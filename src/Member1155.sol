@@ -18,12 +18,17 @@ contract MemberRegistry is ERC1155 {
                                  errors
     //////////////////////////////////////////////////////////////*/
 
-    error UntransferableRole();
+    error Untransferable();
     error onlyOdao();
     error UnregisteredDAO();
     error UnauthorizedID();
     error InvalidMintID();
     error AlreadyIn();
+
+    modifier onlyDAO() {
+        if (!oDAO.isDAO(msg.sender)) revert UnregisteredDAO();
+        _;
+    }
 
     /*//////////////////////////////////////////////////////////////
                                  events
@@ -35,20 +40,31 @@ contract MemberRegistry is ERC1155 {
                                  external
     //////////////////////////////////////////////////////////////*/
 
-    function makeMember(address who_, uint256 id_) external returns (bool) {
+    function makeMember(address who_, uint256 id_) external onlyDAO returns (bool) {
+        /// the id_ of any subunit  is a multiple of DAO address
         if (!(id_ / uint160(bytes20(msg.sender)) > 1) && (id_ % uint160(bytes20(msg.sender)) == 0)) {
             revert InvalidMintID();
         }
-        if (oDAO.isDAO(msg.sender)) revert UnregisteredDAO();
 
+        /// does not yet have member token
         if (balanceOf[who_][id_] > 0) revert AlreadyIn();
 
+        /// if first member to join, fetch cell metadata
         if (tokenUri[id_].length == 0) tokenUri[id_] = iInstanceDAO(msg.sender).entityData(id_);
 
+        /// mint membership token
         _mint(who_, id_, 1, tokenUri[id_]);
 
         emit isNowMember(who_, id_, msg.sender);
         return true;
+    }
+
+    function _wrapMint(address baseToken_, uint256 amount_, address to_) external onlyDAO returns (bool) {
+        _mint(to_, wTokenId(baseToken_), amount_, tokenUri[wTokenId(baseToken_)]);
+    }
+
+    function _unwrapBurn(address baseToken_, uint256 amount_, address from_) external onlyDAO returns (bool) {
+        _burn(from_, wTokenId(baseToken_), amount_);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -67,6 +83,13 @@ contract MemberRegistry is ERC1155 {
         public
         override
     {
-        if (from != address(0) && to != address(0)) revert UntransferableRole();
+        if (from != address(0) && to != address(0)) revert Untransferable();
+    }
+
+    /// misc
+
+    /// @dev duplicated
+    function wTokenId(address baseTokenAddr) public pure returns (uint256) {
+        return uint160(bytes20(baseTokenAddr)) - 1;
     }
 }

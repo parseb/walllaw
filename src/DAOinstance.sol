@@ -2,26 +2,21 @@
 pragma solidity ^0.8.13;
 
 import "./interfaces/IERC20.sol";
+import "./interfaces/IMember1155.sol";
 
 contract DAOinstance {
     IERC20 public BaseToken;
     address[2] private ownerStore;
+    IMemberRegistry iMR;
 
     uint256 public baseID;
     uint256 localID;
 
-    struct Membrane {
-        address[] tokens;
-        uint256[] balances;
-        bytes meta;
-    }
-
-    mapping(uint256 => Membrane) getMembraneById;
-
-    constructor(address baseToken_, address owner_) {
+    constructor(address baseToken_, address owner_, address MemberRegistry_) {
         BaseToken = IERC20(baseToken_);
         baseID = uint160(bytes20(address(this)));
         ownerStore = [owner_, owner_];
+        iMR = IMemberRegistry(MemberRegistry_);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -29,7 +24,6 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     event LocalIncrement(uint256 localID);
-    event subSetCreated(uint256 subUnitId, uint256 parentUnitId);
 
     /*//////////////////////////////////////////////////////////////
                                  external
@@ -44,6 +38,20 @@ contract DAOinstance {
         require(msg.sender == ownerStore[1], "Unauthorized");
         ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
     }
+
+    /// @notice takes the basetoken of this
+    function wrapMint(address baseToken_, uint256 amount_, address to_) public returns (bool s) {
+        BaseToken.transferFrom(msg.sender, address(this), amount_);
+        s = s && iMR._wrapMint(address(BaseToken), amount_, to_);
+    }
+
+    function unwrapBurn(address baseToken_, uint256 amount_, address from_) public returns (bool s) {
+        iMR._unwrapBurn(from_, amount_, address(BaseToken));
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                                 misc
+    //////////////////////////////////////////////////////////////*/
 
     /*//////////////////////////////////////////////////////////////
                                  VIEW
@@ -60,9 +68,5 @@ contract DAOinstance {
 
     function owner() public view returns (address) {
         return ownerStore[1];
-    }
-
-    function entityData(uint256 id) external view returns (bytes memory) {
-        return getMembraneById[id].meta;
     }
 }
