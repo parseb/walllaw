@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IMember1155.sol";
+import "./DAO20.sol";
 
 contract DAOinstance {
     /// inflation rate for base wrapped token ( ponzi / deficit financing )
@@ -13,14 +14,17 @@ contract DAOinstance {
     IERC20 public BaseToken;
     IMemberRegistry iMR;
 
+    DAO20 internalToken;
+
     uint256 public baseID;
     uint256 localID;
 
-    constructor(address baseToken_, address owner_, address MemberRegistry_) {
-        BaseToken = IERC20(baseToken_);
+    constructor(address BaseToken_, address owner_, address MemberRegistry_) {
+        BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
         ownerStore = [owner_, owner_];
         iMR = IMemberRegistry(MemberRegistry_);
+        internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -35,6 +39,7 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     error NotOwner();
+    error TransferFailed();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -55,14 +60,17 @@ contract DAOinstance {
     }
 
     /// @dev @todo: @security review token wrap
-    function wrapMint(address baseToken_, uint256 amount_, address to_) public returns (bool s) {
-        s = BaseToken.transferFrom(msg.sender, address(this), amount_);
-        s = s && iMR._wrapMint(address(BaseToken), amount_, to_);
+    function wrapMint(address to_, uint256 amount_) public returns (bool s) {
+        if (!BaseToken.transferFrom(to_, ownerStore[1], amount_)) revert TransferFailed();
+        s = internalToken.wrapMint(to_, amount_);
+        require(s);
     }
 
-    function unwrapBurn(address baseToken_, uint256 amount_, address from_) public returns (bool s) {
-        s = s && BaseToken.transfer(from_, amount_);
-        s = iMR._unwrapBurn(from_, amount_, address(BaseToken));
+    function unwrapBurn(address from_, uint256 amount_) public returns (bool s) {
+        if (!internalToken.unwrapBurn(from_, amount_)) revert TransferFailed();
+
+        s = BaseToken.transfer(from_, amount_);
+        require(s);
     }
 
     /// @dev prescriptive ? limit max inflation rate
@@ -81,7 +89,7 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     function incrementID() private returns (uint256) {
-        localID = (localID + 1) * baseID;
+        localID = localID * baseID;
         emit LocalIncrement(localID);
     }
 
