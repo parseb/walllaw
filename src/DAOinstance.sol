@@ -5,8 +5,12 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IMember1155.sol";
 
 contract DAOinstance {
-    IERC20 public BaseToken;
+    /// inflation rate for base wrapped token ( ponzi / deficit financing )
+    uint256[2] public inflationRatePerSec;
+    /// [rate, lastSettled]
     address[2] private ownerStore;
+
+    IERC20 public BaseToken;
     IMemberRegistry iMR;
 
     uint256 public baseID;
@@ -24,29 +28,48 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     event LocalIncrement(uint256 localID);
+    event RateAdjusted();
 
     /*//////////////////////////////////////////////////////////////
-                                 external
+                                 errors
     //////////////////////////////////////////////////////////////*/
+
+    error NotOwner();
+
+    /*//////////////////////////////////////////////////////////////
+                                 modifiers
+    //////////////////////////////////////////////////////////////*/
+
+    modifier onlyOwner() {
+        if (msg.sender != ownerStore[1]) revert NotOwner();
+        _;
+    }
 
     // require(msg.sender == owner(), "Only Owner");
 
     function proposeStateChange() public returns (bool) {}
 
     /// @notice ownership change function. execute twice
-    function giveOwnership(address newOwner_) external returns (address currentOwner) {
-        require(msg.sender == ownerStore[1], "Unauthorized");
+    function giveOwnership(address newOwner_) external onlyOwner returns (address currentOwner) {
         ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
     }
 
-    /// @notice takes the basetoken of this
+    /// @dev @todo: @security review token wrap
     function wrapMint(address baseToken_, uint256 amount_, address to_) public returns (bool s) {
-        BaseToken.transferFrom(msg.sender, address(this), amount_);
+        s = BaseToken.transferFrom(msg.sender, address(this), amount_);
         s = s && iMR._wrapMint(address(BaseToken), amount_, to_);
     }
 
     function unwrapBurn(address baseToken_, uint256 amount_, address from_) public returns (bool s) {
-        iMR._unwrapBurn(from_, amount_, address(BaseToken));
+        s = s && BaseToken.transfer(from_, amount_);
+        s = iMR._unwrapBurn(from_, amount_, address(BaseToken));
+    }
+
+    /// @dev prescriptive ? limit max inflation rate
+    function setPerSecondInterestRate(uint256 ratePerSec) external onlyOwner returns (bool) {
+        inflationRatePerSec[0] = ratePerSec;
+
+        emit RateAdjusted();
     }
 
     /*//////////////////////////////////////////////////////////////
