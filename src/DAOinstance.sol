@@ -3,23 +3,33 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IMember1155.sol";
+import "./interfaces/IoDAO.sol";
 import "./DAO20.sol";
 
+
 contract DAOinstance {
-    /// inflation rate for base wrapped token ( ponzi / deficit financing )
-    uint256[2] public inflationRatePerSec;
+    /// inflation rate per sec for base wrapped token ( ponzi / deficit financing )
+    uint256[2] public inflationRateLastUse;
     /// [rate, lastSettled]
+
+    /// [user][entityId] = [ 5 / 1000]
+    mapping(address => uint[][2]) userSignal;
+    mapping(uint => uint[2]) subunitShare;
+
     address[2] private ownerStore;
+    uint[] public subUnits;
 
     IERC20 public BaseToken;
     IMemberRegistry iMR;
 
-    DAO20 internalToken;
+    DAO20 public internalToken;
 
     uint256 public baseID;
-    uint256 localID;
+    uint256 public localID;
+    address public ODAO;
 
     constructor(address BaseToken_, address owner_, address MemberRegistry_) {
+        ODAO = msg.sender;
         BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
         ownerStore = [owner_, owner_];
@@ -32,7 +42,8 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     event LocalIncrement(uint256 localID);
-    event RateAdjusted();
+    event StateAdjusted();
+    event AdjustedRate();
 
     /*//////////////////////////////////////////////////////////////
                                  errors
@@ -52,43 +63,74 @@ contract DAOinstance {
 
     // require(msg.sender == owner(), "Only Owner");
 
-    function proposeStateChange() public returns (bool) {}
+    // function proposeStateChange() public returns (bool) {}
 
     /// @notice ownership change function. execute twice
-    function giveOwnership(address newOwner_) external onlyOwner returns (address currentOwner) {
+    function giveOwnership(address newOwner_) external onlyOwner returns (address) {
+        if (msg.sender == ODAO) ownerStore[0] = newOwner_;
         ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
     }
 
     /// @dev @todo: @security review token wrap
-    function wrapMint(address to_, uint256 amount_) public returns (bool s) {
-        if (!BaseToken.transferFrom(to_, ownerStore[1], amount_)) revert TransferFailed();
-        s = internalToken.wrapMint(to_, amount_);
+    function wrapMint(uint256 amount_) public returns (bool s) {
+        if (!BaseToken.transferFrom(msg.sender, ownerStore[1], amount_)) revert TransferFailed();
+        s = internalToken.wrapMint(msg.sender, amount_);
+
+        _balanceReWeigh(amount_);
         require(s);
     }
 
-    function unwrapBurn(address from_, uint256 amount_) public returns (bool s) {
-        if (!internalToken.unwrapBurn(from_, amount_)) revert TransferFailed();
+    function unwrapBurn(uint256 amount_) public returns (bool s) {
+        if (!internalToken.unwrapBurn(msg.sender, amount_)) revert TransferFailed();
 
-        s = BaseToken.transfer(from_, amount_);
+        s = BaseToken.transfer(msg.sender, amount_);
+
+        _balanceReWeigh(amount_);
+
         require(s);
     }
 
     /// @dev prescriptive ? limit max inflation rate
     function setPerSecondInterestRate(uint256 ratePerSec) external onlyOwner returns (bool) {
-        inflationRatePerSec[0] = ratePerSec;
+        inflationRateLastUse[0] = ratePerSec;
 
-        emit RateAdjusted();
+        emit AdjustedRate();
     }
 
-    /*//////////////////////////////////////////////////////////////
-                                 misc
-    //////////////////////////////////////////////////////////////*/
+
+  /// setMembrane - onlyOwner
+  /// mintMembership(self)
+  /// setRedistributiveSignal
+
+
+    
 
     /*//////////////////////////////////////////////////////////////
-                                 VIEW
+                                 privat
     //////////////////////////////////////////////////////////////*/
 
-    function incrementID() private returns (uint256) {
+    function _balanceReWeigh(uint amount) private {
+    
+    uint[][2] memory uSignal = userSignal[msg.sender];
+    //uint len = uSignal.length;
+    uint i;
+    for (i; i < uSignal.length;) {
+        // if (msg.sig == this.wrapMint.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
+        // if (msg.sig == this.unwrapBurn.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
+
+        unchecked {
+            ++ i;
+        }
+    }
+
+    }
+
+    function incrementSubDAO() external returns (uint) {
+        require(msg.sender == ODAO, "root only");
+        return _incrementID();
+    }
+
+    function _incrementID() private returns (uint256) {
         localID = localID * baseID;
         emit LocalIncrement(localID);
     }
@@ -99,5 +141,13 @@ contract DAOinstance {
 
     function owner() public view returns (address) {
         return ownerStore[1];
+    }
+
+    function internalTokenAddr() public view returns (address) {
+        return address(internalToken);
+    }
+
+    function baseTokenAddress() public view returns (address) {
+        return address(BaseToken);
     }
 }
