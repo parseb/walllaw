@@ -75,4 +75,9 @@ interface IERC20 {
      * Emits a {Transfer} event.
      */
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
+
+    //// @notice owner() function if ERC20 is internal DAO token (mint/burn access)
+
+    function owner() external view returns (address);
+
 }

@@ -11,8 +11,7 @@ contract ODAO {
     mapping(address => address[]) daosOfToken;
     mapping(address => mapping(address => address)) userTokenDAO;
     mapping(uint256 => Membrane) getMembraneById;
-
-
+    mapping(address => uint) usesMembrane; /// stores in-use membrane of DAO instance
     IMemberRegistry MR;
 
     constructor() {
@@ -25,6 +24,9 @@ contract ODAO {
 
     error nullTopLayer();
     error NotCoreMember();
+    error aDAOnot();
+    error NotDAOOwner();
+    error membraneNotFound();
 
 
     /*//////////////////////////////////////////////////////////////
@@ -35,14 +37,10 @@ contract ODAO {
     event isNowMember(address indexed who, uint256 indexed where, address indexed DAO);
     event subSetCreated(uint256 subUnitId, uint256 parentUnitId);
     event CreatedMembrane(uint id, bytes metadata);
-
+    event DAOchangedMembrane(address DAO, uint membrane);
 
     /*//////////////////////////////////////////////////////////////
                                  public
-    //////////////////////////////////////////////////////////////*/
-
-    /*//////////////////////////////////////////////////////////////
-                                 internal
     //////////////////////////////////////////////////////////////*/
 
     function createDAO(address BaseTokenAddress_) public returns (address newDAO) {
@@ -60,7 +58,7 @@ contract ODAO {
         address[] memory tokens_, 
         uint[] memory balances_, 
         bytes memory meta_) 
-        public returns (uint) {
+        public returns (uint id) {
             Membrane memory M;
             M.tokens = tokens_;
             M.balances = balances_;
@@ -82,14 +80,23 @@ contract ODAO {
          
          uint entityID = iInstanceDAO(parentDAO_).incrementSubDAO();
 
-         daoOfId[entityID] = subDAOaddr;
+         usesMembrane[subDAOaddr] = membraneID_;
+         daoOfId[entityID] = parentDAO_;
          daosOfToken[iInstanceDAO(parentDAO_).baseTokenAddress()].push(subDAOaddr);
 
          iInstanceDAO(subDAOaddr).giveOwnership(msg.sender);
-         
+         require( IERC20(iInstanceDAO(subDAOaddr).internalTokenAddr()).owner() == address(subDAOaddr), "DAO not owner");
+
     }
 
-
+    function setMembrane(address DAO_, uint membraneID_) external returns (bool) {
+        if ( msg.sender == ( iInstanceDAO(DAO_).owner()) ) revert NotDAOOwner();
+        if (! isDAO(DAO_)) revert aDAOnot();
+        if ( getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
+        
+        usesMembrane[DAO_] = membraneID_;
+        emit DAOchangedMembrane(DAO_, membraneID_);
+    }
 
 
     /*//////////////////////////////////////////////////////////////
@@ -100,7 +107,7 @@ contract ODAO {
     /// @dev used to authenticate membership minting
     /// @param toCheck_: address to check if registered as DAO
     function isDAO(address toCheck_) public view returns (bool) {
-        return daoOfId[uint160(bytes20(toCheck_))] == toCheck_;
+        return ( daoOfId[uint160(bytes20(toCheck_))] == toCheck_ );
     }
 
     /// @notice returns the DAO instance to which the given id_ belongs to
@@ -114,5 +121,9 @@ contract ODAO {
 
     function getMembrane(uint id) external view returns (Membrane memory) {
         return getMembraneById[id];
+    }
+
+    function getMemberRegistryAddr() external view returns (address) {
+        return address(MR);
     }
 }

@@ -24,7 +24,7 @@ interface iInstanceDAO {
 
     function localID() external view returns (uint);
 
-
+    function mintMembershipToken(address to_) external returns (bool);
     /// only owner
     function setPerSecondInterestRate(uint256 ratePerSec) external returns (bool);
 

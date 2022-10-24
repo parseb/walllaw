@@ -53,7 +53,8 @@ contract MemberRegistry is ERC1155 {
         if (balanceOf[who_][id_] > 0) revert AlreadyIn();
 
         /// if first member to join, fetch cell metadata
-        if (tokenUri[id_].length == 0) tokenUri[id_] = iInstanceDAO(msg.sender).entityData(id_);
+        /// @todo get membrane meta or dao specific metadata
+        // if (tokenUri[id_].length == 0) tokenUri[id_] = oDAO.entityData(id_);
 
         /// mint membership token
         _mint(who_, id_, 1, tokenUri[id_]);

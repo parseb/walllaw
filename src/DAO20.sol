@@ -7,7 +7,7 @@ import "./interfaces/IERC20.sol";
 /// @notice Minimalist and gas efficient standard ERC1155 implementation.
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC1155.sol)
 contract DAO20 is ERC20 {
-    address owner;
+    address public owner;
     IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
@@ -24,6 +24,8 @@ contract DAO20 is ERC20 {
         _;
     }
 
+
+    /// Only Owner //////////
     function wrapMint(address to, uint256 amt) external OnlyOwner returns (bool) {
         _mint(to, amt);
     }
@@ -31,4 +33,9 @@ contract DAO20 is ERC20 {
     function unwrapBurn(address from, uint256 amt) external OnlyOwner returns (bool) {
         _burn(from, amt);
     }
+
+    /// ////////////////////
+
+    /// View //////////////
+
 }

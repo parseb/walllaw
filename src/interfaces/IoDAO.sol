@@ -15,4 +15,15 @@ interface IoDAO {
 
     function getMembrane(uint id) external view returns (Membrane memory);
 
-}
+    function setMembrane(address DAO_, uint membraneID_) external returns (bool);
+
+    function createSubDAO(uint membraneID_, address parentDAO_) external returns (address subDAOaddr);
+
+       function createMembrane(
+        address[] memory tokens_, 
+        uint[] memory balances_, 
+        bytes memory meta_) 
+        external returns (uint);
+
+
+}   

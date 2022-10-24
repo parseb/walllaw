@@ -8,6 +8,11 @@ import "./DAO20.sol";
 
 
 contract DAOinstance {
+
+    uint256 public baseID;
+    uint256 public localID;
+    address public ODAO;
+    address public unwrapper;
     /// inflation rate per sec for base wrapped token ( ponzi / deficit financing )
     uint256[2] public inflationRateLastUse;
     /// [rate, lastSettled]
@@ -24,14 +29,11 @@ contract DAOinstance {
 
     DAO20 public internalToken;
 
-    uint256 public baseID;
-    uint256 public localID;
-    address public ODAO;
-
     constructor(address BaseToken_, address owner_, address MemberRegistry_) {
         ODAO = msg.sender;
         BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
+        localID = 1;
         ownerStore = [owner_, owner_];
         iMR = IMemberRegistry(MemberRegistry_);
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
@@ -57,7 +59,7 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyOwner() {
-        if (msg.sender != ownerStore[1]) revert NotOwner();
+        if (msg.sender != ownerStore[1] && msg.sender != ODAO) revert NotOwner();
         _;
     }
 
@@ -69,6 +71,7 @@ contract DAOinstance {
     function giveOwnership(address newOwner_) external onlyOwner returns (address) {
         if (msg.sender == ODAO) ownerStore[0] = newOwner_;
         ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
+        return ownerStore[1];
     }
 
     /// @dev @todo: @security review token wrap
@@ -81,6 +84,7 @@ contract DAOinstance {
     }
 
     function unwrapBurn(uint256 amount_) public returns (bool s) {
+
         if (!internalToken.unwrapBurn(msg.sender, amount_)) revert TransferFailed();
 
         s = BaseToken.transfer(msg.sender, amount_);
@@ -91,14 +95,19 @@ contract DAOinstance {
     }
 
     /// @dev prescriptive ? limit max inflation rate
-    function setPerSecondInterestRate(uint256 ratePerSec) external onlyOwner returns (bool) {
+    function setPerSecondInterestRate(uint256 ratePerSec) external onlyOwner {
         inflationRateLastUse[0] = ratePerSec;
 
         emit AdjustedRate();
     }
 
 
-  /// setMembrane - onlyOwner
+    function mintMembershipToken(address to_) external returns (bool) {
+
+        //////// membrane check @todo
+
+        return iMR.makeMember(to_, baseID);
+    }
   /// mintMembership(self)
   /// setRedistributiveSignal
 
@@ -131,6 +140,7 @@ contract DAOinstance {
     }
 
     function _incrementID() private returns (uint256) {
+        unchecked { ++localID; }
         localID = localID * baseID;
         emit LocalIncrement(localID);
     }
