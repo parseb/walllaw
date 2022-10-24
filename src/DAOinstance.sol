@@ -6,9 +6,7 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./DAO20.sol";
 
-
 contract DAOinstance {
-
     uint256 public baseID;
     uint256 public localID;
     address public ODAO;
@@ -18,11 +16,11 @@ contract DAOinstance {
     /// [rate, lastSettled]
 
     /// [user][entityId] = [ 5 / 1000]
-    mapping(address => uint[][2]) userSignal;
-    mapping(uint => uint[2]) subunitShare;
+    mapping(address => uint256[][2]) userSignal;
+    mapping(uint256 => uint256[2]) subunitShare;
 
     address[2] private ownerStore;
-    uint[] public subUnits;
+    uint256[] public subUnits;
 
     IERC20 public BaseToken;
     IMemberRegistry iMR;
@@ -53,6 +51,7 @@ contract DAOinstance {
 
     error NotOwner();
     error TransferFailed();
+    error Unqualified();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -84,7 +83,6 @@ contract DAOinstance {
     }
 
     function unwrapBurn(uint256 amount_) public returns (bool s) {
-
         if (!internalToken.unwrapBurn(msg.sender, amount_)) revert TransferFailed();
 
         s = BaseToken.transfer(msg.sender, amount_);
@@ -101,46 +99,50 @@ contract DAOinstance {
         emit AdjustedRate();
     }
 
+    function mintMembershipToken(address to_) external returns (bool s) {
+        Membrane memory M = IoDAO(ODAO).inUseMembrane(address(this));
 
-    function mintMembershipToken(address to_) external returns (bool) {
+        uint256 i;
+        s = true;
+        for (i; i < M.tokens.length;) {
+            s = s && (IERC20(M.tokens[i]).balanceOf(to_) >= M.balances[i]);
+            unchecked { ++ i; }
+        }
 
-        //////// membrane check @todo
+        if (! s) revert Unqualified();
+        s = iMR.makeMember(to_, baseID) && s;
 
-        return iMR.makeMember(to_, baseID);
     }
-  /// mintMembership(self)
-  /// setRedistributiveSignal
-
-
-    
+    /// mintMembership(self)
+    /// setRedistributiveSignal
 
     /*//////////////////////////////////////////////////////////////
                                  privat
     //////////////////////////////////////////////////////////////*/
 
-    function _balanceReWeigh(uint amount) private {
-    
-    uint[][2] memory uSignal = userSignal[msg.sender];
-    //uint len = uSignal.length;
-    uint i;
-    for (i; i < uSignal.length;) {
-        // if (msg.sig == this.wrapMint.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
-        // if (msg.sig == this.unwrapBurn.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
+    function _balanceReWeigh(uint256 amount) private {
+        uint256[][2] memory uSignal = userSignal[msg.sender];
+        //uint len = uSignal.length;
+        uint256 i;
+        for (i; i < uSignal.length;) {
+            // if (msg.sig == this.wrapMint.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
+            // if (msg.sig == this.unwrapBurn.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
 
-        unchecked {
-            ++ i;
+            unchecked {
+                ++i;
+            }
         }
     }
 
-    }
-
-    function incrementSubDAO() external returns (uint) {
+    function incrementSubDAO() external returns (uint256) {
         require(msg.sender == ODAO, "root only");
         return _incrementID();
     }
 
     function _incrementID() private returns (uint256) {
-        unchecked { ++localID; }
+        unchecked {
+            ++localID;
+        }
         localID = localID * baseID;
         emit LocalIncrement(localID);
     }

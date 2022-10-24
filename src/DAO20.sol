@@ -24,7 +24,6 @@ contract DAO20 is ERC20 {
         _;
     }
 
-
     /// Only Owner //////////
     function wrapMint(address to, uint256 amt) external OnlyOwner returns (bool) {
         _mint(to, amt);
@@ -37,5 +36,4 @@ contract DAO20 is ERC20 {
     /// ////////////////////
 
     /// View //////////////
-
 }

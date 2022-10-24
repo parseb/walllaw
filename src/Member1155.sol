@@ -8,6 +8,7 @@ import "./interfaces/iInstanceDAO.sol";
 contract MemberRegistry is ERC1155 {
     IoDAO oDAO;
 
+
     mapping(uint256 => bytes) tokenUri;
 
     constructor() {
@@ -40,12 +41,12 @@ contract MemberRegistry is ERC1155 {
                                  external
     //////////////////////////////////////////////////////////////*/
 
-
     /// mints membership token to provided address
-    
+
     function makeMember(address who_, uint256 id_) external onlyDAO returns (bool) {
         /// the id_ of any subunit  is a multiple of DAO address
-        if (! (id_ % uint160(bytes20(msg.sender)) == 0)) { /// @dev
+        if (!(id_ % uint160(bytes20(msg.sender)) == 0)) {
+            /// @dev
             revert InvalidMintID();
         }
 

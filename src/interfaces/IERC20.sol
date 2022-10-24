@@ -79,5 +79,4 @@ interface IERC20 {
     //// @notice owner() function if ERC20 is internal DAO token (mint/burn access)
 
     function owner() external view returns (address);
-
 }
