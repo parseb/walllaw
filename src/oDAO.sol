@@ -6,7 +6,7 @@ import "./DAOinstance.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
-s
+
 
 contract ODAO {
     mapping(uint256 => address) daoOfId;
@@ -14,7 +14,11 @@ contract ODAO {
     mapping(address => mapping(address => address)) userTokenDAO;
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
+    mapping(address => address) childParentDAO;
     /// stores in-use membrane of DAO instance
+    
+
+
     IMemberRegistry MR;
 
     constructor() {
@@ -85,6 +89,7 @@ contract ODAO {
         daoOfId[entityID] = parentDAO_;
         daosOfToken[iInstanceDAO(parentDAO_).baseTokenAddress()].push(subDAOaddr);
 
+        childParentDAO[parentDAO_] = subDAOaddr;
         iInstanceDAO(subDAOaddr).giveOwnership(msg.sender);
         //  require( iInstanceDAO(subDAOaddr).owner()  == msg.sender, "not owner" );
         //  require( IERC20(iInstanceDAO(subDAOaddr).internalTokenAddr()).owner() == address(subDAOaddr), "DAO not owner");

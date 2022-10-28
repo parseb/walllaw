@@ -8,19 +8,32 @@ import "./DAO20.sol";
 
 contract DAOinstance {
     uint256 public baseID;
+    uint256 baseInflationRate;
+    uint256 baseInflationPerSec;
+
     uint256 public localID;
     address public ODAO;
     address public unwrapper;
-    /// inflation rate per sec for base wrapped token ( ponzi / deficit financing )
-    uint256[2] public inflationRateLastUse;
-    /// [rate, lastSettled]
 
-    /// [user][entityId] = [ 5 / 1000]
+
+
+
+
     mapping(address => uint256[][2]) userSignal;
+
+    mapping(address => uint256) userInflation;
+
     mapping(uint256 => uint256[2]) subunitShare;
 
+    /// @dev @security consider outsider influence asumming economic risk to temporarily change rate
+    /// [address_of_sender(subjective) or address(0)(objective)] - sets internalInflation on majority consensus
+    /// inflation is relative to 
+
+    mapping(uint256 => mapping(address => uint256)) agentRatePreference;
+    mapping(uint256 => address[]) expressedRatePreference;
+
+
     address[2] private ownerStore;
-    uint256[] public subUnits;
 
     IERC20 public BaseToken;
     IMemberRegistry iMR;
@@ -31,6 +44,7 @@ contract DAOinstance {
         ODAO = msg.sender;
         BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
+        baseInflationRate = baseID % 100;
         localID = 1;
         ownerStore = [owner_, owner_];
         iMR = IMemberRegistry(MemberRegistry_);
@@ -44,6 +58,8 @@ contract DAOinstance {
     event LocalIncrement(uint256 localID);
     event StateAdjusted();
     event AdjustedRate();
+    event UserPreferedGuidance();
+    event GlobalInflationUpdated(uint RatePerYear, uint perSecInflation);
 
     /*//////////////////////////////////////////////////////////////
                                  errors
@@ -62,23 +78,51 @@ contract DAOinstance {
         _;
     }
 
-    // require(msg.sender == owner(), "Only Owner");
+    /// percentage per year 1-100 as relative to the totalSupply of base token
+    function setUserInflation(uint percentagePerYear_) external returns (uint inflationRate) {
+        // uint baseSupply = BaseToken.totalSupply(); /// @dev
+        // uint 1percentPerSecPerYear = baseSupply / 31449600 / 100;
+        // uint balanceOfUser = BaseToken.balanceOf(msg.sender);
+        // uint userShareOfMain =  balanceOfUser * 100 / baseSupply;
+        require(percentagePerYear_ / 100 <= 1, ">100!");
+        require(agentRatePreference[percentagePerYear_][msg.sender] == 0, "CannotUpdate");
 
-    // function proposeStateChange() public returns (bool) {}
+        uint balance = IERC20(internalTokenAddr()).balanceOf(msg.sender);
+        uint totalSupply = IERC20(address(internalToken)).totalSupply();
 
-    /// @notice ownership change function. execute twice
-    function giveOwnership(address newOwner_) external onlyOwner returns (address) {
-        if (msg.sender == ODAO) ownerStore[0] = newOwner_;
-        ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
-        return ownerStore[1];
+        agentRatePreference[percentagePerYear_][msg.sender] += balance;
+        agentRatePreference[percentagePerYear_][address(0)] += balance;
+        expressedRatePreference[percentagePerYear_].push(msg.sender);
+
+        inflationRate = (totalSupply / agentRatePreference[percentagePerYear_][address(0)] <= 2) ? _updateGlobalInflation(totalSupply,percentagePerYear_) : baseInflationRate;
+
+    }    
+
+    function _updateGlobalInflation(uint totalSupply_, uint newRate_) private returns (uint inflation) {
+        _redistribute();
+        baseInflationRate = newRate_;
+        baseInflationPerSec = totalSupply_ * newRate_ / 31449600 / 100;
+        
+        for( inflation; inflation < expressedRatePreference[newRate_].length;) {
+            delete agentRatePreference[newRate_][expressedRatePreference[newRate_][inflation]];
+            unchecked { ++ inflation;}
+        }
+            delete agentRatePreference[newRate_][address(0)];
+            delete expressedRatePreference[newRate_];
+
+        inflation = newRate_;
+
+        emit GlobalInflationUpdated(newRate_, baseInflationPerSec );
     }
+
+    function _redistribute() private {}
 
     /// @dev @todo: @security review token wrap
     function wrapMint(uint256 amount_) public returns (bool s) {
         if (!BaseToken.transferFrom(msg.sender, ownerStore[1], amount_)) revert TransferFailed();
         s = internalToken.wrapMint(msg.sender, amount_);
 
-        _balanceReWeigh(amount_);
+        // _balanceReWeigh(amount_);
         require(s);
     }
 
@@ -87,14 +131,13 @@ contract DAOinstance {
 
         s = BaseToken.transfer(msg.sender, amount_);
 
-        _balanceReWeigh(amount_);
-
+        // _balanceReWeigh(amount_);
         require(s);
     }
 
     /// @dev prescriptive ? limit max inflation rate
     function setPerSecondInterestRate(uint256 ratePerSec) external onlyOwner {
-        inflationRateLastUse[0] = ratePerSec;
+
 
         emit AdjustedRate();
     }
@@ -113,8 +156,13 @@ contract DAOinstance {
         s = iMR.makeMember(to_, baseID) && s;
 
     }
-    /// mintMembership(self)
-    /// setRedistributiveSignal
+
+        /// @notice ownership change function. execute twice
+    function giveOwnership(address newOwner_) external onlyOwner returns (address) {
+        if (msg.sender == ODAO) ownerStore[0] = newOwner_;
+        ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
+        return ownerStore[1];
+    }
 
     /*//////////////////////////////////////////////////////////////
                                  privat
@@ -161,5 +209,9 @@ contract DAOinstance {
 
     function baseTokenAddress() public view returns (address) {
         return address(BaseToken);
+    }
+
+    function getUserReDistribution() public view returns (uint[] memory allocation) {
+
     }
 }

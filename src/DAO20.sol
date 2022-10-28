@@ -35,5 +35,29 @@ contract DAO20 is ERC20 {
 
     /// ////////////////////
 
-    /// View //////////////
+    /// Override //////////////
+
+    //// @dev @security DAO token should be transferable only to DAO instances or owner (resource basket multisig)
+    /// there's some potential attack vectors on inflation and redistributive signals (re-enterange like)
+    /// two options: embrace the messiness |OR| allow transfers only to owner and sub-entities
+
+
+    function transfer(address to, uint256 amount) public override returns (bool) {
+        /// limit transfers
+
+        super.transfer(to,amount);
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public override returns (bool) {
+        /// limit transfers
+
+        
+        super.transferFrom(from,to,amount);
+    }
+
+
 }
