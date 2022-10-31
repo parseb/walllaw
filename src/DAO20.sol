@@ -44,8 +44,8 @@ contract DAO20 is ERC20 {
 
     function transfer(address to, uint256 amount) public override returns (bool) {
         /// limit transfers
-
-        super.transfer(to,amount);
+        require(msg.sender == owner, "msg sender not owner");
+        return super.transfer(to,amount);
     }
 
     function transferFrom(
@@ -54,9 +54,10 @@ contract DAO20 is ERC20 {
         uint256 amount
     ) public override returns (bool) {
         /// limit transfers
-
-        
-        super.transferFrom(from,to,amount);
+        require(msg.sender == owner, "msg sender not owner");
+        if (from == owner) _mint(owner, amount);
+        require(super.transferFrom(from,to,amount));
+        return true;
     }
 
 

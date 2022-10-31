@@ -83,25 +83,28 @@ contract ODAO {
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember();
         subDAOaddr = createDAO(internalT);
 
-        uint256 entityID = iInstanceDAO(parentDAO_).incrementSubDAO();
+        iInstanceDAO instance = iInstanceDAO(parentDAO_);
+
+        uint256 entityID = instance.incrementSubDAO() * instance.baseID(); 
 
         usesMembrane[subDAOaddr] = membraneID_;
         daoOfId[entityID] = parentDAO_;
-        daosOfToken[iInstanceDAO(parentDAO_).baseTokenAddress()].push(subDAOaddr);
+        daosOfToken[instance.baseTokenAddress()].push(subDAOaddr);
 
-        childParentDAO[parentDAO_] = subDAOaddr;
-        iInstanceDAO(subDAOaddr).giveOwnership(msg.sender);
-        //  require( iInstanceDAO(subDAOaddr).owner()  == msg.sender, "not owner" );
+        childParentDAO[subDAOaddr] = parentDAO_;
+        instance.giveOwnership(msg.sender);
+        // require( iInstanceDAO(subDAOaddr).owner()  == msg.sender, "not owner" );
         //  require( IERC20(iInstanceDAO(subDAOaddr).internalTokenAddr()).owner() == address(subDAOaddr), "DAO not owner");
     }
 
     function setMembrane(address DAO_, uint256 membraneID_) external returns (bool) {
-        if (msg.sender == (iInstanceDAO(DAO_).owner())) revert NotDAOOwner();
+        if ( isDAO(msg.sender)  || msg.sender == (iInstanceDAO(DAO_).owner())) revert NotDAOOwner();
         if (!isDAO(DAO_)) revert aDAOnot();
         if (getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
 
         usesMembrane[DAO_] = membraneID_;
         emit DAOchangedMembrane(DAO_, membraneID_);
+        return true;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -132,7 +135,20 @@ contract ODAO {
         return address(MR);
     }
 
-    function inUseMembrane(address DAOaddress_) public view returns (Membrane memory M) {
-        M = getMembraneById[usesMembrane[DAOaddress_]];
+    function inUseMembraneId(address DAOaddress_) public view returns (uint ID) {
+        return usesMembrane[DAOaddress_];
     }
+ 
+    function getInUseMembraneOfDAO(address DAOAddress_) public view returns (Membrane memory) {
+        return getMembraneById[usesMembrane[DAOAddress_]];
+    }
+
+    function getParentDAO(address child_) public view returns (address) {
+        return childParentDAO[child_];
+    } 
+
+    function getSubDAOsOf(address parent) external view returns (address[] memory) {
+        return daosOfToken[parent];
+    }
+
 }

@@ -19,5 +19,9 @@ interface IoDAO {
         external
         returns (uint256);
 
-    function inUseMembrane(address DAOaddress_) external view returns (Membrane memory M);
+    function inUseMembraneId(address DAOaddress_) external view returns (uint Id);
+    
+    function getInUseMembraneOfDAO(address DAOAddress_) external view returns (Membrane memory);
+    
+    function getParentDAO(address child_) external view returns (address);
 }
