@@ -27,6 +27,6 @@ interface iInstanceDAO {
     function mintMembershipToken(address to_) external returns (bool);
     /// only owner
     function setPerSecondInterestRate(uint256 ratePerSec) external returns (bool);
-
+        
     function giveOwnership(address newOwner_) external returns (address);
 }

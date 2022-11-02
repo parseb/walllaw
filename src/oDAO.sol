@@ -34,6 +34,7 @@ contract ODAO {
     error aDAOnot();
     error NotDAOOwner();
     error membraneNotFound();
+    error SubDAOLimitReached();
 
     /*//////////////////////////////////////////////////////////////
                                  events
@@ -79,17 +80,18 @@ contract ODAO {
     /// @param parentDAO_: parent
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddr();
-
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember();
-        subDAOaddr = createDAO(internalT);
+        if (daosOfToken[internalT].length > 99) revert SubDAOLimitReached();
 
         iInstanceDAO instance = iInstanceDAO(parentDAO_);
 
         uint256 entityID = instance.incrementSubDAO() * instance.baseID(); 
 
+        subDAOaddr = createDAO(internalT);
+
         usesMembrane[subDAOaddr] = membraneID_;
         daoOfId[entityID] = parentDAO_;
-        daosOfToken[instance.baseTokenAddress()].push(subDAOaddr);
+        daosOfToken[internalT].push(subDAOaddr);
 
         childParentDAO[subDAOaddr] = parentDAO_;
         instance.giveOwnership(msg.sender);

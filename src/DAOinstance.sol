@@ -15,9 +15,10 @@ contract DAOinstance {
     address public ODAO;
     address public unwrapper;
 
-    mapping(address => uint256[][2]) userSignal; /// # EOA => [subUnitId, percentage]
-    mapping(uint256 => uint256[2]) subunitShare; /// #subunit id => [percentage, timestamp] 
+    mapping(address => mapping(address => uint256[2])) userSignal; /// # EOA => subunit => [percentage, amt]
 
+    mapping(address => uint256[2]) subunitPerSec; /// #subunit id => [perSecond, timestamp] 
+    
     mapping(uint256 => mapping(address => uint256)) cakeSlice; /// # endpoint
 
     /// @dev @security consider outsider influence asumming economic risk to temporarily change rate
@@ -67,6 +68,8 @@ contract DAOinstance {
     error DAOinstance__NotMember();
     error DAOinstance__InvalidMembrane();
     error DAOinstance__CannotUpdate();
+    error DAOinstance__LenMismatch();
+    error DAOinstance__Over100();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -90,7 +93,7 @@ contract DAOinstance {
         require(agentPreference[percentagePerYear_][msg.sender] == 0, "CannotUpdate");
 
         uint balance = IERC20(internalTokenAddr()).balanceOf(msg.sender);
-        uint totalSupply = IERC20(address(internalToken)).totalSupply();
+        uint totalSupply = internalToken.totalSupply();
 
         agentPreference[percentagePerYear_][msg.sender] = balance;
         agentPreference[percentagePerYear_][address(0)] += balance;
@@ -107,7 +110,7 @@ contract DAOinstance {
         if (M.tokens.length == 0) revert DAOinstance__InvalidMembrane();
 
         uint balance = IERC20(internalTokenAddr()).balanceOf(msg.sender);
-        uint totalSupply = IERC20(address(internalToken)).totalSupply();
+        uint totalSupply = internalToken.totalSupply();
 
         agentPreference[membraneId_][msg.sender] = balance;
         agentPreference[membraneId_][address(0)] += balance;
@@ -120,10 +123,39 @@ contract DAOinstance {
 
 
 
-    function distributiveSignal(uint256[] memory cronoOrderedDistribution) external onlyMember() returns (bool s) {
+    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external onlyMember() returns (bool s) {
         s = _redistribute();
+        /// cronoOrderedDistributionAmts
+        address[] memory subDAOs =  IoDAO(ODAO).getSubDAOsOf(internalTokenAddr());
+        if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
-        IoDAO(ODAO).getSubDAOsOf(address(BaseToken));
+        // mapping(address => mapping(address => uint256[2])) userSignal; /// # EOA => subunit => [ percentage, amt]
+        // mapping(address => uint256[2]) subunitPerSec; /// #subunit id => [perSecond, timestamp] 
+
+        uint i;
+        uint centum;
+        uint perSec;
+        for (i; i< subDAOs.length;) {
+            uint submittedValue = cronoOrderedDistributionAmts[i];
+            address entity = subDAOs[i];
+            uint prevValue = subunitPerSec[entity][0];
+            uint senderForce = IERC20(internalTokenAddr()).balanceOf(_msgSender());
+
+
+            if ( submittedValue == subunitPerSec[subDAOs[i]][0] ) continue;
+            unchecked { centum += cronoOrderedDistributionAmts[i]; }
+            if (centum > 100) revert DAOinstance__Over100();
+            
+            perSec = submittedValue * baseInflationPerSec / 100;
+            perSec =  ( IERC20(internalTokenAddr()).balanceOf(msg.sender) * 100 / internalToken.totalSupply() ) * perSec / 100;
+
+
+            subunitPerSec[entity][0] = ( subunitPerSec[entity][0] - userSignal[_msgSender()][entity][1] ) + perSec;
+            userSignal[_msgSender()][entity][1] = perSec;
+            userSignal[_msgSender()][entity][0] = submittedValue;
+
+            unchecked { ++ i; }
+        }
 
     }
 
@@ -225,8 +257,8 @@ contract DAOinstance {
     //     //uint len = uSignal.length;
     //     uint256 i;
     //     for (i; i < uSignal.length;) {
-    //         // if (msg.sig == this.wrapMint.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
-    //         // if (msg.sig == this.unwrapBurn.selector ) subunitShare[uSignal[i][0]][1] = _mint(1);
+    //         // if (msg.sig == this.wrapMint.selector ) subunitPerSec[uSignal[i][0]][1] = _mint(1);
+    //         // if (msg.sig == this.unwrapBurn.selector ) subunitPerSec[uSignal[i][0]][1] = _mint(1);
 
     //         unchecked {
     //             ++i;
@@ -247,6 +279,11 @@ contract DAOinstance {
         }
         emit LocalIncrement(localID);
         return localID;
+    }
+
+    function _msgSender() private returns (address) {
+        /// 
+        return msg.sender;
     }
 
     /*//////////////////////////////////////////////////////////////

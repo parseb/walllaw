@@ -8,13 +8,13 @@ import "./interfaces/IERC20.sol";
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC1155.sol)
 contract DAO20 is ERC20 {
     address public owner;
-    IERC20 baseToken;
+    /// IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
         ERC20(name_, symbol_, decimals_)
     {
         owner = msg.sender;
-        baseToken = IERC20(baseToken_);
+        /// baseToken = IERC20(baseToken_);
     }
 
     error NotOwner();
