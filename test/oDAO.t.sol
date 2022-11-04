@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "../src/interfaces/IMember1155.sol";
 import "../src/interfaces/iInstanceDAO.sol";
-import "../src/interfaces/IERC20.sol";
+// import "../src/interfaces/IERC20.sol";
 import "../src/interfaces/IERC721.sol";
 
 import "../src/oDAO.sol";

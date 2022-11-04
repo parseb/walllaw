@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "solmate/tokens/ERC20.sol";
+// import "solmate/tokens/ERC20.sol";
 // import "./interfaces/IERC20.sol";
+// import "solmate/tokens/ERC20.sol";
+import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 
 /// @notice Minimalist and gas efficient standard ERC1155 implementation.
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC1155.sol)
@@ -11,7 +13,7 @@ contract DAO20 is ERC20 {
     /// IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
-        ERC20(name_, symbol_, decimals_)
+        ERC20(name_, symbol_)
     {
         owner = msg.sender;
         /// baseToken = IERC20(baseToken_);

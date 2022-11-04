@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "./interfaces/IERC20.sol";
+// import "./interfaces/IERC20.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./DAO20.sol";
@@ -119,18 +119,16 @@ contract DAOinstance {
         if (M.tokens.length == 0) revert DAOinstance__InvalidMembrane();
 
         uint balance = internalToken.balanceOf(msg.sender);
-        //uint balance = 12435456356745435634566324532435234534;
         uint totalSupply = internalToken.totalSupply();
-        // uint totalSupply = 12435456356745435634566324234534;
-/// @todo ^ was ist das
-    //     agentPreference[membraneId_][msg.sender] = balance;
-    //     agentPreference[membraneId_][address(0)] += balance;
-    //     expressedMembranePreference[membraneId_].push(msg.sender);
-    //     lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
+
+        agentPreference[membraneId_][msg.sender] = balance;
+        agentPreference[membraneId_][address(0)] += balance;
+        expressedMembranePreference[membraneId_].push(msg.sender);
+        lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
 
         
-    //     require(IoDAO(ODAO).setMembrane(address(this), membraneId_), "failed to set");
-    //     membraneID = (totalSupply / agentPreference[membraneId_][address(0)] <= 2) ? _updateMembrane(membraneId_) : IoDAO(ODAO).inUseMembraneId(address(this));
+        require(IoDAO(ODAO).setMembrane(address(this), membraneId_), "failed to set");
+        membraneID = (totalSupply / agentPreference[membraneId_][address(0)] <= 2) ? _updateMembrane(membraneId_) : IoDAO(ODAO).inUseMembraneId(address(this));
     }
 
 

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "solmate/tokens/ERC20.sol";
+// import "solmate/tokens/ERC20.sol";
+import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 
-contract M20 is ERC20("Mock20", "M20", 18) {
+contract M20 is ERC20("Mock20", "M20") {
     address deployer = address(4896);
     address Agent1 = address(16);
     address Agent2 = address(32);
