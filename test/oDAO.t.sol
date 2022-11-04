@@ -31,6 +31,22 @@ contract oDao is Test {
         iMR = IMemberRegistry(O.getMemberRegistryAddr());
     }
 
+
+    function _createAnERC20() public returns (address){
+        return address(new M20());
+    }
+
+    function _createBasicMembrane() public returns (uint256 basicMid) {
+        Membrane memory Mmm;
+        address[] memory tokens_ = new address[](1);
+        uint256[] memory balances_ = new uint[](1);
+
+        tokens_[0] = address(BaseE20);
+        balances_[0] = uint256(1000);
+
+        basicMid = O.createMembrane(tokens_, balances_, bytes("veryMeta"));
+    }
+
     function testCreateNewDao() public returns (address Dinstnace) {
         vm.prank(deployer, deployer);
         Dinstnace = address(O.createDAO(address(BaseE20)));
@@ -59,16 +75,7 @@ contract oDao is Test {
         assertTrue(iMR.balanceOf(to_, id) == 1, "isNotCoreMember");
     }
 
-    function createBasicMembrane() public returns (uint256 basicMid) {
-        Membrane memory Mmm;
-        address[] memory tokens_ = new address[](1);
-        uint256[] memory balances_ = new uint[](1);
 
-        tokens_[0] = address(BaseE20);
-        balances_[0] = uint256(1000);
-
-        basicMid = O.createMembrane(tokens_, balances_, bytes("veryMeta"));
-    }
 
     function testCreatesSubDAO() public {
         iInstanceDAO DI = iInstanceDAO(testCreateNewDao());
@@ -77,14 +84,16 @@ contract oDao is Test {
         // vm.prank(deployer,deployer);
         // DI.giveOwnership(Agent2);
 
-        uint256 membraneID = createBasicMembrane();
+        uint256 membraneID = _createBasicMembrane();
         vm.expectRevert();
         address subDAOaddr = O.createSubDAO(membraneID, address(DI));
         vm.prank(deployer, deployer);
         DI.mintMembershipToken(Agent1);
         vm.prank(Agent1);
-        subDAOaddr = O.createSubDAO(membraneID, address(DI));
+        subDAOaddr = address( O.createSubDAO(membraneID, address(DI)));
         assertTrue(subDAOaddr != address(0), "subdao is 0");
+
+        assertTrue(O.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
     }
 
     function testAddMembertoDAO() public {
@@ -100,8 +109,58 @@ contract oDao is Test {
         /// "AlreadyIn()"
         DI.mintMembershipToken(Agent2);
 
-        // vm.expectRevert();
-        // /// unatisfied token balances
-        // assertFalse(DI.mintMembershipToken(address(991)));
+        // unatisfied token balances
+        // assertFalse(DI.mintMembershipToken(address(934591)));
     }
+
+
+    function testChangesMembrane() public {
+        vm.prank(deployer, deployer);
+        address dInstance = address(O.createDAO(address(BaseE20)));
+        DAO = DAOinstance(dInstance);
+        
+        /// active membrane of dInstance
+        uint256 currentMembrane;
+
+        currentMembrane = O.inUseMembraneId(dInstance);
+        assertTrue(currentMembrane == 0, "has unexpected default membrane");
+
+        address[] memory a = new address[](1);
+        uint[] memory u = new uint[](1);
+
+        a[0] =  DAO.baseTokenAddress();
+        u[0] = 101_000;
+        uint membrane1 = O.createMembrane(a,u,bytes("url://deployer_hasaccessmeta"));
+
+
+        vm.prank(Agent3);
+        IERC20 token2 = IERC20(_createAnERC20());
+
+        a[0] =  address(token2);
+        u[0] = 101_000;
+        uint membrane2 = O.createMembrane(a,u,bytes("url://deployer_noaccess"));
+        assertTrue(DAO.owner() == deployer, "owned not deployer");
+
+        vm.expectRevert(); // membraneNotFound();
+        O.setMembrane(dInstance, 2121);
+
+        /// #### 1
+
+        vm.prank(Agent3,Agent3);
+        BaseE20.approve(dInstance, type(uint256).max);
+
+        vm.prank(Agent3,Agent3);        
+        DAO.wrapMint(100000);
+
+        DAO.mintMembershipToken(deployer);
+
+        vm.prank(deployer,deployer);
+        DAO.changeMembrane(membrane1);
+
+        /// #### test exclusive 2
+
+    
+    }
+
+     
 }

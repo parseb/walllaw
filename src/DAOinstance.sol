@@ -26,6 +26,7 @@ contract DAOinstance {
     /// inflation is relative to 
 
     mapping(uint256 => mapping(address => uint256)) agentPreference;
+    mapping(address => uint256[2]) lastAgentExpressedPreference; //[interestRate,membraneId]
     mapping(uint256 => address[]) expressedRatePreference;
     mapping(uint256 => address[]) expressedMembranePreference;
 
@@ -90,34 +91,46 @@ contract DAOinstance {
     function signalInflation(uint percentagePerYear_) external onlyMember returns (uint inflationRate) {
         
         require(percentagePerYear_ <= 100, ">100!");
-        require(agentPreference[percentagePerYear_][msg.sender] == 0, "CannotUpdate");
+        require(agentPreference[percentagePerYear_][_msgSender()] == 0, "CannotUpdate");
+        
+        /// once signaled cannot be changed (simplicity, for now) - swap possible
+        // require(lastAgentExpressedPreference[_msgSender()][0] == 0, "CannotUpdate");
 
-        uint balance = IERC20(internalTokenAddr()).balanceOf(msg.sender);
+        uint balance = IERC20(internalTokenAddr()).balanceOf(_msgSender());
         uint totalSupply = internalToken.totalSupply();
 
         agentPreference[percentagePerYear_][msg.sender] = balance;
         agentPreference[percentagePerYear_][address(0)] += balance;
-        expressedRatePreference[percentagePerYear_].push(msg.sender);
+        expressedRatePreference[percentagePerYear_].push(_msgSender());
+        lastAgentExpressedPreference[_msgSender()][0] = percentagePerYear_;
 
         inflationRate = (totalSupply / agentPreference[percentagePerYear_][address(0)] <= 2) ? _updateGlobalInflation(totalSupply,percentagePerYear_) : baseInflationRate;
 
     }
 
     function changeMembrane(uint membraneId_) external onlyMember() returns (uint membraneID) {
-        if (agentPreference[membraneId_][msg.sender] == 0) revert DAOinstance__CannotUpdate();
+        // if (agentPreference[membraneId_][msg.sender] == 0) revert DAOinstance__CannotUpdate();
         
+        /// once signaled cannot be changed (simplicity, for now) - swap possible
+        // require(lastAgentExpressedPreference[_msgSender()][1] == 0, "CannotUpdate");
+
+
         Membrane memory M = IoDAO(ODAO).getMembrane(membraneId_);
         if (M.tokens.length == 0) revert DAOinstance__InvalidMembrane();
 
-        uint balance = IERC20(internalTokenAddr()).balanceOf(msg.sender);
+        uint balance = internalToken.balanceOf(msg.sender);
+        //uint balance = 12435456356745435634566324532435234534;
         uint totalSupply = internalToken.totalSupply();
+        // uint totalSupply = 12435456356745435634566324234534;
+/// @todo ^ was ist das
+    //     agentPreference[membraneId_][msg.sender] = balance;
+    //     agentPreference[membraneId_][address(0)] += balance;
+    //     expressedMembranePreference[membraneId_].push(msg.sender);
+    //     lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
 
-        agentPreference[membraneId_][msg.sender] = balance;
-        agentPreference[membraneId_][address(0)] += balance;
-        expressedMembranePreference[membraneId_].push(msg.sender);
         
-        require(IoDAO(ODAO).setMembrane(address(this), membraneId_));
-        membraneID = (totalSupply / agentPreference[membraneId_][address(0)] <= 2) ? _updateMembrane(membraneId_) : IoDAO(ODAO).inUseMembraneId(address(this));
+    //     require(IoDAO(ODAO).setMembrane(address(this), membraneId_), "failed to set");
+    //     membraneID = (totalSupply / agentPreference[membraneId_][address(0)] <= 2) ? _updateMembrane(membraneId_) : IoDAO(ODAO).inUseMembraneId(address(this));
     }
 
 
@@ -159,6 +172,20 @@ contract DAOinstance {
 
     }
 
+    /// @notice rollsback last user preference signal proportional to withdrawn amount
+    function rollbackInfluence(address ofWhom_, uint256 amnt_) private {
+
+        if ( (lastAgentExpressedPreference[ofWhom_][0]  +  lastAgentExpressedPreference[ofWhom_][1] ) == 0) return;
+
+        uint cache = agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_];
+        if (cache > 0) { unchecked { agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] -= amnt_; } }
+        if (agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] > cache) lastAgentExpressedPreference[ofWhom_][0] = 0;
+        
+        cache = lastAgentExpressedPreference[ofWhom_][1];
+        if (cache > 0)  { unchecked { agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] -= amnt_; } }
+        if (agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] > cache) lastAgentExpressedPreference[ofWhom_][0] = 0;
+
+    }
 
 
     /// @dev @todo: @security review token wrap
@@ -172,6 +199,8 @@ contract DAOinstance {
     }
 
     function unwrapBurn(uint256 amount_) public returns (bool s) {
+        rollbackInfluence(msg.sender, amount_);
+
         if (!internalToken.unwrapBurn(msg.sender, amount_)) revert DAOinstance__TransferFailed();
 
         s = BaseToken.transfer(msg.sender, amount_);
@@ -209,13 +238,15 @@ contract DAOinstance {
     function _updateGlobalInflation(uint totalSupply_, uint newRate_) private returns (uint inflation) {
         _redistribute();
 
-        /// 
-
+        
         baseInflationRate = newRate_;
         baseInflationPerSec = totalSupply_ * newRate_ / 31449600 / 100;
         
         for( inflation; inflation < expressedRatePreference[newRate_].length;) {
             delete agentPreference[newRate_][expressedRatePreference[newRate_][inflation]];
+
+
+            delete lastAgentExpressedPreference[expressedRatePreference[newRate_][inflation]][0];
             unchecked { ++ inflation;}
         }
             delete agentPreference[newRate_][address(0)];
@@ -227,11 +258,13 @@ contract DAOinstance {
     }
 
     function _updateMembrane(uint id) private returns (uint256 newId) {
-        _redistribute();
-
+        //_redistribute();
+        // _unroll();
         
         for( newId; newId < expressedMembranePreference[id].length;) {
             delete agentPreference[id][expressedMembranePreference[id][newId]];
+            
+            delete lastAgentExpressedPreference[expressedMembranePreference[id][newId]][1];
             unchecked { ++ newId;}
         }
             delete agentPreference[id][address(0)];

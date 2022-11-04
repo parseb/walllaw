@@ -69,7 +69,7 @@ contract ODAO {
         M.tokens = tokens_;
         M.balances = balances_;
         M.meta = meta_;
-        uint256 id = uint256(keccak256(abi.encode(M)));
+        id = uint256(keccak256(abi.encode(M)));
         getMembraneById[id] = M;
 
         emit CreatedMembrane(id, meta_);
@@ -100,7 +100,8 @@ contract ODAO {
     }
 
     function setMembrane(address DAO_, uint256 membraneID_) external returns (bool) {
-        if ( isDAO(msg.sender)  || msg.sender == (iInstanceDAO(DAO_).owner())) revert NotDAOOwner();
+        // if ( ( !(msg.sender == (iInstanceDAO(DAO_).owner()))) ) revert NotDAOOwner();
+
         if (!isDAO(DAO_)) revert aDAOnot();
         if (getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
 

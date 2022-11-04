@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import "solmate/tokens/ERC20.sol";
-import "./interfaces/IERC20.sol";
+// import "./interfaces/IERC20.sol";
 
 /// @notice Minimalist and gas efficient standard ERC1155 implementation.
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC1155.sol)
@@ -27,10 +27,12 @@ contract DAO20 is ERC20 {
     /// Only Owner //////////
     function wrapMint(address to, uint256 amt) external OnlyOwner returns (bool) {
         _mint(to, amt);
+        return true;
     }
 
     function unwrapBurn(address from, uint256 amt) external OnlyOwner returns (bool) {
         _burn(from, amt);
+        return true;
     }
 
     /// ////////////////////
@@ -60,5 +62,12 @@ contract DAO20 is ERC20 {
         return true;
     }
 
+    // function _balanceOf(address who_) external returns (uint) {
+    //     return balanceOf[who_];
+    // }
+
+    // function _totalSupply() external returns (uint) {
+    //     return this.totalSupply;
+    // }
 
 }
