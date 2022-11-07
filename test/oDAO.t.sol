@@ -69,13 +69,6 @@ contract oDao is Test {
         assertTrue(DAO.owner() == Agent1);
     }
 
-    function sudoMintMembership(address DAO_, address to_) public {
-        uint256 id = uint160(bytes20(DAO_));
-        iMR.makeMember(to_, id);
-        assertTrue(iMR.balanceOf(to_, id) == 1, "isNotCoreMember");
-    }
-
-
 
     function testCreatesSubDAO() public {
         iInstanceDAO DI = iInstanceDAO(testCreateNewDao());
@@ -143,21 +136,62 @@ contract oDao is Test {
 
         vm.expectRevert(); // membraneNotFound();
         O.setMembrane(dInstance, 2121);
-
+        
+        O.setMembrane(dInstance, membrane1);
+        assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
         /// #### 1
 
         vm.prank(Agent3,Agent3);
         BaseE20.approve(dInstance, type(uint256).max);
 
         vm.prank(Agent3,Agent3);        
-        DAO.wrapMint(100000);
+        DAO.wrapMint(10000099999999999);
 
-        DAO.mintMembershipToken(deployer);
+        vm.prank(address(343), address(343));
+        DAO.mintMembershipToken(Agent3);
 
-        vm.prank(deployer,deployer);
+        assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
+        vm.prank(Agent3,Agent3);
         DAO.changeMembrane(membrane1);
+        assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
 
-        /// #### test exclusive 2
+        //// basic interest rate flip
+        uint newInteresRate;
+        console.log("##############################################");
+        vm.prank(Agent1,Agent1);
+        vm.expectRevert(); /// DAOinstance__NotMember()
+        newInteresRate = DAO.signalInflation(5);
+
+        vm.prank(Agent3,Agent3);
+        newInteresRate = DAO.signalInflation(5);
+        assertTrue(DAO.baseInflationRate() == 5, "inconsistent");
+        assertTrue(DAO.baseInflationPerSec() != 0, "not persec 0");
+
+        IERC20 internalT = IERC20(DAO.internalToken());
+        // assertTrue(internalT.totalSupply() == 100000);
+
+
+        vm.startPrank(Agent1,Agent1);
+        BaseE20.approve(dInstance, type(uint256).max);
+        DAO.wrapMint(3144960000*10000000);
+        vm.stopPrank();
+
+        // assertTrue(DAO.baseInflationPerSec() != 0, "not persec 0");
+        
+
+        vm.prank(Agent3,Agent3);
+        vm.expectRevert(); // [FAIL. Reason: >100!] 
+        newInteresRate = DAO.signalInflation(101);
+        DAO.mintMembershipToken(Agent1);
+
+
+        vm.prank(Agent1,Agent1);
+        newInteresRate = DAO.signalInflation(0);
+    
+        assertTrue(DAO.baseInflationRate() == 0, "inconsistent");
+        assertTrue(DAO.baseInflationPerSec() == 0, "not persec 0");
+        
+        /// #### test tipping point 
 
     
     }

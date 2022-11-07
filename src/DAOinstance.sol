@@ -8,12 +8,11 @@ import "./DAO20.sol";
 
 contract DAOinstance {
     uint256 public baseID;
-    uint256 baseInflationRate;
-    uint256 baseInflationPerSec;
-
+    uint256 public baseInflationRate;
+    uint256 public baseInflationPerSec;
     uint256 public localID;
+
     address public ODAO;
-    address public unwrapper;
 
     mapping(address => mapping(address => uint256[2])) userSignal; /// # EOA => subunit => [percentage, amt]
 
@@ -35,7 +34,6 @@ contract DAOinstance {
 
     IERC20 public BaseToken;
     IMemberRegistry iMR;
-
     DAO20 public internalToken;
 
     constructor(address BaseToken_, address owner_, address MemberRegistry_) {
@@ -47,6 +45,8 @@ contract DAOinstance {
         ownerStore = [owner_, owner_];
         iMR = IMemberRegistry(MemberRegistry_);
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
+
+        subunitPerSec[address(this)][1] = block.timestamp;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -58,6 +58,7 @@ contract DAOinstance {
     event AdjustedRate();
     event UserPreferedGuidance();
     event GlobalInflationUpdated(uint RatePerYear, uint perSecInflation);
+    event inflationaryMint(uint amount);
 
     /*//////////////////////////////////////////////////////////////
                                  errors
@@ -71,6 +72,7 @@ contract DAOinstance {
     error DAOinstance__CannotUpdate();
     error DAOinstance__LenMismatch();
     error DAOinstance__Over100();
+    error DAOinstance__nonR();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -108,6 +110,8 @@ contract DAOinstance {
 
     }
 
+
+
     function changeMembrane(uint membraneId_) external onlyMember() returns (uint membraneID) {
         // if (agentPreference[membraneId_][msg.sender] == 0) revert DAOinstance__CannotUpdate();
         
@@ -127,8 +131,8 @@ contract DAOinstance {
         lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
 
         
-        require(IoDAO(ODAO).setMembrane(address(this), membraneId_), "failed to set");
-        membraneID = (totalSupply / agentPreference[membraneId_][address(0)] <= 2) ? _updateMembrane(membraneId_) : IoDAO(ODAO).inUseMembraneId(address(this));
+        // require(IoDAO(ODAO).setMembrane(address(this), membraneId_), "failed to set");
+        membraneID = ( (totalSupply / ( agentPreference[membraneId_][address(0)] + 1) <= 2)) ? _updateMembrane(membraneId_) : IoDAO(ODAO).inUseMembraneId(address(this));
     }
 
 
@@ -148,12 +152,12 @@ contract DAOinstance {
         uint perSec;
         for (i; i< subDAOs.length;) {
             uint submittedValue = cronoOrderedDistributionAmts[i];
+            if ( submittedValue == subunitPerSec[subDAOs[i]][0] ) continue;
+
             address entity = subDAOs[i];
             uint prevValue = subunitPerSec[entity][0];
             uint senderForce = IERC20(internalTokenAddr()).balanceOf(_msgSender());
 
-
-            if ( submittedValue == subunitPerSec[subDAOs[i]][0] ) continue;
             unchecked { centum += cronoOrderedDistributionAmts[i]; }
             if (centum > 100) revert DAOinstance__Over100();
             
@@ -161,7 +165,7 @@ contract DAOinstance {
             perSec =  ( IERC20(internalTokenAddr()).balanceOf(msg.sender) * 100 / internalToken.totalSupply() ) * perSec / 100;
 
 
-            subunitPerSec[entity][0] = ( subunitPerSec[entity][0] - userSignal[_msgSender()][entity][1] ) + perSec;
+            subunitPerSec[entity][0] = ( subunitPerSec[entity][0] - userSignal[_msgSender()][entity][1] ) + perSec; /// @dev fuzz
             userSignal[_msgSender()][entity][1] = perSec;
             userSignal[_msgSender()][entity][0] = submittedValue;
 
@@ -170,6 +174,7 @@ contract DAOinstance {
 
     }
 
+    /// @dev reconsider
     /// @notice rollsback last user preference signal proportional to withdrawn amount
     function rollbackInfluence(address ofWhom_, uint256 amnt_) private {
 
@@ -234,11 +239,14 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     function _updateGlobalInflation(uint totalSupply_, uint newRate_) private returns (uint inflation) {
-        _redistribute();
+        // _redistribute();
 
         
         baseInflationRate = newRate_;
         baseInflationPerSec = totalSupply_ * newRate_ / 31449600 / 100;
+
+        subunitPerSec[address(this)][0] = baseInflationPerSec;
+
         
         for( inflation; inflation < expressedRatePreference[newRate_].length;) {
             delete agentPreference[newRate_][expressedRatePreference[newRate_][inflation]];
@@ -274,11 +282,26 @@ contract DAOinstance {
         newId = id;
     }
 
+    function mintInflation() public returns (uint256 amountToMint) {
+        if (subunitPerSec[address(this)][1] == block.timestamp) revert DAOinstance__nonR();
+
+        amountToMint = ((block.timestamp - subunitPerSec[address(this)][1]) * subunitPerSec[address(this)][0]);
+        require(internalToken.inflationaryMint(amountToMint));
+        subunitPerSec[address(this)][1] = block.timestamp;
+
+        emit inflationaryMint(amountToMint);
+    }
+
+    function redistributeSubDAO(address subDAO_) public {
+
+    }
+
     function _redistribute() private returns (bool) {
         /// set internal token allowance to owner - subdao
         /// 
 
         /// update inflation
+        mintInflation();
 
         /// iterate and allow to subdaos
     }
@@ -331,6 +354,10 @@ contract DAOinstance {
 
     function baseTokenAddress() public view returns (address) {
         return address(BaseToken);
+    }
+
+    function getParent() public view returns (address) {
+        return IoDAO(ODAO).getParentDAO(address(this));
     }
 
     function getUserReDistribution() public view returns (uint[] memory allocation) {

@@ -37,6 +37,12 @@ contract DAO20 is ERC20 {
         return true;
     }
 
+    function inflationaryMint(uint amt) external OnlyOwner returns (bool) {
+        _mint(owner, amt);
+
+        return true;
+    }
+
     /// ////////////////////
 
     /// Override //////////////
