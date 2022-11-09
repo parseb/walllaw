@@ -15,7 +15,7 @@ import "./mocks/mockERC20.sol";
 contract redistributiveInflation is Test {
     ODAO O;
     IERC20 BaseE20;
-    IMemberRegistry iMR; 
+    IMemberRegistry iMR;
 
     DAOinstance DAO;
 
@@ -29,12 +29,9 @@ contract redistributiveInflation is Test {
         O = new ODAO();
         BaseE20 = IERC20(address(new M20()));
         iMR = IMemberRegistry(O.getMemberRegistryAddr());
-
-        
     }
 
-
-    function _createAnERC20() public returns (address){
+    function _createAnERC20() public returns (address) {
         return address(new M20());
     }
 
@@ -53,7 +50,7 @@ contract redistributiveInflation is Test {
         vm.prank(deployer, deployer);
         address dInstance = address(O.createDAO(address(BaseE20)));
         DAO = DAOinstance(dInstance);
-        
+
         /// active membrane of dInstance
         uint256 currentMembrane;
 
@@ -61,49 +58,46 @@ contract redistributiveInflation is Test {
         assertTrue(currentMembrane == 0, "has unexpected default membrane");
 
         address[] memory a = new address[](1);
-        uint[] memory u = new uint[](1);
+        uint256[] memory u = new uint[](1);
 
-        a[0] =  DAO.baseTokenAddress();
+        a[0] = DAO.baseTokenAddress();
         u[0] = 101_000;
-        uint membrane1 = O.createMembrane(a,u,bytes("url://deployer_hasaccessmeta"));
+        uint256 membrane1 = O.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
 
         O.setMembrane(dInstance, membrane1);
 
         assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
-
     }
 
     //// #######################################
 
     function testMintsInflation() public {
         _context();
-        uint startInflation = DAO.baseInflationRate();
-        uint startPerSec = DAO.baseInflationPerSec(); 
+        uint256 startInflation = DAO.baseInflationRate();
+        uint256 startPerSec = DAO.baseInflationPerSec();
         IERC20 internalT = IERC20(DAO.internalToken());
         IERC20 baseT = IERC20(DAO.baseTokenAddress());
 
-        assertTrue(startInflation == ( DAO.baseID() % 100 ), "unexpected start % infl");
+        assertTrue(startInflation == (DAO.baseID() % 100), "unexpected start % infl");
         assertTrue(startPerSec == 0, "not 0");
         assertTrue(iMR.balanceOf(Agent1, DAO.baseID()) == 0, "agent1 already member");
         assertTrue(DAO.mintMembershipToken(Agent1), "mint failed");
 
         assertTrue(internalT.balanceOf(Agent1) == 0, "has internal balance");
         vm.startPrank(Agent1);
-        assertTrue( baseT.approve(address(DAO), type(uint256).max), "approve f");
+        assertTrue(baseT.approve(address(DAO), type(uint256).max), "approve f");
         DAO.wrapMint(10 * 1 ether);
         assertTrue(internalT.balanceOf(Agent1) != 0, "does not have internal balance");
 
-        uint newInflation = DAO.signalInflation(2);
+        uint256 newInflation = DAO.signalInflation(2);
         assertTrue(newInflation == DAO.baseInflationRate(), "unexpected inflation");
         vm.stopPrank();
-        
-        assertTrue( startInflation != DAO.baseInflationRate(), "samo1");
-        assertTrue( startPerSec != DAO.baseInflationPerSec(), "samo2");
+
+        assertTrue(startInflation != DAO.baseInflationRate(), "samo1");
+        assertTrue(startPerSec != DAO.baseInflationPerSec(), "samo2");
         skip(2000);
-        
-        uint minted = DAO.mintInflation();
-        assertTrue(minted == (DAO.baseInflationPerSec() * 2000),"math went wrong");
 
+        uint256 minted = DAO.mintInflation();
+        assertTrue(minted == (DAO.baseInflationPerSec() * 2000), "math went wrong");
     }
-
 }

@@ -7,7 +7,6 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
 
-
 contract ODAO {
     mapping(uint256 => address) daoOfId;
     mapping(address => address[]) daosOfToken;
@@ -16,8 +15,6 @@ contract ODAO {
     mapping(address => uint256) usesMembrane;
     mapping(address => address) childParentDAO;
     /// stores in-use membrane of DAO instance
-    
-
 
     IMemberRegistry MR;
 
@@ -85,7 +82,7 @@ contract ODAO {
 
         iInstanceDAO instance = iInstanceDAO(parentDAO_);
 
-        uint256 entityID = instance.incrementSubDAO() * instance.baseID(); 
+        uint256 entityID = instance.incrementSubDAO() * instance.baseID();
 
         subDAOaddr = createDAO(internalT);
 
@@ -138,20 +135,19 @@ contract ODAO {
         return address(MR);
     }
 
-    function inUseMembraneId(address DAOaddress_) public view returns (uint ID) {
+    function inUseMembraneId(address DAOaddress_) public view returns (uint256 ID) {
         return usesMembrane[DAOaddress_];
     }
- 
+
     function getInUseMembraneOfDAO(address DAOAddress_) public view returns (Membrane memory) {
         return getMembraneById[usesMembrane[DAOAddress_]];
     }
 
     function getParentDAO(address child_) public view returns (address) {
         return childParentDAO[child_];
-    } 
+    }
 
     function getSubDAOsOf(address parent) external view returns (address[] memory) {
         return daosOfToken[parent];
     }
-
 }

@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import "./IMember1155.sol";
 
 interface IoDAO {
-
     function isDAO(address toCheck) external view returns (bool);
 
     function makeMember(address who_, uint256 id_, bytes memory tokenData) external returns (uint256);
@@ -19,12 +18,11 @@ interface IoDAO {
         external
         returns (uint256);
 
-    function inUseMembraneId(address DAOaddress_) external view returns (uint Id);
-    
+    function inUseMembraneId(address DAOaddress_) external view returns (uint256 Id);
+
     function getInUseMembraneOfDAO(address DAOAddress_) external view returns (Membrane memory);
-    
+
     function getParentDAO(address child_) external view returns (address);
 
     function getSubDAOsOf(address parent) external view returns (address[] memory);
-
 }

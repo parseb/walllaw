@@ -28,7 +28,7 @@ interface iInstanceDAO {
     /// only owner & majority
     function setPerSecondInterestRate(uint256 ratePerSec) external returns (bool);
 
-    function changeMembrane(uint membraneId_) external returns (uint membraneID);
+    function changeMembrane(uint256 membraneId_) external returns (uint256 membraneID);
 
     function giveOwnership(address newOwner_) external returns (address);
 }

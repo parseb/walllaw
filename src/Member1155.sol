@@ -8,7 +8,6 @@ import "./interfaces/iInstanceDAO.sol";
 contract MemberRegistry is ERC1155 {
     IoDAO oDAO;
 
-
     mapping(uint256 => bytes) tokenUri;
 
     constructor() {

@@ -37,9 +37,8 @@ contract DAO20 is ERC20 {
         return true;
     }
 
-    function inflationaryMint(uint amt) external OnlyOwner returns (bool) {
+    function inflationaryMint(uint256 amt) external OnlyOwner returns (bool) {
         _mint(owner, amt);
-
         return true;
     }
 
@@ -51,22 +50,17 @@ contract DAO20 is ERC20 {
     /// there's some potential attack vectors on inflation and redistributive signals (re-enterange like)
     /// two options: embrace the messiness |OR| allow transfers only to owner and sub-entities
 
-
     function transfer(address to, uint256 amount) public override returns (bool) {
         /// limit transfers
         require(msg.sender == owner, "msg sender not owner");
-        return super.transfer(to,amount);
+        return super.transfer(to, amount);
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
         /// limit transfers
         require(msg.sender == owner, "msg sender not owner");
         if (from == owner) _mint(owner, amount);
-        require(super.transferFrom(from,to,amount));
+        require(super.transferFrom(from, to, amount));
         return true;
     }
 
@@ -77,5 +71,4 @@ contract DAO20 is ERC20 {
     // function _totalSupply() external returns (uint) {
     //     return this.totalSupply;
     // }
-
 }
