@@ -16,5 +16,6 @@ contract M20 is ERC20("Mock20", "M20") {
         _mint(Agent1, 100_000 ether);
         _mint(Agent2, 200_000 ether);
         _mint(Agent3, 300_000 ether);
+        _mint(address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), 200_000 ether);
     }
 }

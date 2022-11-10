@@ -1,0 +1,7 @@
+forge create  --rpc-url http://127.0.0.1:8545 --private-key $DEFAULT_PVK_ANVIL ODAO
+_________
+
+forge create  --rpc-url http://127.0.0.1:8545 --private-key $DEFAULT_PVK_ANVIL M20
+
+__________
+

@@ -31,4 +31,6 @@ interface iInstanceDAO {
     function changeMembrane(uint256 membraneId_) external returns (uint256 membraneID);
 
     function giveOwnership(address newOwner_) external returns (address);
+
+    function instantiatedAt() external returns (uint256);
 }

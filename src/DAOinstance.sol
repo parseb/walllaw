@@ -40,9 +40,11 @@ contract DAOinstance {
     IERC20 public BaseToken;
     IMemberRegistry iMR;
     DAO20 public internalToken;
+    uint256 public instantiatedAt;
 
     constructor(address BaseToken_, address owner_, address MemberRegistry_) {
         ODAO = msg.sender;
+        instantiatedAt = block.timestamp;
         BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
         baseInflationRate = baseID % 100;
