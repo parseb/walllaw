@@ -10,6 +10,8 @@ contract MemberRegistry is ERC1155 {
 
     mapping(uint256 => bytes) tokenUri;
 
+    mapping(uint256 => uint256) uidTotalSupply;
+
     constructor() {
         oDAO = IoDAO(msg.sender);
     }
@@ -18,15 +20,15 @@ contract MemberRegistry is ERC1155 {
                                  errors
     //////////////////////////////////////////////////////////////*/
 
-    error Untransferable();
-    error onlyOdao();
-    error UnregisteredDAO();
-    error UnauthorizedID();
-    error InvalidMintID();
-    error AlreadyIn();
+    error MR1155_Untransferable();
+    error MR1155_onlyOdao();
+    error MR1155_UnregisteredDAO();
+    error MR1155_UnauthorizedID();
+    error MR1155_InvalidMintID();
+    error MR1155_AlreadyIn();
 
     modifier onlyDAO() {
-        if (!oDAO.isDAO(msg.sender)) revert UnregisteredDAO();
+        if (!oDAO.isDAO(msg.sender)) revert MR1155_UnregisteredDAO();
         _;
     }
 
@@ -46,11 +48,11 @@ contract MemberRegistry is ERC1155 {
         /// the id_ of any subunit  is a multiple of DAO address
         if (!(id_ % uint160(bytes20(msg.sender)) == 0)) {
             /// @dev
-            revert InvalidMintID();
+            revert MR1155_InvalidMintID();
         }
 
         /// does not yet have member token
-        if (balanceOf[who_][id_] > 0) revert AlreadyIn();
+        if (balanceOf[who_][id_] > 0) revert MR1155_AlreadyIn();
 
         /// if first member to join, fetch cell metadata
         /// @todo get membrane meta or dao specific metadata
@@ -79,13 +81,50 @@ contract MemberRegistry is ERC1155 {
         public
         override
     {
-        if (from != address(0) || to != address(0)) revert Untransferable();
+        if (from != address(0) || to != address(0)) revert MR1155_Untransferable();
+
+        super.safeTransferFrom(from, to, id, amount, data);
     }
 
-    /// misc
+    /// @notice custom burn for gCheck functionality
+    function gCheckBurn(address who_) external onlyDAO returns (bool) {
+        uint256 id_ = uint160(bytes20(msg.sender));
+        _burn(who_, id_, balanceOf[who_][id_]);
+        return balanceOf[who_][id_] == 0;
+    }
 
-    // /// @dev duplicated
-    // function wTokenId(address baseTokenAddr) public pure returns (uint256) {
-    //     return uint160(bytes20(baseTokenAddr)) - 1;
-    // }
+    function howManyTotal(uint256 id_) public view returns (uint256) {
+        return uidTotalSupply[id_];
+    }
+
+    function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal override {
+        super._mint(to, id, amount, data);
+        uidTotalSupply[id] += 1;
+    }
+
+    function _burn(address from, uint256 id, uint256 amount) internal override {
+        super._burn(from, id, amount);
+        uidTotalSupply[id] -= 1;
+    }
+
+    function _batchBurn(address from, uint256[] memory ids, uint256[] memory amounts) internal override {
+        revert("_batchBurn");
+    }
+
+    function _batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override
+    {
+        revert("_batchMint");
+    }
+
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) public override {
+        revert("safeBatchTransferFrom");
+    }
 }

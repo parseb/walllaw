@@ -39,9 +39,9 @@ contract ODAO {
 
     event newDAOCreated(address indexed DAO, address indexed token_);
     event isNowMember(address indexed who, uint256 indexed where, address indexed DAO);
-    event subSetCreated(uint256 subUnitId, uint256 parentUnitId);
     event CreatedMembrane(uint256 id, bytes metadata);
     event DAOchangedMembrane(address DAO, uint256 membrane);
+    event subDAOCreated(address indexed parendDAO, address indexed subDAO, address indexed creator);
 
     /*//////////////////////////////////////////////////////////////
                                  public
@@ -62,6 +62,7 @@ contract ODAO {
         public
         returns (uint256 id)
     {
+        /// @dev @security erc165 check
         Membrane memory M;
         M.tokens = tokens_;
         M.balances = balances_;
@@ -75,25 +76,32 @@ contract ODAO {
     /// @notice enshrines exclusionary sub-unit
     /// @param membraneID_: border materiality
     /// @param parentDAO_: parent
+    /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddr();
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember();
         if (daosOfToken[internalT].length > 99) revert SubDAOLimitReached();
+        /// @dev membership sufficient for base layer grieffing attack
 
-        iInstanceDAO instance = iInstanceDAO(parentDAO_);
+        iInstanceDAO parentInstance = iInstanceDAO(parentDAO_);
+        iInstanceDAO childInstance;
 
-        uint256 entityID = instance.incrementSubDAO() * instance.baseID();
+        uint256 entityID = parentInstance.incrementSubDAO() * parentInstance.baseID();
 
         subDAOaddr = createDAO(internalT);
+        childInstance = iInstanceDAO(subDAOaddr);
 
         usesMembrane[subDAOaddr] = membraneID_;
         daoOfId[entityID] = parentDAO_;
         daosOfToken[internalT].push(subDAOaddr);
 
         childParentDAO[subDAOaddr] = parentDAO_;
-        instance.giveOwnership(msg.sender);
-        // require( iInstanceDAO(subDAOaddr).owner()  == msg.sender, "not owner" );
-        //  require( IERC20(iInstanceDAO(subDAOaddr).internalTokenAddr()).owner() == address(subDAOaddr), "DAO not owner");
+        parentInstance.giveOwnership(msg.sender);
+
+        childInstance.makeOwnerMemberOnCreateForEndpointFunctionality();
+
+        emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
+
     }
 
     function setMembrane(address DAO_, uint256 membraneID_) external returns (bool) {
@@ -147,7 +155,7 @@ contract ODAO {
         return childParentDAO[child_];
     }
 
-    function getSubDAOsOf(address parent) external view returns (address[] memory) {
+    function getDAOsOfToken(address parent) external view returns (address[] memory) {
         return daosOfToken[parent];
     }
 }

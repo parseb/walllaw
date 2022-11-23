@@ -12,6 +12,8 @@ interface IMemberRegistry {
 
     function _wrapMint(address baseToken_, uint256 amount_, address to_) external returns (bool);
     function _unwrapBurn(address baseToken_, uint256 amount_, address from_) external returns (bool);
+    function gCheckBurn(address who_) external returns (bool);
+    function howManyTotal(uint256 id_) external view returns (uint256);
 
     //////////////////////// ERC1155
 

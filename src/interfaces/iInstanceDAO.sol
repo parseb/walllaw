@@ -33,4 +33,8 @@ interface iInstanceDAO {
     function giveOwnership(address newOwner_) external returns (address);
 
     function instantiatedAt() external returns (uint256);
+
+    function gCheck(address who_) external returns (bool);
+
+    function makeOwnerMemberOnCreateForEndpointFunctionality() external returns (bool);
 }

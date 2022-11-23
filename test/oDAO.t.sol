@@ -60,6 +60,8 @@ contract oDao is Test {
         testCreateNewDao();
 
         assertTrue(DAO.owner() == deployer);
+        vm.prank(deployer, deployer);
+        BaseE20.approve(address(DAO), type(uint256).max - 1);
         vm.prank(deployer);
         DAO.giveOwnership(Agent1);
         assertFalse(DAO.owner() == Agent1);
@@ -185,6 +187,46 @@ contract oDao is Test {
         assertTrue(DAO.baseInflationRate() == 0, "inconsistent");
         assertTrue(DAO.baseInflationPerSec() == 0, "not persec 0");
 
+        /// gCheck
+
+        assertTrue(DAO.gCheck(Agent1), "expected Agent1 to be g");
+        assertFalse(DAO.gCheck(address(33335433)));
+
+        IERC20 token3 = IERC20(_createAnERC20());
+        a[0] = address(token3);
+        u[0] = 4294967294;
+        uint256 membrane3 = O.createMembrane(a, u, bytes("url://deployer_noaccess"));
+
+        vm.prank(Agent1, Agent1);
+        token3.approve(address(this), type(uint256).max);
+        token3.transferFrom(Agent1, address(111), token3.balanceOf(Agent1));
+        assertTrue(token3.balanceOf(Agent1) == 0, "still has banalce");
+
+        vm.prank(Agent1, Agent1);
+        DAO.changeMembrane(membrane3);
+
+        assertFalse(DAO.gCheck(Agent1), "expected Agent1 to be g");
+        assertFalse(DAO.gCheck(address(111)));
+
         /// #### test tipping point
     }
+
+    // function testCreatesMultipleSubDAO() public {
+    //     iInstanceDAO DI = iInstanceDAO(testCreateNewDao());
+
+    //     uint256 membraneID = _createBasicMembrane();
+    //     vm.expectRevert();
+    //     address subDAOaddr = O.createSubDAO(membraneID, address(DI));
+    //     vm.prank(deployer, deployer);
+    //     DI.mintMembershipToken(Agent1);
+    //     vm.prank(Agent1);
+    //     subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
+    //     assertTrue(subDAOaddr != address(0), "subdao is 0");
+
+    //     vm.prank(Agent1);
+    //     subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
+    //     assertTrue(subDAOaddr != address(0), "subdao is 0");
+
+    //     assertTrue(O.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
+    // }
 }

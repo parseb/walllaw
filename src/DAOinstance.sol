@@ -8,6 +8,7 @@ import "./DAO20.sol";
 
 contract DAOinstance {
     uint256 public baseID;
+
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
     uint256 public localID;
@@ -52,7 +53,6 @@ contract DAOinstance {
         ownerStore = [owner_, owner_];
         iMR = IMemberRegistry(MemberRegistry_);
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
-
         subunitPerSec[address(this)][1] = block.timestamp;
     }
 
@@ -66,6 +66,7 @@ contract DAOinstance {
     event UserPreferedGuidance();
     event GlobalInflationUpdated(uint256 RatePerYear, uint256 perSecInflation);
     event inflationaryMint(uint256 amount);
+    event gCheckKick(address indexed who);
 
     /*//////////////////////////////////////////////////////////////
                                  errors
@@ -80,6 +81,8 @@ contract DAOinstance {
     error DAOinstance__LenMismatch();
     error DAOinstance__Over100();
     error DAOinstance__nonR();
+    error DAOinstance__NotEndpoint();
+    error DAOinstance__OnlyODAO();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -92,6 +95,11 @@ contract DAOinstance {
 
     modifier onlyMember() {
         if (iMR.balanceOf(msg.sender, baseID) == 0) revert DAOinstance__NotMember();
+        _;
+    }
+
+    modifier onlyEndpoint() {
+        if (iMR.howManyTotal(baseID) > 1) revert DAOinstance__NotEndpoint();
         _;
     }
 
@@ -220,33 +228,59 @@ contract DAOinstance {
 
         if (!internalToken.unwrapBurn(msg.sender, amount_)) revert DAOinstance__TransferFailed();
 
-        s = BaseToken.transfer(msg.sender, amount_);
+        // = BaseToken.transfer(msg.sender, amount_);
+        s = BaseToken.transferFrom(ownerStore[1], msg.sender, amount_);
 
         // _balanceReWeigh(amount_);
+        /// @dev q: shoudl unwrapping be tied to exit module
         require(s);
     }
 
     function mintMembershipToken(address to_) external returns (bool s) {
-        Membrane memory M = IoDAO(ODAO).getInUseMembraneOfDAO(address(this));
-
-        uint256 i;
-        s = true;
-        for (i; i < M.tokens.length;) {
-            s = s && (IERC20(M.tokens[i]).balanceOf(to_) >= M.balances[i]);
-            unchecked {
-                ++i;
-            }
-        }
-
+        s = _checkG(to_);
         if (!s) revert DAOinstance__Unqualified();
         s = iMR.makeMember(to_, baseID) && s;
     }
 
+    //// @notice burns membership token of check entity if ineligible
+    /// @param who_ checked address
+    function gCheck(address who_) external returns (bool s) {
+        if (iMR.balanceOf(who_, baseID) == 0) return false;
+        s = _checkG(who_);
+        if (s) return true;
+        if (!s) iMR.gCheckBurn(who_);
+        emit gCheckKick(who_);
+    }
+
+    function _checkG(address _custard) private returns (bool s) {
+        Membrane memory M = IoDAO(ODAO).getInUseMembraneOfDAO(address(this));
+        uint256 i;
+        s = true;
+        for (i; i < M.tokens.length;) {
+            s = s && (IERC20(M.tokens[i]).balanceOf(_custard) >= M.balances[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
     /// @notice ownership change function. execute twice
+
     function giveOwnership(address newOwner_) external onlyOwner returns (address) {
         if (msg.sender == ODAO) ownerStore[0] = newOwner_;
+        address prevOwner = ownerStore[1];
+
         ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
+
+        if (msg.sender != ODAO && ownerStore[1] != prevOwner) {
+            bool s = BaseToken.transferFrom(prevOwner, ownerStore[1], BaseToken.balanceOf(prevOwner));
+            if (!s) revert DAOinstance__Unqualified();
+        }
         return ownerStore[1];
+    }
+
+    function makeOwnerMemberOnCreateForEndpointFunctionality() external returns (bool) {
+        if (msg.sender != ODAO) revert DAOinstance__OnlyODAO();
+        return iMR.makeMember(owner(), baseID);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -308,7 +342,13 @@ contract DAOinstance {
         emit inflationaryMint(amountToMint);
     }
 
-    function redistributeSubDAO(address subDAO_) public {}
+    function redistributeSubDAO(address subDAO_) public returns (bool s) {
+        _redistribute();
+        uint256 amt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
+
+        internalToken.transfer(subDAO_, amt);
+        subunitPerSec[subDAO_][1] = block.timestamp;
+    }
 
     function _redistribute() private returns (bool) {
         /// set internal token allowance to owner - subdao
