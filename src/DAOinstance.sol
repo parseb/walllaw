@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 // import "./interfaces/IERC20.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
+import "./utils/Address.sol";
 import "./DAO20.sol";
 
 contract DAOinstance {
@@ -47,13 +48,15 @@ contract DAOinstance {
         ODAO = msg.sender;
         instantiatedAt = block.timestamp;
         BaseToken = IERC20(BaseToken_);
-        baseID = uint160(bytes20(address(this)));
-        baseInflationRate = baseID % 100;
+        baseID = uint160(bytes20(address(this))); 
+        baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
         localID = 1;
         ownerStore = [owner_, owner_];
         iMR = IMemberRegistry(MemberRegistry_);
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
         subunitPerSec[address(this)][1] = block.timestamp;
+
+        emit NewInstance(address(this), BaseToken_, owner_);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -67,6 +70,7 @@ contract DAOinstance {
     event GlobalInflationUpdated(uint256 RatePerYear, uint256 perSecInflation);
     event inflationaryMint(uint256 amount);
     event gCheckKick(address indexed who);
+    event NewInstance(address indexed at, address indexed baseToken, address owner);
 
     /*//////////////////////////////////////////////////////////////
                                  errors
@@ -141,12 +145,13 @@ contract DAOinstance {
         expressedMembranePreference[membraneId_].push(msg.sender);
         lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
 
-        // require(IoDAO(ODAO).setMembrane(address(this), membraneId_), "failed to set");
         membraneID = ((totalSupply / (agentPreference[membraneId_][address(0)] + 1) <= 2))
             ? _updateMembrane(membraneId_)
             : IoDAO(ODAO).inUseMembraneId(address(this));
     }
 
+
+    /// @dev max length of cronoOrderedDistributionAmts is 100
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external onlyMember returns (bool s) {
         s = _redistribute();
         /// cronoOrderedDistributionAmts
@@ -173,8 +178,7 @@ contract DAOinstance {
             if (centum > 100) revert DAOinstance__Over100();
 
             perSec = submittedValue * baseInflationPerSec / 100;
-            perSec =
-                (IERC20(internalTokenAddr()).balanceOf(msg.sender) * 100 / internalToken.totalSupply()) * perSec / 100;
+            perSec = ( senderForce * 100 / internalToken.totalSupply() ) * perSec / 100;
 
             subunitPerSec[entity][0] = (subunitPerSec[entity][0] - userSignal[_msgSender()][entity][1]) + perSec;
 
@@ -387,10 +391,20 @@ contract DAOinstance {
         return localID;
     }
 
+    function multicall(bytes[] calldata data) external virtual returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            results[i] = Address.functionDelegateCall(address(this), data[i]);
+        }
+        return results;
+    }
+
     function _msgSender() private returns (address) {
         ///
         return msg.sender;
     }
+
+
 
     /*//////////////////////////////////////////////////////////////
                                  VIEW

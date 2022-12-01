@@ -37,7 +37,7 @@ contract ODAO {
                                  events
     //////////////////////////////////////////////////////////////*/
 
-    event newDAOCreated(address indexed DAO, address indexed token_);
+    event newDAOCreated(address indexed DAO, address indexed token);
     event isNowMember(address indexed who, uint256 indexed where, address indexed DAO);
     event CreatedMembrane(uint256 id, bytes metadata);
     event DAOchangedMembrane(address DAO, uint256 membrane);
@@ -53,8 +53,6 @@ contract ODAO {
         daosOfToken[BaseTokenAddress_].push(newDAO);
         /// @dev make sure membership determination (allegience) accounts for overwrites
         userTokenDAO[msg.sender][BaseTokenAddress_] = newDAO;
-        /// creator in case of subdao
-
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
 
@@ -105,7 +103,6 @@ contract ODAO {
     }
 
     function setMembrane(address DAO_, uint256 membraneID_) external returns (bool) {
-        // if ( ( !(msg.sender == (iInstanceDAO(DAO_).owner()))) ) revert NotDAOOwner();
 
         if (!isDAO(DAO_)) revert aDAOnot();
         if (getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
