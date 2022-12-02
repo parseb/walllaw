@@ -32,10 +32,15 @@ contract DAOinstance {
     /// [address_of_sender(subjective) or address(0)(objective)] - sets internalInflation on majority consensus
     /// inflation is relative to
 
-    mapping(uint256 => mapping(address => uint256)) agentPreference;
+    mapping(uint256 => mapping(address => uint256)) agentPreference; // id-agent-preference
     mapping(address => uint256[2]) lastAgentExpressedPreference; //[interestRate,membraneId]
+
+    /// @dev the below 3 can be bundled
     mapping(uint256 => address[]) expressedRatePreference;
     mapping(uint256 => address[]) expressedMembranePreference;
+    mapping(uint256 => address[]) expressedUriPreference;
+    
+
 
     address[2] private ownerStore;
 
@@ -85,7 +90,8 @@ contract DAOinstance {
     error DAOinstance__LenMismatch();
     error DAOinstance__Over100();
     error DAOinstance__nonR();
-    error DAOinstance__NotEndpoint();
+    error DAOinstance__NotEndpoint1();
+    error DAOinstance__NotEndpoint2();
     error DAOinstance__OnlyODAO();
 
     /*//////////////////////////////////////////////////////////////
@@ -103,7 +109,8 @@ contract DAOinstance {
     }
 
     modifier onlyEndpoint() {
-        if (iMR.howManyTotal(baseID) > 1) revert DAOinstance__NotEndpoint();
+        if (iMR.howManyTotal(baseID) > 1) revert DAOinstance__NotEndpoint1();
+        if (iMR.balanceOf(msg.sender, baseID) == 1) revert  DAOinstance__NotEndpoint2();
         _;
     }
 
@@ -111,6 +118,8 @@ contract DAOinstance {
     function signalInflation(uint256 percentagePerYear_) external onlyMember returns (uint256 inflationRate) {
         require(percentagePerYear_ <= 100, ">100!");
         require(agentPreference[percentagePerYear_][_msgSender()] == 0, "CannotUpdate");
+        if (! (agentPreference[percentagePerYear_][msg.sender] == 0)) revert DAOinstance__CannotUpdate();
+
 
         /// once signaled cannot be changed (simplicity, for now) - swap possible
         // require(lastAgentExpressedPreference[_msgSender()][0] == 0, "CannotUpdate");
@@ -129,10 +138,7 @@ contract DAOinstance {
     }
 
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
-        // if (agentPreference[membraneId_][msg.sender] == 0) revert DAOinstance__CannotUpdate();
-
-        /// once signaled cannot be changed (simplicity, for now) - swap possible
-        // require(lastAgentExpressedPreference[_msgSender()][1] == 0, "CannotUpdate");
+        if (! (agentPreference[membraneId_][msg.sender] == 0)) revert DAOinstance__CannotUpdate();
 
         Membrane memory M = IoDAO(ODAO).getMembrane(membraneId_);
         if (M.tokens.length == 0) revert DAOinstance__InvalidMembrane();
@@ -143,11 +149,30 @@ contract DAOinstance {
         agentPreference[membraneId_][msg.sender] = balance;
         agentPreference[membraneId_][address(0)] += balance;
         expressedMembranePreference[membraneId_].push(msg.sender);
-        lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
+        // lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
 
         membraneID = ((totalSupply / (agentPreference[membraneId_][address(0)] + 1) <= 2))
             ? _updateMembrane(membraneId_)
             : IoDAO(ODAO).inUseMembraneId(address(this));
+    }
+
+    function changeUri(bytes32 uri_) onlyMember external returns ( bytes32 currentUri ) {
+        
+        uint256 uriAsId = uint256(keccak256(abi.encode(uri_)));
+        if (! (agentPreference[uriAsId][msg.sender] == 0)) revert DAOinstance__CannotUpdate();
+
+
+        uint256 balance = internalToken.balanceOf(msg.sender);
+        uint256 totalSupply = internalToken.totalSupply();
+
+        agentPreference[uriAsId][msg.sender] = balance;
+        agentPreference[uriAsId][address(0)] += balance;
+        expressedUriPreference[uriAsId].push(msg.sender);
+        //lastAgentExpressedPreference[_msgSender()][1] = uri_;
+
+        currentUri = ((totalSupply /  agentPreference[uriAsId][address(0)] + 1) <= 2)
+            ? _updateUri(uri_)
+            : bytes32(abi.encode(iMR.uri(baseID)));
     }
 
 
@@ -192,7 +217,7 @@ contract DAOinstance {
         }
     }
 
-    /// @dev reconsider
+    /// @dev reconsider --- for simplicity just drop all pending influence? - and remove lastAgentExpressedPreference
     /// @notice rollsback last user preference signal proportional to withdrawn amount
     function rollbackInfluence(address ofWhom_, uint256 amnt_) private {
         if ((lastAgentExpressedPreference[ofWhom_][0] + lastAgentExpressedPreference[ofWhom_][1]) == 0) return;
@@ -204,7 +229,7 @@ contract DAOinstance {
             }
         }
         if (agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] > cache) {
-            lastAgentExpressedPreference[ofWhom_][0] = 0;
+            lastAgentExpressedPreference[ofWhom_][0] = 0; 
         }
 
         cache = lastAgentExpressedPreference[ofWhom_][1];
@@ -275,6 +300,7 @@ contract DAOinstance {
 
         ownerStore = ownerStore[0] == newOwner_ ? [newOwner_, newOwner_] : [newOwner_, msg.sender];
 
+        /// @notice if ownership has changed
         if (msg.sender != ODAO && ownerStore[1] != prevOwner) {
             bool s = BaseToken.transferFrom(prevOwner, ownerStore[1], BaseToken.balanceOf(prevOwner));
             if (!s) revert DAOinstance__Unqualified();
@@ -286,6 +312,7 @@ contract DAOinstance {
         if (msg.sender != ODAO) revert DAOinstance__OnlyODAO();
         return iMR.makeMember(owner(), baseID);
     }
+
 
     /*//////////////////////////////////////////////////////////////
                                  privat
@@ -335,6 +362,16 @@ contract DAOinstance {
 
         newId = id;
     }
+
+    function _updateUri(bytes32 uri_) private returns (bytes32) {
+        
+
+
+
+        
+        return iMR.setUri(uri_);
+    } 
+
 
     function mintInflation() public returns (uint256 amountToMint) {
         if (subunitPerSec[address(this)][1] == block.timestamp) revert DAOinstance__nonR();

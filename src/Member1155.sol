@@ -8,7 +8,7 @@ import "./interfaces/iInstanceDAO.sol";
 contract MemberRegistry is ERC1155 {
     IoDAO oDAO;
 
-    mapping(uint256 => bytes) tokenUri;
+    mapping(uint256 => bytes32) tokenUri;
 
     mapping(uint256 => uint256) uidTotalSupply;
 
@@ -59,18 +59,23 @@ contract MemberRegistry is ERC1155 {
         // if (tokenUri[id_].length == 0) tokenUri[id_] = oDAO.entityData(id_);
 
         /// mint membership token
-        _mint(who_, id_, 1, tokenUri[id_]);
+        _mint(who_, id_, 1, abi.encode(tokenUri[id_]));
 
         emit isNowMember(who_, id_, msg.sender);
         return true;
     }
+
+    function setUri(bytes32 uri_) external onlyDAO returns (bytes32) {
+        tokenUri[uint160(bytes20(msg.sender))] =  uri_;
+        return tokenUri[uint160(bytes20(msg.sender))];
+    } 
 
     /*//////////////////////////////////////////////////////////////
                                  view
     //////////////////////////////////////////////////////////////*/
 
     function uri(uint256 id) public view override returns (string memory) {
-        return string(tokenUri[id]);
+        return string(abi.encode(tokenUri[id]));
     }
 
     /*//////////////////////////////////////////////////////////////
