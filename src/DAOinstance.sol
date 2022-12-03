@@ -8,46 +8,38 @@ import "./utils/Address.sol";
 import "./DAO20.sol";
 
 contract DAOinstance {
-    uint256 public baseID;
 
+    uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
     uint256 public localID;
-
+    uint256 public instantiatedAt;
     address public ODAO;
-
-    mapping(address => mapping(address => uint256[2])) userSignal;
-
-    /// # EOA => subunit => [percentage, amt]
-
-    mapping(address => uint256[2]) subunitPerSec;
-
-    /// #subunit id => [perSecond, timestamp]
-
-    mapping(uint256 => mapping(address => uint256)) cakeSlice;
-
-    /// # endpoint
-
-    /// @dev @security consider outsider influence asumming economic risk to temporarily change rate
-    /// [address_of_sender(subjective) or address(0)(objective)] - sets internalInflation on majority consensus
-    /// inflation is relative to
-
-    mapping(uint256 => mapping(address => uint256)) agentPreference; // id-agent-preference
-    mapping(address => uint256[2]) lastAgentExpressedPreference; //[interestRate,membraneId]
-
-    /// @dev the below 3 can be bundled
-    mapping(uint256 => address[]) expressedRatePreference;
-    mapping(uint256 => address[]) expressedMembranePreference;
-    mapping(uint256 => address[]) expressedUriPreference;
-    
-
-
     address[2] private ownerStore;
-
     IERC20 public BaseToken;
     IMemberRegistry iMR;
     DAO20 public internalToken;
-    uint256 public instantiatedAt;
+
+
+    /// # EOA => subunit => [percentage, amt]
+    mapping(address => mapping(address => uint256[2])) userSignal;
+
+    /// #subunit id => [perSecond, timestamp]
+    mapping(address => uint256[2]) subunitPerSec;
+
+    ///
+    struct Preference {
+        uint256[] inflation;
+        uint256[] membrane;
+        uint256[] uri;
+    }
+
+    /// stores individual user and gloval preferences 
+    /// @dev signals[address(0)] = global state
+    mapping(address => Preference) signals;
+    
+
+
 
     constructor(address BaseToken_, address owner_, address MemberRegistry_) {
         ODAO = msg.sender;
@@ -117,28 +109,18 @@ contract DAOinstance {
     /// percentage anualized 1-100 as relative to the totalSupply of base token
     function signalInflation(uint256 percentagePerYear_) external onlyMember returns (uint256 inflationRate) {
         require(percentagePerYear_ <= 100, ">100!");
-        require(agentPreference[percentagePerYear_][_msgSender()] == 0, "CannotUpdate");
-        if (! (agentPreference[percentagePerYear_][msg.sender] == 0)) revert DAOinstance__CannotUpdate();
 
-
-        /// once signaled cannot be changed (simplicity, for now) - swap possible
-        // require(lastAgentExpressedPreference[_msgSender()][0] == 0, "CannotUpdate");
 
         uint256 balance = IERC20(internalTokenAddr()).balanceOf(_msgSender());
         uint256 totalSupply = internalToken.totalSupply();
 
-        agentPreference[percentagePerYear_][msg.sender] = balance;
-        agentPreference[percentagePerYear_][address(0)] += balance;
-        expressedRatePreference[percentagePerYear_].push(_msgSender());
-        lastAgentExpressedPreference[_msgSender()][0] = percentagePerYear_;
 
-        inflationRate = (totalSupply / agentPreference[percentagePerYear_][address(0)] <= 2)
-            ? _updateGlobalInflation(totalSupply, percentagePerYear_)
-            : baseInflationRate;
+        // inflationRate = (totalSupply / agentPreference[percentagePerYear_][address(0)] <= 2)
+        //     ? _majoritarianUpdate(percentagePerYear_)
+        //     : baseInflationRate;
     }
 
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
-        if (! (agentPreference[membraneId_][msg.sender] == 0)) revert DAOinstance__CannotUpdate();
 
         Membrane memory M = IoDAO(ODAO).getMembrane(membraneId_);
         if (M.tokens.length == 0) revert DAOinstance__InvalidMembrane();
@@ -146,32 +128,21 @@ contract DAOinstance {
         uint256 balance = internalToken.balanceOf(msg.sender);
         uint256 totalSupply = internalToken.totalSupply();
 
-        agentPreference[membraneId_][msg.sender] = balance;
-        agentPreference[membraneId_][address(0)] += balance;
-        expressedMembranePreference[membraneId_].push(msg.sender);
-        // lastAgentExpressedPreference[_msgSender()][1] = membraneId_;
 
-        membraneID = ((totalSupply / (agentPreference[membraneId_][address(0)] + 1) <= 2))
-            ? _updateMembrane(membraneId_)
-            : IoDAO(ODAO).inUseMembraneId(address(this));
+
+        // membraneID = ((totalSupply / (agentPreference[membraneId_][address(0)] + 1) <= 2))
+        //     ? _majoritarianUpdate(membraneId_)
+        //     : IoDAO(ODAO).inUseMembraneId(address(this));
     }
 
     function changeUri(bytes32 uri_) onlyMember external returns ( bytes32 currentUri ) {
         
-        uint256 uriAsId = uint256(keccak256(abi.encode(uri_)));
-        if (! (agentPreference[uriAsId][msg.sender] == 0)) revert DAOinstance__CannotUpdate();
-
-
+        // uint256 uriAsId = uint256(keccak256(abi.encode(uri_)));
         uint256 balance = internalToken.balanceOf(msg.sender);
         uint256 totalSupply = internalToken.totalSupply();
 
-        agentPreference[uriAsId][msg.sender] = balance;
-        agentPreference[uriAsId][address(0)] += balance;
-        expressedUriPreference[uriAsId].push(msg.sender);
-        //lastAgentExpressedPreference[_msgSender()][1] = uri_;
-
-        currentUri = ((totalSupply /  agentPreference[uriAsId][address(0)] + 1) <= 2)
-            ? _updateUri(uri_)
+        currentUri = ((totalSupply /  signals[address(0)].uri[0] + 1) <= 2)
+            ? bytes32(_majoritarianUpdate(uint256(uri_)))
             : bytes32(abi.encode(iMR.uri(baseID)));
     }
 
@@ -218,29 +189,12 @@ contract DAOinstance {
     }
 
     /// @dev reconsider --- for simplicity just drop all pending influence? - and remove lastAgentExpressedPreference
+    /// --------------------------- maybe use  expressedPreferece [  baseInflationRate ] - reduce acting preference
+    /// ------ cleanup function --- point to changed balance to remove exerciseable influence.
+
     /// @notice rollsback last user preference signal proportional to withdrawn amount
     function rollbackInfluence(address ofWhom_, uint256 amnt_) private {
-        if ((lastAgentExpressedPreference[ofWhom_][0] + lastAgentExpressedPreference[ofWhom_][1]) == 0) return;
 
-        uint256 cache = agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_];
-        if (cache > 0) {
-            unchecked {
-                agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] -= amnt_;
-            }
-        }
-        if (agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] > cache) {
-            lastAgentExpressedPreference[ofWhom_][0] = 0; 
-        }
-
-        cache = lastAgentExpressedPreference[ofWhom_][1];
-        if (cache > 0) {
-            unchecked {
-                agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] -= amnt_;
-            }
-        }
-        if (agentPreference[lastAgentExpressedPreference[ofWhom_][0]][ofWhom_] > cache) {
-            lastAgentExpressedPreference[ofWhom_][0] = 0;
-        }
     }
 
     /// @dev @todo: @security review token wrap
@@ -318,58 +272,66 @@ contract DAOinstance {
                                  privat
     //////////////////////////////////////////////////////////////*/
 
-    function _updateGlobalInflation(uint256 totalSupply_, uint256 newRate_) private returns (uint256 inflation) {
-        // _redistribute();
+    // function _updateGlobalInflation(uint256 totalSupply_, uint256 newRate_) private returns (uint256 inflation) {
+    //     // _redistribute();
 
-        baseInflationRate = newRate_;
-        baseInflationPerSec = totalSupply_ * newRate_ / 31449600 / 100;
+    //     baseInflationRate = newRate_;
+    //     baseInflationPerSec = totalSupply_ * newRate_ / 31449600 / 100;
 
-        subunitPerSec[address(this)][0] = baseInflationPerSec;
+    //     subunitPerSec[address(this)][0] = baseInflationPerSec;
 
-        for (inflation; inflation < expressedRatePreference[newRate_].length;) {
-            delete agentPreference[newRate_][expressedRatePreference[newRate_][inflation]];
+    //     for (inflation; inflation < expressedRatePreference[newRate_].length;) {
+    //         delete agentPreference[newRate_][expressedRatePreference[newRate_][inflation]];
 
-            delete lastAgentExpressedPreference[expressedRatePreference[newRate_][inflation]][0];
-            unchecked {
-                ++inflation;
-            }
+    //         unchecked {
+    //             ++inflation;
+    //         }
+    //     }
+    //     delete agentPreference[newRate_][address(0)];
+    //     delete expressedRatePreference[newRate_];
+
+    //     inflation = newRate_;
+
+    //     emit GlobalInflationUpdated(newRate_, baseInflationPerSec);
+    // }
+
+    // function _updateMembrane(uint256 id) private returns (uint256 newId) {
+    //     //_redistribute();
+    //     // _unroll();
+
+    //     for (newId; newId < expressedMembranePreference[id].length;) {
+    //         delete agentPreference[id][expressedMembranePreference[id][newId]];
+
+    //         unchecked {
+    //             ++newId;
+    //         }
+    //     }
+    //     delete agentPreference[id][address(0)];
+    //     delete expressedMembranePreference[id];
+
+    //     require(IoDAO(ODAO).setMembrane(address(this), id));
+    //     emit GlobalInflationUpdated(id, baseInflationPerSec);
+
+    //     newId = id;
+    // }
+
+    function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
+        
+        if (msg.sig == this.signalInflation.selector ) {
+
+            return newVal;
         }
-        delete agentPreference[newRate_][address(0)];
-        delete expressedRatePreference[newRate_];
+        if (msg.sig == this.changeMembrane.selector ) {
 
-        inflation = newRate_;
-
-        emit GlobalInflationUpdated(newRate_, baseInflationPerSec);
-    }
-
-    function _updateMembrane(uint256 id) private returns (uint256 newId) {
-        //_redistribute();
-        // _unroll();
-
-        for (newId; newId < expressedMembranePreference[id].length;) {
-            delete agentPreference[id][expressedMembranePreference[id][newId]];
-
-            delete lastAgentExpressedPreference[expressedMembranePreference[id][newId]][1];
-            unchecked {
-                ++newId;
-            }
+            return newVal;
         }
-        delete agentPreference[id][address(0)];
-        delete expressedMembranePreference[id];
 
-        require(IoDAO(ODAO).setMembrane(address(this), id));
-        emit GlobalInflationUpdated(id, baseInflationPerSec);
-
-        newId = id;
-    }
-
-    function _updateUri(bytes32 uri_) private returns (bytes32) {
+        if (msg.sig == this.changeUri.selector ) {
+            
+            return uint256(iMR.setUri(bytes32(newVal_)));
+        }
         
 
-
-
-        
-        return iMR.setUri(uri_);
     } 
 
 
