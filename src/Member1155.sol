@@ -66,9 +66,9 @@ contract MemberRegistry is ERC1155 {
     }
 
     function setUri(bytes32 uri_) external onlyDAO returns (bytes32) {
-        tokenUri[uint160(bytes20(msg.sender))] =  uri_;
+        tokenUri[uint160(bytes20(msg.sender))] = uri_;
         return tokenUri[uint160(bytes20(msg.sender))];
-    } 
+    }
 
     /*//////////////////////////////////////////////////////////////
                                  view

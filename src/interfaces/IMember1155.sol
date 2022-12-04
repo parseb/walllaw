@@ -14,7 +14,7 @@ interface IMemberRegistry {
     function _unwrapBurn(address baseToken_, uint256 amount_, address from_) external returns (bool);
     function gCheckBurn(address who_) external returns (bool);
     function howManyTotal(uint256 id_) external view returns (uint256);
-    function setUri(bytes32 uri_) external returns (bytes32); 
+    function setUri(bytes32 uri_) external returns (bytes32);
     function uri(uint256 id) external view returns (string memory);
     //////////////////////// ERC1155
 

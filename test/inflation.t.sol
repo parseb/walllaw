@@ -64,6 +64,7 @@ contract redistributiveInflation is Test {
         u[0] = 101_000;
         uint256 membrane1 = O.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
 
+        vm.prank(dInstance);
         O.setMembrane(dInstance, membrane1);
 
         assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");

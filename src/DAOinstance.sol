@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-// import "./interfaces/IERC20.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./utils/Address.sol";
 import "./DAO20.sol";
 
 contract DAOinstance {
-
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
@@ -20,38 +18,30 @@ contract DAOinstance {
     IMemberRegistry iMR;
     DAO20 public internalToken;
 
-
     /// # EOA => subunit => [percentage, amt]
     mapping(address => mapping(address => uint256[2])) userSignal;
 
     /// #subunit id => [perSecond, timestamp]
     mapping(address => uint256[2]) subunitPerSec;
 
-    ///
-    struct Preference {
-        uint256[] inflation;
-        uint256[] membrane;
-        uint256[] uri;
-    }
+    /// expressed: id/percent/uri | msgSender()/address(0) | value/0
+    mapping(uint256 => mapping(address => uint256)) public expressed;
 
-    /// stores individual user and gloval preferences 
-    /// @dev signals[address(0)] = global state
-    mapping(address => Preference) signals;
-    
-
-
+    /// list of expressors for id/percent/uri
+    mapping(uint256 => address[]) expressors;
 
     constructor(address BaseToken_, address owner_, address MemberRegistry_) {
         ODAO = msg.sender;
         instantiatedAt = block.timestamp;
         BaseToken = IERC20(BaseToken_);
-        baseID = uint160(bytes20(address(this))); 
+        baseID = uint160(bytes20(address(this)));
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
         localID = 1;
         ownerStore = [owner_, owner_];
         iMR = IMemberRegistry(MemberRegistry_);
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
         subunitPerSec[address(this)][1] = block.timestamp;
+        
 
         emit NewInstance(address(this), BaseToken_, owner_);
     }
@@ -85,6 +75,7 @@ contract DAOinstance {
     error DAOinstance__NotEndpoint1();
     error DAOinstance__NotEndpoint2();
     error DAOinstance__OnlyODAO();
+    error DAOinstance__YouCantDoThat();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -102,60 +93,43 @@ contract DAOinstance {
 
     modifier onlyEndpoint() {
         if (iMR.howManyTotal(baseID) > 1) revert DAOinstance__NotEndpoint1();
-        if (iMR.balanceOf(msg.sender, baseID) == 1) revert  DAOinstance__NotEndpoint2();
+        if (iMR.balanceOf(msg.sender, baseID) == 1) revert DAOinstance__NotEndpoint2();
         _;
     }
 
     /// percentage anualized 1-100 as relative to the totalSupply of base token
     function signalInflation(uint256 percentagePerYear_) external onlyMember returns (uint256 inflationRate) {
         require(percentagePerYear_ <= 100, ">100!");
+        _expressPrefernece(percentagePerYear_);
 
-
-        uint256 balance = IERC20(internalTokenAddr()).balanceOf(_msgSender());
-        uint256 totalSupply = internalToken.totalSupply();
-
-
-        // inflationRate = (totalSupply / agentPreference[percentagePerYear_][address(0)] <= 2)
-        //     ? _majoritarianUpdate(percentagePerYear_)
-        //     : baseInflationRate;
+        inflationRate = (internalToken.totalSupply() / (expressed[percentagePerYear_][address(0)] + 1) <= 2)
+            ? _majoritarianUpdate(percentagePerYear_)
+            : baseInflationRate;
     }
 
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
+        _expressPrefernece(membraneId_);
 
-        Membrane memory M = IoDAO(ODAO).getMembrane(membraneId_);
-        if (M.tokens.length == 0) revert DAOinstance__InvalidMembrane();
-
-        uint256 balance = internalToken.balanceOf(msg.sender);
-        uint256 totalSupply = internalToken.totalSupply();
-
-
-
-        // membraneID = ((totalSupply / (agentPreference[membraneId_][address(0)] + 1) <= 2))
-        //     ? _majoritarianUpdate(membraneId_)
-        //     : IoDAO(ODAO).inUseMembraneId(address(this));
+        membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) <= 2))
+            ? _majoritarianUpdate(membraneId_)
+            : IoDAO(ODAO).inUseMembraneId(address(this));
     }
 
-    function changeUri(bytes32 uri_) onlyMember external returns ( bytes32 currentUri ) {
-        
-        // uint256 uriAsId = uint256(keccak256(abi.encode(uri_)));
-        uint256 balance = internalToken.balanceOf(msg.sender);
-        uint256 totalSupply = internalToken.totalSupply();
+    function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
+        if (uint256(uri_) < 101 || IoDAO(ODAO).isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
+        _expressPrefernece(uint256(uri_));
 
-        currentUri = ((totalSupply /  signals[address(0)].uri[0] + 1) <= 2)
+        currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) <= 2)
             ? bytes32(_majoritarianUpdate(uint256(uri_)))
             : bytes32(abi.encode(iMR.uri(baseID)));
     }
 
-
-    /// @dev max length of cronoOrderedDistributionAmts is 100
+    /// @dev max length and sum of cronoOrderedDistributionAmts is 100
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external onlyMember returns (bool s) {
         s = _redistribute();
         /// cronoOrderedDistributionAmts
         address[] memory subDAOs = IoDAO(ODAO).getSubDAOsOf(internalTokenAddr());
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
-
-        // mapping(address => mapping(address => uint256[2])) userSignal; /// # EOA => subunit => [ percentage, amt]
-        // mapping(address => uint256[2]) subunitPerSec; /// #subunit id => [perSecond, timestamp]
 
         uint256 i;
         uint256 centum;
@@ -166,7 +140,7 @@ contract DAOinstance {
 
             address entity = subDAOs[i];
             uint256 prevValue = subunitPerSec[entity][0];
-            uint256 senderForce = IERC20(internalTokenAddr()).balanceOf(_msgSender());
+            uint256 senderForce = internalToken.balanceOf(_msgSender());
 
             unchecked {
                 centum += cronoOrderedDistributionAmts[i];
@@ -174,11 +148,11 @@ contract DAOinstance {
             if (centum > 100) revert DAOinstance__Over100();
 
             perSec = submittedValue * baseInflationPerSec / 100;
-            perSec = ( senderForce * 100 / internalToken.totalSupply() ) * perSec / 100;
+            perSec = (senderForce * 100 / internalToken.totalSupply()) * perSec / 100;
 
             subunitPerSec[entity][0] = (subunitPerSec[entity][0] - userSignal[_msgSender()][entity][1]) + perSec;
+            /// @dev fuzz  (subunitPerSec[entity][0] > userSignal[_msgSender()][entity][1])
 
-            /// @dev fuzz
             userSignal[_msgSender()][entity][1] = perSec;
             userSignal[_msgSender()][entity][0] = submittedValue;
 
@@ -188,14 +162,8 @@ contract DAOinstance {
         }
     }
 
-    /// @dev reconsider --- for simplicity just drop all pending influence? - and remove lastAgentExpressedPreference
-    /// --------------------------- maybe use  expressedPreferece [  baseInflationRate ] - reduce acting preference
-    /// ------ cleanup function --- point to changed balance to remove exerciseable influence.
-
     /// @notice rollsback last user preference signal proportional to withdrawn amount
-    function rollbackInfluence(address ofWhom_, uint256 amnt_) private {
-
-    }
+    function rollbackInfluence(address ofWhom_, uint256 amnt_) private {}
 
     /// @dev @todo: @security review token wrap
     function wrapMint(uint256 amount_) public returns (bool s) {
@@ -220,7 +188,7 @@ contract DAOinstance {
     }
 
     function mintMembershipToken(address to_) external returns (bool s) {
-        s = _checkG(to_);
+        s = checkG(to_);
         if (!s) revert DAOinstance__Unqualified();
         s = iMR.makeMember(to_, baseID) && s;
     }
@@ -229,25 +197,13 @@ contract DAOinstance {
     /// @param who_ checked address
     function gCheck(address who_) external returns (bool s) {
         if (iMR.balanceOf(who_, baseID) == 0) return false;
-        s = _checkG(who_);
+        s = checkG(who_);
         if (s) return true;
         if (!s) iMR.gCheckBurn(who_);
         emit gCheckKick(who_);
     }
 
-    function _checkG(address _custard) private returns (bool s) {
-        Membrane memory M = IoDAO(ODAO).getInUseMembraneOfDAO(address(this));
-        uint256 i;
-        s = true;
-        for (i; i < M.tokens.length;) {
-            s = s && (IERC20(M.tokens[i]).balanceOf(_custard) >= M.balances[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
     /// @notice ownership change function. execute twice
-
     function giveOwnership(address newOwner_) external onlyOwner returns (address) {
         if (msg.sender == ODAO) ownerStore[0] = newOwner_;
         address prevOwner = ownerStore[1];
@@ -267,73 +223,57 @@ contract DAOinstance {
         return iMR.makeMember(owner(), baseID);
     }
 
-
-    /*//////////////////////////////////////////////////////////////
-                                 privat
-    //////////////////////////////////////////////////////////////*/
-
-    // function _updateGlobalInflation(uint256 totalSupply_, uint256 newRate_) private returns (uint256 inflation) {
-    //     // _redistribute();
-
-    //     baseInflationRate = newRate_;
-    //     baseInflationPerSec = totalSupply_ * newRate_ / 31449600 / 100;
-
-    //     subunitPerSec[address(this)][0] = baseInflationPerSec;
-
-    //     for (inflation; inflation < expressedRatePreference[newRate_].length;) {
-    //         delete agentPreference[newRate_][expressedRatePreference[newRate_][inflation]];
-
-    //         unchecked {
-    //             ++inflation;
-    //         }
-    //     }
-    //     delete agentPreference[newRate_][address(0)];
-    //     delete expressedRatePreference[newRate_];
-
-    //     inflation = newRate_;
-
-    //     emit GlobalInflationUpdated(newRate_, baseInflationPerSec);
-    // }
-
-    // function _updateMembrane(uint256 id) private returns (uint256 newId) {
-    //     //_redistribute();
-    //     // _unroll();
-
-    //     for (newId; newId < expressedMembranePreference[id].length;) {
-    //         delete agentPreference[id][expressedMembranePreference[id][newId]];
-
-    //         unchecked {
-    //             ++newId;
-    //         }
-    //     }
-    //     delete agentPreference[id][address(0)];
-    //     delete expressedMembranePreference[id];
-
-    //     require(IoDAO(ODAO).setMembrane(address(this), id));
-    //     emit GlobalInflationUpdated(id, baseInflationPerSec);
-
-    //     newId = id;
-    // }
-
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
-        
-        if (msg.sig == this.signalInflation.selector ) {
-
-            return newVal;
-        }
-        if (msg.sig == this.changeMembrane.selector ) {
-
-            return newVal;
+        if (msg.sig == this.signalInflation.selector) {
+            baseInflationRate = newVal_;
+            baseInflationPerSec = internalToken.totalSupply() * newVal_ / 31449600 / 100;
+            subunitPerSec[address(this)][0] = baseInflationPerSec;
+            return _postMajorityCleanup(newVal_);
         }
 
-        if (msg.sig == this.changeUri.selector ) {
-            
-            return uint256(iMR.setUri(bytes32(newVal_)));
+        if (msg.sig == this.changeMembrane.selector) {
+            require(IoDAO(ODAO).setMembrane(address(this), newVal_), "f O.setM.");
+            return _postMajorityCleanup(newVal_);
         }
-        
 
-    } 
+        if (msg.sig == this.changeUri.selector) {
+            iMR.setUri(bytes32(newVal_));
+            return _postMajorityCleanup(newVal_);
+        }
+    }
 
+    function _expressPrefernece(uint256 preference_) private {
+        uint256 pressure = internalToken.balanceOf(_msgSender());
+        uint256 previous = expressed[preference_][_msgSender()];
+
+        if (previous > 0) expressed[preference_][address(0)] -= previous;
+        expressed[preference_][address(0)] += pressure;
+        expressed[preference_][_msgSender()] = pressure;
+        if (previous == 0) expressors[preference_].push(_msgSender());
+    }
+
+    function _postMajorityCleanup(uint256 target_) private returns (uint256 outcome) {
+        /// is sum validatation superfluous and prone to error? -&/ gas concerns
+        address[] memory agents = expressors[target_];
+        uint256 sum;
+        address a;
+        for (outcome; outcome < agents.length;) {
+            a = agents[outcome];
+            unchecked {
+                sum += expressed[target_][a];
+            }
+            delete expressed[target_][a];
+            unchecked {
+                ++outcome;
+            }
+        }
+
+        if (!(sum >= expressed[target_][address(0)])) revert DAOinstance__CannotUpdate();
+
+        delete expressed[target_][a];
+        delete expressors[target_];
+        outcome = target_;
+    }
 
     function mintInflation() public returns (uint256 amountToMint) {
         if (subunitPerSec[address(this)][1] == block.timestamp) revert DAOinstance__nonR();
@@ -353,7 +293,8 @@ contract DAOinstance {
         subunitPerSec[subDAO_][1] = block.timestamp;
     }
 
-    function _redistribute() private returns (bool) {
+    /// security would be useful if public - consider
+    function _redistribute() public returns (bool) {
         /// set internal token allowance to owner - subdao
         ///
 
@@ -403,14 +344,24 @@ contract DAOinstance {
         return msg.sender;
     }
 
-
-
     /*//////////////////////////////////////////////////////////////
                                  VIEW
     //////////////////////////////////////////////////////////////*/
 
     function owner() public view returns (address) {
         return ownerStore[1];
+    }
+
+    function checkG(address _custard) public view returns (bool s) {
+        Membrane memory M = IoDAO(ODAO).getInUseMembraneOfDAO(address(this));
+        uint256 i;
+        s = true;
+        for (i; i < M.tokens.length;) {
+            s = s && (IERC20(M.tokens[i]).balanceOf(_custard) >= M.balances[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function internalTokenAddr() public view returns (address) {

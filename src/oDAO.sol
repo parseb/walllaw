@@ -99,12 +99,11 @@ contract ODAO {
         childInstance.makeOwnerMemberOnCreateForEndpointFunctionality();
 
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
-
     }
 
     function setMembrane(address DAO_, uint256 membraneID_) external returns (bool) {
-
         if (!isDAO(DAO_)) revert aDAOnot();
+        if (!(msg.sender == DAO_ || msg.sender == iInstanceDAO(DAO_).owner())) revert NotDAOOwner();
         if (getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
 
         usesMembrane[DAO_] = membraneID_;
@@ -128,12 +127,16 @@ contract ODAO {
         return daoOfId[id_];
     }
 
-    function entityData(uint256 id) external view returns (bytes memory) {
-        return getMembraneById[id].meta;
+    function entityData(uint256 id_) external view returns (bytes memory) {
+        return getMembraneById[id_].meta;
     }
 
-    function getMembrane(uint256 id) external view returns (Membrane memory) {
-        return getMembraneById[id];
+    function getMembrane(uint256 id_) external view returns (Membrane memory) {
+        return getMembraneById[id_];
+    }
+
+    function isMembrane(uint256 id_) external view returns (bool) {
+        return (getMembraneById[id_].tokens.length > 0);
     }
 
     function getMemberRegistryAddr() external view returns (address) {

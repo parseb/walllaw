@@ -135,6 +135,7 @@ contract oDao is Test {
         vm.expectRevert(); // membraneNotFound();
         O.setMembrane(dInstance, 2121);
 
+        vm.prank(dInstance);
         O.setMembrane(dInstance, membrane1);
         assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
         /// #### 1
@@ -211,22 +212,22 @@ contract oDao is Test {
         /// #### test tipping point
     }
 
-    // function testCreatesMultipleSubDAO() public {
-    //     iInstanceDAO DI = iInstanceDAO(testCreateNewDao());
+    function testCreatesMultipleSubDAO() public {
+        iInstanceDAO DI = iInstanceDAO(testCreateNewDao());
 
-    //     uint256 membraneID = _createBasicMembrane();
-    //     vm.expectRevert();
-    //     address subDAOaddr = O.createSubDAO(membraneID, address(DI));
-    //     vm.prank(deployer, deployer);
-    //     DI.mintMembershipToken(Agent1);
-    //     vm.prank(Agent1);
-    //     subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
-    //     assertTrue(subDAOaddr != address(0), "subdao is 0");
+        uint256 membraneID = _createBasicMembrane();
+        vm.expectRevert();
+        address subDAOaddr = O.createSubDAO(membraneID, address(DI));
+        vm.prank(deployer, deployer);
+        DI.mintMembershipToken(Agent1);
+        vm.prank(Agent1);
+        subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
+        assertTrue(subDAOaddr != address(0), "subdao is 0");
 
-    //     vm.prank(Agent1);
-    //     subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
-    //     assertTrue(subDAOaddr != address(0), "subdao is 0");
+        vm.prank(Agent1);
+        subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
+        assertTrue(subDAOaddr != address(0), "subdao is 0");
 
-    //     assertTrue(O.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
-    // }
+        assertTrue(O.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
+    }
 }
