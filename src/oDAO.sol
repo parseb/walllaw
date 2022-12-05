@@ -91,7 +91,7 @@ contract ODAO {
 
         usesMembrane[subDAOaddr] = membraneID_;
         daoOfId[entityID] = parentDAO_;
-        daosOfToken[internalT].push(subDAOaddr);
+        // daosOfToken[internalT].push(subDAOaddr); - done in createDAO()
 
         childParentDAO[subDAOaddr] = parentDAO_;
         parentInstance.giveOwnership(msg.sender);
@@ -155,7 +155,7 @@ contract ODAO {
         return childParentDAO[child_];
     }
 
-    function getDAOsOfToken(address parent) external view returns (address[] memory) {
-        return daosOfToken[parent];
+    function getDAOsOfToken(address parentToken) external view returns (address[] memory) {
+        return daosOfToken[parentToken];
     }
 }

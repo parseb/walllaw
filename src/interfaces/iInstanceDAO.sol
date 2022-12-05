@@ -37,4 +37,7 @@ interface iInstanceDAO {
     function gCheck(address who_) external returns (bool);
 
     function makeOwnerMemberOnCreateForEndpointFunctionality() external returns (bool);
+
+    function getUserReDistribution(address ofWhom) external view returns (uint256[] memory);
+
 }

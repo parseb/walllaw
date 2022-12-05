@@ -24,6 +24,9 @@ contract DAOinstance {
     /// #subunit id => [perSecond, timestamp]
     mapping(address => uint256[2]) subunitPerSec;
 
+    /// last user distributive signal
+    mapping(address => uint256[]) redistributiveSignal;
+
     /// expressed: id/percent/uri | msgSender()/address(0) | value/0
     mapping(uint256 => mapping(address => uint256)) public expressed;
 
@@ -76,6 +79,7 @@ contract DAOinstance {
     error DAOinstance__NotEndpoint2();
     error DAOinstance__OnlyODAO();
     error DAOinstance__YouCantDoThat();
+    error DAOinstance__notmajority();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -127,8 +131,9 @@ contract DAOinstance {
     /// @dev max length and sum of cronoOrderedDistributionAmts is 100
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external onlyMember returns (bool s) {
         s = _redistribute();
+        redistributiveSignal[_msgSender()] = cronoOrderedDistributionAmts;
         /// cronoOrderedDistributionAmts
-        address[] memory subDAOs = IoDAO(ODAO).getSubDAOsOf(internalTokenAddr());
+        address[] memory subDAOs = IoDAO(ODAO).getDAOsOfToken(internalTokenAddr());
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
         uint256 i;
@@ -139,7 +144,7 @@ contract DAOinstance {
             if (submittedValue == subunitPerSec[subDAOs[i]][0]) continue;
 
             address entity = subDAOs[i];
-            uint256 prevValue = subunitPerSec[entity][0];
+            // uint256 prevValue = subunitPerSec[entity][0];
             uint256 senderForce = internalToken.balanceOf(_msgSender());
 
             unchecked {
@@ -255,6 +260,19 @@ contract DAOinstance {
     function _postMajorityCleanup(uint256 target_) private returns (uint256 outcome) {
         /// is sum validatation superfluous and prone to error? -&/ gas concerns
         address[] memory agents = expressors[target_];
+        uint256 sum = _postMajorityCleanup(agents, target_);
+
+        if (!(sum >= expressed[target_][address(0)])) revert DAOinstance__CannotUpdate();
+
+        delete expressed[target_][address(0)];
+        delete expressors[target_];
+        outcome = target_;
+    }
+
+
+    function _postMajorityCleanup(address[] memory agents, uint256 target_) public returns (uint256 outcome) {
+        if (expressed[target_][address(0)] < ( internalToken.totalSupply() / 2 )) revert DAOinstance__notmajority();
+
         uint256 sum;
         address a;
         for (outcome; outcome < agents.length;) {
@@ -267,13 +285,9 @@ contract DAOinstance {
                 ++outcome;
             }
         }
-
-        if (!(sum >= expressed[target_][address(0)])) revert DAOinstance__CannotUpdate();
-
-        delete expressed[target_][a];
-        delete expressors[target_];
-        outcome = target_;
+        outcome = sum;
     }
+
 
     function mintInflation() public returns (uint256 amountToMint) {
         if (subunitPerSec[address(this)][1] == block.timestamp) revert DAOinstance__nonR();
@@ -289,19 +303,20 @@ contract DAOinstance {
         _redistribute();
         uint256 amt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
 
-        internalToken.transfer(subDAO_, amt);
+        s = internalToken.transfer(subDAO_, amt);
         subunitPerSec[subDAO_][1] = block.timestamp;
     }
 
     /// security would be useful if public - consider
-    function _redistribute() public returns (bool) {
+    function _redistribute() public returns (bool s) {
         /// set internal token allowance to owner - subdao
         ///
 
         /// update inflation
-        mintInflation();
+        s = mintInflation() > baseInflationPerSec;
 
         /// iterate and allow to subdaos
+
     }
 
     // function _balanceReWeigh(uint256 amount) private {
@@ -376,5 +391,7 @@ contract DAOinstance {
         return IoDAO(ODAO).getParentDAO(address(this));
     }
 
-    function getUserReDistribution() public view returns (uint256[] memory allocation) {}
+    function getUserReDistribution(address user_) public view returns (uint256[] memory) {
+        return redistributiveSignal[user_];
+    }
 }

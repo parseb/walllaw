@@ -36,17 +36,16 @@ contract redistributiveInflation is Test {
     }
 
     function _createBasicMembrane() public returns (uint256 basicMid) {
-        Membrane memory Mmm;
         address[] memory tokens_ = new address[](1);
         uint256[] memory balances_ = new uint[](1);
 
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
-
-        basicMid = O.createMembrane(tokens_, balances_, bytes("veryMeta"));
+        skip(20);
+        basicMid = O.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
     }
 
-    function _context() public {
+    function _membraneContext() public {
         vm.prank(deployer, deployer);
         address dInstance = address(O.createDAO(address(BaseE20)));
         DAO = DAOinstance(dInstance);
@@ -73,7 +72,7 @@ contract redistributiveInflation is Test {
     //// #######################################
 
     function testMintsInflation() public {
-        _context();
+        _membraneContext() ;
         uint256 startInflation = DAO.baseInflationRate();
         uint256 startPerSec = DAO.baseInflationPerSec();
         IERC20 internalT = IERC20(DAO.internalToken());
@@ -96,9 +95,18 @@ contract redistributiveInflation is Test {
 
         assertTrue(startInflation != DAO.baseInflationRate(), "samo1");
         assertTrue(startPerSec != DAO.baseInflationPerSec(), "samo2");
+
         skip(2000);
 
         uint256 minted = DAO.mintInflation();
         assertTrue(minted == (DAO.baseInflationPerSec() * 2000), "math went wrong");
+
+        skip(3000);
+        minted += DAO.mintInflation();
+        assertTrue(minted == (DAO.baseInflationPerSec() * 5000), "math went wrong");
+
+        skip(1);
+        minted = DAO.mintInflation();
+        assertTrue(minted == DAO.baseInflationPerSec(), "math went wrong");
     }
 }

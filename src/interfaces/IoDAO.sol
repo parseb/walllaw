@@ -24,7 +24,7 @@ interface IoDAO {
 
     function getParentDAO(address child_) external view returns (address);
 
-    function getSubDAOsOf(address parent) external view returns (address[] memory);
-
+    function getDAOsOfToken(address parentToken) external view returns (address[] memory);
+    
     function isMembrane(uint256 id_) external view returns (bool);
 }
