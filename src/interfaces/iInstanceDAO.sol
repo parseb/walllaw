@@ -40,4 +40,5 @@ interface iInstanceDAO {
 
     function getUserReDistribution(address ofWhom) external view returns (uint256[] memory);
 
+    function initiatedAt() external view returns (uint);
 }

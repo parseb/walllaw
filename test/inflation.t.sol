@@ -41,7 +41,7 @@ contract redistributiveInflation is Test {
 
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
-        skip(20);
+        skip(1);
         basicMid = O.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
     }
 

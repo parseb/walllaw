@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
+import "./interfaces/iInstanceDAO.sol";
 import "./utils/Address.sol";
 import "./DAO20.sol";
 
@@ -141,6 +142,7 @@ contract DAOinstance {
         uint256 perSec;
         for (i; i < subDAOs.length;) {
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
+            if (subunitPerSec[subDAOs[i]][1] == 0) subunitPerSec[subDAOs[i]][1] = iInstanceDAO(subDAOs[i]).initiatedAt();
             if (submittedValue == subunitPerSec[subDAOs[i]][0]) continue;
 
             address entity = subDAOs[i];
@@ -231,7 +233,7 @@ contract DAOinstance {
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
         if (msg.sig == this.signalInflation.selector) {
             baseInflationRate = newVal_;
-            baseInflationPerSec = internalToken.totalSupply() * newVal_ / 31449600 / 100;
+            baseInflationPerSec = internalToken.totalSupply() * newVal_ / 31536000 / 100;
             subunitPerSec[address(this)][0] = baseInflationPerSec;
             return _postMajorityCleanup(newVal_);
         }
@@ -313,7 +315,9 @@ contract DAOinstance {
         ///
 
         /// update inflation
-        s = mintInflation() > baseInflationPerSec;
+        if (subunitPerSec[address(this)][1] < block.timestamp) mintInflation();
+
+        s=true;
 
         /// iterate and allow to subdaos
 
@@ -394,4 +398,9 @@ contract DAOinstance {
     function getUserReDistribution(address user_) public view returns (uint256[] memory) {
         return redistributiveSignal[user_];
     }
+
+    function initiatedAt() external view returns (uint) {
+        return instantiatedAt;
+    }
+
 }
