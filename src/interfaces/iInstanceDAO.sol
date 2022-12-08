@@ -12,6 +12,8 @@ interface iInstanceDAO {
 
     function incrementSubDAO() external returns (uint256);
 
+    function signalInflation(uint256 percentagePerYear_) external returns (uint256 inflationRate);
+
     /// view
 
     function owner() external view returns (address);
@@ -40,5 +42,15 @@ interface iInstanceDAO {
 
     function getUserReDistribution(address ofWhom) external view returns (uint256[] memory);
 
-    function initiatedAt() external view returns (uint);
+    function initiatedAt() external view returns (uint256);
+
+    function baseInflationRate() external view returns (uint256);
+
+    function baseInflationPerSec() external view returns (uint256);
+
+    function checkG(address) external view returns (bool);
+
+    function multicall(bytes[] memory) external returns (bytes[] memory results);
+
+    function executeExternalLogic(uint256 callId_) external returns (bool);
 }

@@ -6,6 +6,7 @@ import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./utils/Address.sol";
 import "./DAO20.sol";
+import "./errors.sol";
 
 contract DAOinstance {
     uint256 public baseID;
@@ -45,7 +46,6 @@ contract DAOinstance {
         iMR = IMemberRegistry(MemberRegistry_);
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
         subunitPerSec[address(this)][1] = block.timestamp;
-        
 
         emit NewInstance(address(this), BaseToken_, owner_);
     }
@@ -62,25 +62,6 @@ contract DAOinstance {
     event inflationaryMint(uint256 amount);
     event gCheckKick(address indexed who);
     event NewInstance(address indexed at, address indexed baseToken, address owner);
-
-    /*//////////////////////////////////////////////////////////////
-                                 errors
-    //////////////////////////////////////////////////////////////*/
-
-    error DAOinstance__NotOwner();
-    error DAOinstance__TransferFailed();
-    error DAOinstance__Unqualified();
-    error DAOinstance__NotMember();
-    error DAOinstance__InvalidMembrane();
-    error DAOinstance__CannotUpdate();
-    error DAOinstance__LenMismatch();
-    error DAOinstance__Over100();
-    error DAOinstance__nonR();
-    error DAOinstance__NotEndpoint1();
-    error DAOinstance__NotEndpoint2();
-    error DAOinstance__OnlyODAO();
-    error DAOinstance__YouCantDoThat();
-    error DAOinstance__notmajority();
 
     /*//////////////////////////////////////////////////////////////
                                  modifiers
@@ -105,7 +86,7 @@ contract DAOinstance {
     /// percentage anualized 1-100 as relative to the totalSupply of base token
     function signalInflation(uint256 percentagePerYear_) external onlyMember returns (uint256 inflationRate) {
         require(percentagePerYear_ <= 100, ">100!");
-        _expressPrefernece(percentagePerYear_);
+        _expressPreference(percentagePerYear_);
 
         inflationRate = (internalToken.totalSupply() / (expressed[percentagePerYear_][address(0)] + 1) <= 2)
             ? _majoritarianUpdate(percentagePerYear_)
@@ -113,16 +94,27 @@ contract DAOinstance {
     }
 
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
-        _expressPrefernece(membraneId_);
+        _expressPreference(membraneId_);
 
         membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) <= 2))
             ? _majoritarianUpdate(membraneId_)
             : IoDAO(ODAO).inUseMembraneId(address(this));
     }
 
+    //// @security with great power comes the need of great awareness
+    function executeExternalLogic(uint256 callId_) external onlyMember returns (bool) {
+        _expressPreference(callId_);
+
+        callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) <= 2))
+            ? _majoritarianUpdate(callId_)
+            : 0;
+
+        return callId_ > 0;
+    }
+
     function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
         if (uint256(uri_) < 101 || IoDAO(ODAO).isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
-        _expressPrefernece(uint256(uri_));
+        _expressPreference(uint256(uri_));
 
         currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) <= 2)
             ? bytes32(_majoritarianUpdate(uint256(uri_)))
@@ -142,7 +134,9 @@ contract DAOinstance {
         uint256 perSec;
         for (i; i < subDAOs.length;) {
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
-            if (subunitPerSec[subDAOs[i]][1] == 0) subunitPerSec[subDAOs[i]][1] = iInstanceDAO(subDAOs[i]).initiatedAt();
+            if (subunitPerSec[subDAOs[i]][1] == 0) {
+                subunitPerSec[subDAOs[i]][1] = iInstanceDAO(subDAOs[i]).initiatedAt();
+            }
             if (submittedValue == subunitPerSec[subDAOs[i]][0]) continue;
 
             address entity = subDAOs[i];
@@ -207,6 +201,10 @@ contract DAOinstance {
         s = checkG(who_);
         if (s) return true;
         if (!s) iMR.gCheckBurn(who_);
+
+        s = _liquidateValue(who_);
+        // if ( ! s) revert DAOinstance__CannotLiquidate();
+
         emit gCheckKick(who_);
     }
 
@@ -247,9 +245,15 @@ contract DAOinstance {
             iMR.setUri(bytes32(newVal_));
             return _postMajorityCleanup(newVal_);
         }
+
+        if (msg.sig == this.executeExternalLogic.selector) {
+            ExternallCall memory ExT = IoDAO(ODAO).getLongDistanceCall(newVal_);
+            (bool s,) = address(ExT.callPointAddress).delegatecall(ExT.callData);
+            newVal = s ? 1 : 0;
+        }
     }
 
-    function _expressPrefernece(uint256 preference_) private {
+    function _expressPreference(uint256 preference_) private {
         uint256 pressure = internalToken.balanceOf(_msgSender());
         uint256 previous = expressed[preference_][_msgSender()];
 
@@ -271,9 +275,8 @@ contract DAOinstance {
         outcome = target_;
     }
 
-
     function _postMajorityCleanup(address[] memory agents, uint256 target_) public returns (uint256 outcome) {
-        if (expressed[target_][address(0)] < ( internalToken.totalSupply() / 2 )) revert DAOinstance__notmajority();
+        if (expressed[target_][address(0)] < (internalToken.totalSupply() / 2)) revert DAOinstance__notmajority();
 
         uint256 sum;
         address a;
@@ -289,7 +292,6 @@ contract DAOinstance {
         }
         outcome = sum;
     }
-
 
     function mintInflation() public returns (uint256 amountToMint) {
         if (subunitPerSec[address(this)][1] == block.timestamp) revert DAOinstance__nonR();
@@ -317,10 +319,14 @@ contract DAOinstance {
         /// update inflation
         if (subunitPerSec[address(this)][1] < block.timestamp) mintInflation();
 
-        s=true;
+        s = true;
 
         /// iterate and allow to subdaos
+    }
 
+    //////   @todo
+    function _liquidateValue(address who_) private returns (bool s) {
+        s = false;
     }
 
     // function _balanceReWeigh(uint256 amount) private {
@@ -350,7 +356,7 @@ contract DAOinstance {
         return localID;
     }
 
-    function multicall(bytes[] calldata data) external virtual returns (bytes[] memory results) {
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; i++) {
             results[i] = Address.functionDelegateCall(address(this), data[i]);
@@ -391,16 +397,11 @@ contract DAOinstance {
         return address(BaseToken);
     }
 
-    function getParent() public view returns (address) {
-        return IoDAO(ODAO).getParentDAO(address(this));
-    }
-
     function getUserReDistribution(address user_) public view returns (uint256[] memory) {
         return redistributiveSignal[user_];
     }
 
-    function initiatedAt() external view returns (uint) {
+    function initiatedAt() external view returns (uint256) {
         return instantiatedAt;
     }
-
 }

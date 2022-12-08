@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-struct Membrane {
-    address[] tokens;
-    uint256[] balances;
-    bytes meta;
-}
+import "./structs.sol";
 
 interface IMemberRegistry {
     function makeMember(address who_, uint256 id_) external returns (bool);

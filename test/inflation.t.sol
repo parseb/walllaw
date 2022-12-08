@@ -35,13 +35,13 @@ contract redistributiveInflation is Test {
         return address(new M20());
     }
 
-    function _createBasicMembrane() public returns (uint256 basicMid) {
+    function _createBasicMembrane(uint256 skipSeconds) public returns (uint256 basicMid) {
         address[] memory tokens_ = new address[](1);
         uint256[] memory balances_ = new uint[](1);
 
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
-        skip(1);
+        skip(skipSeconds);
         basicMid = O.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
     }
 
@@ -72,7 +72,7 @@ contract redistributiveInflation is Test {
     //// #######################################
 
     function testMintsInflation() public {
-        _membraneContext() ;
+        _membraneContext();
         uint256 startInflation = DAO.baseInflationRate();
         uint256 startPerSec = DAO.baseInflationPerSec();
         IERC20 internalT = IERC20(DAO.internalToken());

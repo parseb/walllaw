@@ -14,7 +14,7 @@ contract ODAO {
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
     mapping(address => address) childParentDAO;
-    /// stores in-use membrane of DAO instance
+    mapping(uint256 => ExternallCall) getExternalCall;
 
     IMemberRegistry MR;
 
@@ -32,6 +32,7 @@ contract ODAO {
     error NotDAOOwner();
     error membraneNotFound();
     error SubDAOLimitReached();
+    error NonR();
 
     /*//////////////////////////////////////////////////////////////
                                  events
@@ -42,7 +43,7 @@ contract ODAO {
     event CreatedMembrane(uint256 id, bytes metadata);
     event DAOchangedMembrane(address DAO, uint256 membrane);
     event subDAOCreated(address indexed parendDAO, address indexed subDAO, address indexed creator);
-
+    event CreatedExternalCall(address indexed willCall, address indexed createdBy, bytes callData);
     /*//////////////////////////////////////////////////////////////
                                  public
     //////////////////////////////////////////////////////////////*/
@@ -109,6 +110,23 @@ contract ODAO {
         usesMembrane[DAO_] = membraneID_;
         emit DAOchangedMembrane(DAO_, membraneID_);
         return true;
+    }
+
+    function createExternalCall(address callPoint_, bytes memory callData_) external returns (uint256 id) {
+        ExternallCall memory ecALL;
+        ecALL.callPointAddress = callPoint_;
+        ecALL.callData = callData_;
+        ecALL.lastCalledAt = block.timestamp;
+        id = uint256(keccak256(callData_)) - block.timestamp;
+        getExternalCall[id] = ecALL;
+
+        emit CreatedExternalCall(callPoint_, msg.sender, callData_);
+    }
+
+    function getLongDistanceCall(uint256 id_) external returns (ExternallCall memory) {
+        if ((getExternalCall[id_].lastCalledAt + 432000) >= block.timestamp) revert NonR();
+        getExternalCall[id_].lastCalledAt = block.timestamp;
+        return getExternalCall[id_];
     }
 
     /*//////////////////////////////////////////////////////////////
