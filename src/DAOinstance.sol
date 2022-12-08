@@ -68,7 +68,7 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyOwner() {
-        if (msg.sender != ownerStore[1] && msg.sender != ODAO) revert DAOinstance__NotOwner();
+        if (!(msg.sender == ownerStore[1] || msg.sender == ODAO)) revert DAOinstance__NotOwner();
         _;
     }
 
@@ -111,6 +111,9 @@ contract DAOinstance {
 
         return callId_ > 0;
     }
+
+    /// for un-delayed execution
+    function whitelistCall(uint256 callId_) external onlyOwner returns (uint256 oneTwo) {}
 
     function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
         if (uint256(uri_) < 101 || IoDAO(ODAO).isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
@@ -247,8 +250,12 @@ contract DAOinstance {
         }
 
         if (msg.sig == this.executeExternalLogic.selector) {
-            ExternallCall memory ExT = IoDAO(ODAO).getLongDistanceCall(newVal_);
-            (bool s,) = address(ExT.callPointAddress).delegatecall(ExT.callData);
+            bool s;
+            ExternallCall memory ExT = IoDAO(ODAO).prepLongDistanceCall(newVal_);
+            if (ExT.eligibleCaller != msg.sender) revert DAOinstance__NotCallMaker();
+
+            (s,) = address(ExT.callPointAddress).delegatecall(ExT.callData);
+
             newVal = s ? 1 : 0;
         }
     }

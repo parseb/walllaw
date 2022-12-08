@@ -116,16 +116,19 @@ contract ODAO {
         ExternallCall memory ecALL;
         ecALL.callPointAddress = callPoint_;
         ecALL.callData = callData_;
-        ecALL.lastCalledAt = block.timestamp;
+        ecALL.lastCalledAt = block.timestamp + 5 days;
+        /// @dev is this feature worth the risks?
+        ecALL.eligibleCaller = tx.origin;
+
         id = uint256(keccak256(callData_)) - block.timestamp;
         getExternalCall[id] = ecALL;
 
         emit CreatedExternalCall(callPoint_, msg.sender, callData_);
     }
 
-    function getLongDistanceCall(uint256 id_) external returns (ExternallCall memory) {
-        if ((getExternalCall[id_].lastCalledAt + 432000) >= block.timestamp) revert NonR();
-        getExternalCall[id_].lastCalledAt = block.timestamp;
+    function prepLongDistanceCall(uint256 id_) external returns (ExternallCall memory) {
+        if ((getExternalCall[id_].lastCalledAt) >= block.timestamp) revert NonR();
+        getExternalCall[id_].lastCalledAt = block.timestamp + 5 days;
         return getExternalCall[id_];
     }
 
@@ -175,5 +178,9 @@ contract ODAO {
 
     function getDAOsOfToken(address parentToken) external view returns (address[] memory) {
         return daosOfToken[parentToken];
+    }
+
+    function getLongDistanceCall(uint256 id_) external view returns (ExternallCall memory) {
+        return getExternalCall[id_];
     }
 }

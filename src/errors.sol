@@ -17,3 +17,4 @@ error DAOinstance__OnlyODAO();
 error DAOinstance__YouCantDoThat();
 error DAOinstance__notmajority();
 error DAOinstance__CannotLiquidate();
+error DAOinstance__NotCallMaker();

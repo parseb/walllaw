@@ -30,5 +30,7 @@ interface IoDAO {
 
     function longDistanceCall(uint256 id) external returns (bool);
 
-    function getLongDistanceCall(uint256 id_) external returns (ExternallCall memory);
+    function getLongDistanceCall(uint256 id_) external view returns (ExternallCall memory);
+
+    function prepLongDistanceCall(uint256 id_) external returns (ExternallCall memory);
 }

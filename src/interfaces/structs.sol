@@ -6,6 +6,7 @@ struct Membrane {
 
 struct ExternallCall {
     address callPointAddress;
+    address eligibleCaller;
     uint256 lastCalledAt;
     bytes callData;
 }

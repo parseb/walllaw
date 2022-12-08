@@ -30,13 +30,40 @@ contract CheckTrickle is Test, MyUtils {
 
     function testCreateExternalCall() public {
         DAO.mintMembershipToken(Agent1);
+        vm.prank(Agent1, Agent1); // tx.origin
         uint256 id = _createSimpleExternalCall();
-        skip(10 days);
+
         assertTrue(id > 0);
         assertTrue(MockExt.baseID() == 5);
+
         vm.prank(Agent1);
+        vm.expectRevert(); //"NonR()"
         bool t = DAO.executeExternalLogic(id);
+
+        vm.prank(Agent1);
+        skip(1 days);
+        vm.expectRevert(); // "NonR()"
+        t = DAO.executeExternalLogic(id);
+
+        vm.prank(Agent2);
+        skip(4 days);
+        vm.expectRevert(); // "DAOinstance__NotMember()"
+        t = DAO.executeExternalLogic(id);
+        assertFalse(t);
+
+        vm.prank(Agent2);
+        DAO.mintMembershipToken(Agent2);
+        skip(4 days);
+        vm.expectRevert(); // "DAOinstance__NotMember()"
+        t = DAO.executeExternalLogic(id);
+        assertFalse(t);
+
         assertTrue(MockExt.baseID() == 5);
+
+        vm.prank(Agent1, Agent1);
+        skip(6 days);
+        t = DAO.executeExternalLogic(id);
+
         assertTrue(t);
         assertTrue(DAO.baseID() == 999999999);
     }
