@@ -1,6 +1,6 @@
 pragma solidity ^0.8.13;
 
-contract MockExternalSameStorageLayout {
+contract DelegStore {
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;

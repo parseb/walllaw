@@ -2,15 +2,15 @@
 pragma solidity ^0.8.13;
 
 import "./utils/functionality.t.sol";
-import "./mocks/mockExternal.sol";
+import "./mocks/mExtern.sol";
 
 contract CheckTrickle is Test, MyUtils {
     iInstanceDAO DAO;
-    MockExternalSameStorageLayout MockExt;
+    DelegStore MockExt;
     address mxt;
 
     constructor() {
-        MockExt = new MockExternalSameStorageLayout();
+        MockExt = new DelegStore();
         mxt = address(MockExt);
         DAO = iInstanceDAO(_createDAO(address(BaseE20)));
     }
@@ -18,7 +18,7 @@ contract CheckTrickle is Test, MyUtils {
     function setup() public {
         vm.startPrank(Agent1);
 
-        DAO.wrapMint(1000 ether);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(1000 ether);
         _setCreateMembrane(address(DAO));
         // _createSubDaos();
         vm.stopPrank();

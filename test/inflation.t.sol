@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "../src/interfaces/IMember1155.sol";
 import "../src/interfaces/iInstanceDAO.sol";
-// import "../src/interfaces/IERC20.sol";
+import "../src/interfaces/IDAO20.sol";
 import "../src/interfaces/IERC721.sol";
 
 import "../src/oDAO.sol";
@@ -86,7 +86,9 @@ contract redistributiveInflation is Test {
         assertTrue(internalT.balanceOf(Agent1) == 0, "has internal balance");
         vm.startPrank(Agent1);
         assertTrue(baseT.approve(address(DAO), type(uint256).max), "approve f");
-        DAO.wrapMint(10 * 1 ether);
+
+        baseT.approve(address(internalT), 100000000 * 1 ether);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(10 * 1 ether);
         assertTrue(internalT.balanceOf(Agent1) != 0, "does not have internal balance");
 
         uint256 newInflation = DAO.signalInflation(2);
@@ -99,14 +101,20 @@ contract redistributiveInflation is Test {
         skip(2000);
 
         uint256 minted = DAO.mintInflation();
-        assertTrue(minted == (DAO.baseInflationPerSec() * 2000), "math went wrong");
+        uint256 basePerSec1 = DAO.baseInflationPerSec();
+        assertTrue(minted   < (DAO.baseInflationPerSec() * 2000), "math went wrong");
+        /// @dev todo calculate match rise in basePerSec given increase in totalSupply
 
         skip(3000);
         minted += DAO.mintInflation();
-        assertTrue(minted == (DAO.baseInflationPerSec() * 5000), "math went wrong");
+        uint256 basePerSec2 = DAO.baseInflationPerSec();
+        assertTrue(minted < (DAO.baseInflationPerSec() * 5000), "math went wrong");
 
         skip(1);
         minted = DAO.mintInflation();
-        assertTrue(minted == DAO.baseInflationPerSec(), "math went wrong");
+        uint256 basePerSec3 = DAO.baseInflationPerSec();
+
+        assertTrue(basePerSec3 > basePerSec2, "inflation per sec should rise with supply");
+        assertTrue(basePerSec2 > basePerSec1, "inflation per sec should rise with supply");
     }
 }

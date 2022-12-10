@@ -11,6 +11,7 @@ contract ODAO {
     mapping(uint256 => address) daoOfId;
     mapping(address => address[]) daosOfToken;
     mapping(address => mapping(address => address)) userTokenDAO;
+    /// @dev useless? : allegience dynamic
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
     mapping(address => address) childParentDAO;
@@ -27,7 +28,7 @@ contract ODAO {
     //////////////////////////////////////////////////////////////*/
 
     error nullTopLayer();
-    error NotCoreMember();
+    error NotCoreMember(address who_);
     error aDAOnot();
     error NotDAOOwner();
     error membraneNotFound();
@@ -54,6 +55,7 @@ contract ODAO {
         daosOfToken[BaseTokenAddress_].push(newDAO);
         /// @dev make sure membership determination (allegience) accounts for overwrites
         userTokenDAO[msg.sender][BaseTokenAddress_] = newDAO;
+
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
 
@@ -61,6 +63,7 @@ contract ODAO {
         public
         returns (uint256 id)
     {
+        /// @dev consider negative as feature . [] <- isZero. sybil f
         /// @dev @security erc165 check
         Membrane memory M;
         M.tokens = tokens_;
@@ -77,8 +80,8 @@ contract ODAO {
     /// @param parentDAO_: parent
     /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
-        address internalT = iInstanceDAO(parentDAO_).internalTokenAddr();
-        if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember();
+        address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
+        if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
         if (daosOfToken[internalT].length > 99) revert SubDAOLimitReached();
         /// @dev membership sufficient for base layer grieffing attack
 
@@ -92,12 +95,11 @@ contract ODAO {
 
         usesMembrane[subDAOaddr] = membraneID_;
         daoOfId[entityID] = parentDAO_;
-        // daosOfToken[internalT].push(subDAOaddr); - done in createDAO()
 
         childParentDAO[subDAOaddr] = parentDAO_;
-        parentInstance.giveOwnership(msg.sender);
 
-        childInstance.makeOwnerMemberOnCreateForEndpointFunctionality();
+        childInstance.__initSetParentAddress(parentDAO_);
+        childInstance.memberOnCreate();
 
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
     }

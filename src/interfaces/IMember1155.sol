@@ -6,8 +6,6 @@ import "./structs.sol";
 interface IMemberRegistry {
     function makeMember(address who_, uint256 id_) external returns (bool);
 
-    function _wrapMint(address baseToken_, uint256 amount_, address to_) external returns (bool);
-    function _unwrapBurn(address baseToken_, uint256 amount_, address from_) external returns (bool);
     function gCheckBurn(address who_) external returns (bool);
     function howManyTotal(uint256 id_) external view returns (uint256);
     function setUri(bytes32 uri_) external returns (bytes32);

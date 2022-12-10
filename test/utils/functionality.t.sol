@@ -4,7 +4,7 @@ import "forge-std/Test.sol";
 
 import "../../src/interfaces/IMember1155.sol";
 import "../../src/interfaces/iInstanceDAO.sol";
-import "../../src/interfaces/IERC721.sol";
+import "../../src/interfaces/IDAO20.sol";
 
 import "../../src/oDAO.sol";
 import "../../src/Member1155.sol";
@@ -51,15 +51,35 @@ contract MyUtils is Test {
     }
 
     function _createSubDaos(uint256 howMany_, address parentDAO_) public returns (address[] memory subDs) {
+        uint basicMembrane = _createBasicMembrane();
         uint256 i;
         for (i; i < howMany_;) {
-            O.createSubDAO(_createBasicMembrane(), parentDAO_);
+            O.createSubDAO(basicMembrane, parentDAO_);
             unchecked {
                 ++i;
             }
         }
 
-        subDs = O.getDAOsOfToken(iInstanceDAO(parentDAO_).internalTokenAddr());
+        subDs = O.getDAOsOfToken(iInstanceDAO(parentDAO_).internalTokenAddress());
+    }
+
+    function _createNestedDAOs(address startDAO_, uint256 membrane, uint256 levels_)
+        public
+        returns (address[] memory nestedBaseIs0)
+    {
+        uint256 i;
+        nestedBaseIs0 = new address[](levels_);
+        nestedBaseIs0[i] = startDAO_;
+        assertTrue(iInstanceDAO(nestedBaseIs0[i]).isMember(Agent1), "not member");
+        membrane = membrane == 0 ? _createBasicMembrane() : membrane;
+
+        i = 1;
+        for (i; i < levels_;) {
+            nestedBaseIs0[i] = O.createSubDAO(membrane, nestedBaseIs0[i - 1]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /// @notice creates and assigns basic membrane (A1) to given DAOaddr

@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import "../src/interfaces/IMember1155.sol";
 import "../src/interfaces/iInstanceDAO.sol";
-// import "../src/interfaces/IERC20.sol";
+import "../src/interfaces/IDAO20.sol";
 import "../src/interfaces/IERC721.sol";
 
 import "../src/oDAO.sol";
@@ -140,11 +140,13 @@ contract oDao is Test {
         assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
         /// #### 1
 
+        skip(1);
         vm.prank(Agent3, Agent3);
-        BaseE20.approve(dInstance, type(uint256).max);
+        IDAO20(DAO.baseTokenAddress()).approve(DAO.internalTokenAddress(), type(uint256).max);
 
         vm.prank(Agent3, Agent3);
-        DAO.wrapMint(10000099999999999);
+        skip(1);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(10000099999999999);
 
         vm.prank(address(343), address(343));
         DAO.mintMembershipToken(Agent3);
@@ -162,20 +164,12 @@ contract oDao is Test {
         /// DAOinstance__NotMember()
         newInteresRate = DAO.signalInflation(5);
 
-        vm.prank(Agent3, Agent3);
-        newInteresRate = DAO.signalInflation(5);
-        assertTrue(DAO.baseInflationRate() == 5, "inconsistent");
-        assertTrue(DAO.baseInflationPerSec() != 0, "not persec 0");
-
         IERC20 internalT = IERC20(DAO.internalToken());
-        // assertTrue(internalT.totalSupply() == 100000);
 
         vm.startPrank(Agent1, Agent1);
-        BaseE20.approve(dInstance, type(uint256).max);
-        DAO.wrapMint(3144960000 * 10000000);
+        BaseE20.approve(DAO.internalTokenAddress(), type(uint256).max);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(3144960000 * 10000000);
         vm.stopPrank();
-
-        // assertTrue(DAO.baseInflationPerSec() != 0, "not persec 0");
 
         vm.prank(Agent3, Agent3);
         vm.expectRevert(); // [FAIL. Reason: >100!]
