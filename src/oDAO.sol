@@ -15,6 +15,8 @@ contract ODAO {
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
     mapping(address => address) childParentDAO;
+    mapping(address => address[]) topLevelPath;
+
     mapping(uint256 => ExternallCall) getExternalCall;
 
     IMemberRegistry MR;
@@ -43,7 +45,7 @@ contract ODAO {
     event isNowMember(address indexed who, uint256 indexed where, address indexed DAO);
     event CreatedMembrane(uint256 id, bytes metadata);
     event DAOchangedMembrane(address DAO, uint256 membrane);
-    event subDAOCreated(address indexed parendDAO, address indexed subDAO, address indexed creator);
+    event subDAOCreated(address indexed parentDAO, address indexed subDAO, address indexed creator);
     event CreatedExternalCall(address indexed willCall, address indexed createdBy, bytes callData);
     /*//////////////////////////////////////////////////////////////
                                  public
@@ -97,6 +99,22 @@ contract ODAO {
         daoOfId[entityID] = parentDAO_;
 
         childParentDAO[subDAOaddr] = parentDAO_;
+
+        address[] memory parentPath = topLevelPath[parentDAO_];
+        topLevelPath[subDAOaddr] = new address[](parentPath.length + 1);
+
+        if (parentPath.length > 0) {
+        
+        uint i= 1;
+        for (i; i<=parentPath.length;) {
+            topLevelPath[subDAOaddr][i] = parentPath[i-1];
+            unchecked { ++i;}
+        }
+            topLevelPath[subDAOaddr][0] = parentDAO_;
+        }
+
+    
+        subDAOaddr = address(childInstance);
 
         childInstance.__initSetParentAddress(parentDAO_);
         childInstance.memberOnCreate();
@@ -176,6 +194,10 @@ contract ODAO {
 
     function getParentDAO(address child_) public view returns (address) {
         return childParentDAO[child_];
+    }
+
+    function getTrickleDownPath(address floor_) external view returns (address[] memory) {
+        return topLevelPath[floor_];
     }
 
     function getDAOsOfToken(address parentToken) external view returns (address[] memory) {

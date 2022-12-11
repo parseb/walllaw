@@ -8,6 +8,11 @@ import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
 
+
+////DEEV
+import "forge-std/console.sol";
+
+
 contract DAOinstance {
     uint256 public baseID;
     uint256 public baseInflationRate;
@@ -35,6 +40,10 @@ contract DAOinstance {
 
     /// list of expressors for id/percent/uri
     mapping(uint256 => address[]) expressors;
+
+
+    //// DEV
+    uint256  timesCalled;
 
     constructor(address BaseToken_, address owner_, address MemberRegistry_) {
         ODAO = msg.sender;
@@ -196,45 +205,59 @@ contract DAOinstance {
         require(s);
     }
 
-    function feedStart() external returns (uint256 minted) {
-        address[] memory Crumbs = new address[](1);
-        return iInstanceDAO(address(this)).feedMe(Crumbs);
-    }
 
-    function feedMe(address[] memory crumbTrail) external returns (uint256 deposited) {
-        if (!IoDAO(ODAO).isDAO(msg.sender)) revert DAOinstance__OnlyDAO();
-        address[] memory freshCrumbs;
-        deposited = crumbTrail.length;
 
-        if (parentDAO != address(0) && crumbTrail[deposited - 1] != address(this)) {
-            if (deposited == 1 && crumbTrail[0] == address(0)) {
-            freshCrumbs[0] = address(this);
-            iInstanceDAO(parentDAO).feedMe(freshCrumbs);
-        }
-            if (deposited == 1) crumbTrail[0] = address(this);
-            freshCrumbs = new address[](deposited + 1);
-            uint256 i = deposited;
-            for (deposited; deposited > 0;) {
-                freshCrumbs[deposited] = crumbTrail[deposited];
-                unchecked {
-                    --deposited;
-                }
-            }
-            freshCrumbs[i] = address(this);
-            iInstanceDAO(parentDAO).feedMe(freshCrumbs);
-        }
-        freshCrumbs = new address[](deposited - 1);
-        if (freshCrumbs.length == 0) return deposited = internalToken.balanceOf(address(this));
-        //// mint inflation
-        if (freshCrumbs.length >= 1) redistributeSubDAO(crumbTrail[deposited - 2]);
-        uint i;
-        for (i; i < freshCrumbs.length;) {
-            freshCrumbs[i] = crumbTrail[i];
-            unchecked { ++ i; }
-        }
+    // function feedStart() external returns (uint256 minted) {
+    //     address[] memory Crumbs = new address[](1);
+    //     timesCalled = 0;
+    //     return iInstanceDAO(address(this)).feedMe(Crumbs);
+    // }
 
-        iInstanceDAO(parentDAO).feedMe(freshCrumbs);
-        /// get amount ------------------------- @todo
+    // function feedMe(address[] memory crumbTrail) external returns (uint256 deposited) {
+    //     timesCalled += 1;
+    //         console.log("senderis %s:", msg.sender);
+    //     if (!IoDAO(ODAO).isDAO(msg.sender)) revert DAOinstance__OnlyDAO();
+    //     address[] memory freshCrumbs;
+    //     deposited = crumbTrail.length;
+
+    //     if (parentDAO != address(0) && crumbTrail[deposited - 1] != address(this)) {
+    //         if (deposited == 1 && crumbTrail[0] == address(0)) {
+   
+    //         freshCrumbs = new address[](deposited);
+                     
+    //         freshCrumbs[0] = address(this);
+    //         iInstanceDAO(parentDAO).feedMe(freshCrumbs);
+
+    //     }
+    //         if (deposited == 1) crumbTrail[0] = address(this);
+                         
+    //         freshCrumbs = new address[](deposited + 1);
+    //         uint256 i = deposited;
+
+    //         for (i; i >0;) {
+  
+    //             freshCrumbs[i] = crumbTrail[i-1];
+    //             unchecked {
+    //                 i--;
+    //             }
+    //         }
+
+    //         freshCrumbs[i] = address(this);
+    //         iInstanceDAO(parentDAO).feedMe(freshCrumbs);
+    //     }
+
+    //     freshCrumbs = new address[](deposited - 1);
+    //     if (freshCrumbs.length == 0) return deposited = internalToken.balanceOf(address(this));
+    //     //// mint inflation
+    //     if (freshCrumbs.length >= 1) redistributeSubDAO(crumbTrail[deposited - 2]);
+    //     uint i;
+    //     for (i; i < freshCrumbs.length;) {
+    //         freshCrumbs[i] = crumbTrail[i];
+    //         unchecked { ++ i; }
+    //     }
+    //     console.logUint(timesCalled);
+        
+    //     iInstanceDAO(crumbTrail[0]).feedMe(freshCrumbs);
 
         //////// IERC20(internalToken).approve(crumbTrail[deposited])
         //////// IERC20(internalToken).transfer(crumbTrail[deposited], amount);
@@ -242,7 +265,7 @@ contract DAOinstance {
         //// iInstanceDAO(crumbTrail[deposited]).wrapMint??? why not just transfer?
 
         //// @todo check that no funds reach owner. no point really. can be delegateCalled to multisig if needed. look to remove 'owner' entirely
-    }
+    // }
 
     function mintMembershipToken(address to_) external returns (bool s) {
         s = checkG(to_);
@@ -412,7 +435,7 @@ contract DAOinstance {
         return results;
     }
 
-    function _msgSender() private returns (address) {
+    function _msgSender() private view returns (address) {
         ///
         return msg.sender;
     }

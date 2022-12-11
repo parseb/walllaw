@@ -26,15 +26,15 @@ contract GravityFeed is Test, MyUtils {
         vm.stopPrank();
     }
 
-    function testFeedStart() public {
-        vm.prank(Agent1);
-        BaseE20.approve(DAO.internalTokenAddress(), type(uint256).max);
-        vm.prank(Agent1);
-        IDAO20(DAO.internalTokenAddress()).wrapMint(1 ether);
-        skip(1);
-        assertTrue(DAO.feedStart() > 0, "feed didn't start");
+    // function testFeedStart() public {
+    //     vm.prank(Agent1);
+    //     BaseE20.approve(DAO.internalTokenAddress(), type(uint256).max);
+    //     vm.prank(Agent1);
+    //     IDAO20(DAO.internalTokenAddress()).wrapMint(1 ether);
+    //     skip(1);
+    //     assertTrue(DAO.feedStart() > 0, "feed didn't start");
 
-    }
+    // }
 
     function _initNestedConstantRates(
         uint256 howMany,
@@ -87,21 +87,47 @@ contract GravityFeed is Test, MyUtils {
         vm.stopPrank();
     }
 
-    function testDiferentiatedBalances() public {
-        iInstanceDAO[] memory DAOS;
+
+    function _DiferentiatedBalances(uint hM_) public returns (iInstanceDAO[] memory DAOS){
+
         uint256 timeStart = block.timestamp;
 
-        DAOS = _initNestedConstantRates(5, 10, 20, 100 ether, 10, 10 days);
+        DAOS = _initNestedConstantRates(hM_, 10, 20, 100 ether, 10, 10 days);
     
-        assertTrue(DAOS.length == 5);
+        assertTrue(DAOS.length == hM_);
         uint256 timeNow = block.timestamp;
-        assertTrue(timeNow == timeStart + (50 days));
+        assertTrue(timeNow == timeStart + (hM_ * 10 days));
 
-        iInstanceDAO D =  DAOS[DAOS.length - 1];
-        assertTrue(D.parentDAO() == address(DAOS[DAOS.length-2]));
+        uint i = DAOS.length;
 
-        D.feedStart();
-    
-        
+        for (i; i>=2;) {
+            iInstanceDAO D =  DAOS[i-1];
+            if (D.parentDAO() == address(0)) break;
+            if (i > 2) assertTrue(D.parentDAO() == address(DAOS[i-2]));
+            
+            console.log(address(DAOS[i-1]));
+
+            address[] memory path = new address[](hM_);
+            path = O.getTrickleDownPath(address(DAOS[i-1]));
+
+            unchecked { --i;}
+        }
+
     }
+
+    /// @dev fuzz : uint howMany
+    uint howMany =5;
+    function testDiferentiatedBalances() public {
+        vm.assume(howMany < 99);
+        vm.assume(howMany > 3);
+        iInstanceDAO[] memory DsszNuts;
+        DsszNuts = _DiferentiatedBalances(howMany);
+
+        O.getTrickleDownPath(address(DsszNuts[DsszNuts.length-2]));
+
+    }
+
+
 }
+
+

@@ -33,4 +33,7 @@ interface IoDAO {
     function getLongDistanceCall(uint256 id_) external view returns (ExternallCall memory);
 
     function prepLongDistanceCall(uint256 id_) external returns (ExternallCall memory);
+
+    function getTrickleDownPath(address floor_) external view returns (address[] memory);
+    
 }
