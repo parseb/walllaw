@@ -16,15 +16,15 @@ interface iInstanceDAO {
 
     function changeMembrane(uint256 membraneId_) external returns (uint256 membraneID);
 
-    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external returns (bool);
+    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external returns (uint);
 
     function multicall(bytes[] memory) external returns (bytes[] memory results);
 
     function executeExternalLogic(uint256 callId_) external returns (bool);
 
-    function feedMe(address[] memory crumbTrail) external returns (uint256);
+    function feedMe() external returns (uint256);
 
-    function redistributeSubDAO(address subDAO_) external returns (bool s);
+    function redistributeSubDAO(address subDAO_) external returns (uint256);
     /// view
 
     function owner() external view returns (address);

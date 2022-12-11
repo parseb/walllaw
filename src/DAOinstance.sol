@@ -19,7 +19,7 @@ contract DAOinstance {
     uint256 public baseInflationPerSec;
     uint256 public localID;
     uint256 public instantiatedAt;
-    address public ODAO;
+    address ODAO;
     address public parentDAO;
     address[2] private ownerStore;
     IERC20 public BaseToken;
@@ -135,7 +135,7 @@ contract DAOinstance {
     }
 
     /// @dev max length and sum of cronoOrderedDistributionAmts is 100
-    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external onlyMember returns (bool s) {
+    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external onlyMember returns (uint i) {
         uint256 senderForce = internalToken.balanceOf(_msgSender());
         if (senderForce == 0) revert DAOinstance__HasNoSay();
         redistributiveSignal[_msgSender()] = cronoOrderedDistributionAmts;
@@ -143,12 +143,11 @@ contract DAOinstance {
         address[] memory subDAOs = IoDAO(ODAO).getDAOsOfToken(internalTokenAddress());
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
-        uint256 i;
         uint256 centum;
         uint256 perSec;
         for (i; i < subDAOs.length;) {
 
-            s = redistributeSubDAO(subDAOs[i]);
+            redistributeSubDAO(subDAOs[i]);
 
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
             if (subunitPerSec[subDAOs[i]][1] == 0) {
@@ -205,67 +204,20 @@ contract DAOinstance {
         require(s);
     }
 
+    function feedMe() external returns (uint256 fed) {
+        address[] memory feedPath = IoDAO(ODAO).getTrickleDownPath(address(this));
+        if (feedPath[0] == address(0)) return fed = 0;
+        uint i = 1;
+        for (i; i < feedPath.length;) {
+            if (feedPath[i] == address(0)) break;
+            iInstanceDAO(feedPath[i]).redistributeSubDAO(feedPath[i-1]);
 
+            unchecked { ++ i;}
+        }
+        fed = iInstanceDAO(feedPath[0]).redistributeSubDAO(address(this)); 
+    }
 
-    // function feedStart() external returns (uint256 minted) {
-    //     address[] memory Crumbs = new address[](1);
-    //     timesCalled = 0;
-    //     return iInstanceDAO(address(this)).feedMe(Crumbs);
-    // }
-
-    // function feedMe(address[] memory crumbTrail) external returns (uint256 deposited) {
-    //     timesCalled += 1;
-    //         console.log("senderis %s:", msg.sender);
-    //     if (!IoDAO(ODAO).isDAO(msg.sender)) revert DAOinstance__OnlyDAO();
-    //     address[] memory freshCrumbs;
-    //     deposited = crumbTrail.length;
-
-    //     if (parentDAO != address(0) && crumbTrail[deposited - 1] != address(this)) {
-    //         if (deposited == 1 && crumbTrail[0] == address(0)) {
    
-    //         freshCrumbs = new address[](deposited);
-                     
-    //         freshCrumbs[0] = address(this);
-    //         iInstanceDAO(parentDAO).feedMe(freshCrumbs);
-
-    //     }
-    //         if (deposited == 1) crumbTrail[0] = address(this);
-                         
-    //         freshCrumbs = new address[](deposited + 1);
-    //         uint256 i = deposited;
-
-    //         for (i; i >0;) {
-  
-    //             freshCrumbs[i] = crumbTrail[i-1];
-    //             unchecked {
-    //                 i--;
-    //             }
-    //         }
-
-    //         freshCrumbs[i] = address(this);
-    //         iInstanceDAO(parentDAO).feedMe(freshCrumbs);
-    //     }
-
-    //     freshCrumbs = new address[](deposited - 1);
-    //     if (freshCrumbs.length == 0) return deposited = internalToken.balanceOf(address(this));
-    //     //// mint inflation
-    //     if (freshCrumbs.length >= 1) redistributeSubDAO(crumbTrail[deposited - 2]);
-    //     uint i;
-    //     for (i; i < freshCrumbs.length;) {
-    //         freshCrumbs[i] = crumbTrail[i];
-    //         unchecked { ++ i; }
-    //     }
-    //     console.logUint(timesCalled);
-        
-    //     iInstanceDAO(crumbTrail[0]).feedMe(freshCrumbs);
-
-        //////// IERC20(internalToken).approve(crumbTrail[deposited])
-        //////// IERC20(internalToken).transfer(crumbTrail[deposited], amount);
-
-        //// iInstanceDAO(crumbTrail[deposited]).wrapMint??? why not just transfer?
-
-        //// @todo check that no funds reach owner. no point really. can be delegateCalled to multisig if needed. look to remove 'owner' entirely
-    // }
 
     function mintMembershipToken(address to_) external returns (bool s) {
         s = checkG(to_);
@@ -309,13 +261,13 @@ contract DAOinstance {
 
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
         if (msg.sig == this.mintInflation.selector) {
-            baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 356 days / 100;
+            baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
             // subunitPerSec[address(this)][0] = baseInflationPerSec;
         }
 
         if (msg.sig == this.signalInflation.selector) {
             baseInflationRate = newVal_;
-            baseInflationPerSec = internalToken.totalSupply() * newVal_ / 356 days / 100;
+            baseInflationPerSec = internalToken.totalSupply() * newVal_ / 365 days / 100;
             // subunitPerSec[address(this)][0] = baseInflationPerSec;
             return _postMajorityCleanup(newVal_);
         }
@@ -385,7 +337,6 @@ contract DAOinstance {
         amountToMint = (block.timestamp - subunitPerSec[address(this)][1]);
         if (amountToMint == 0) return amountToMint;
 
-
         amountToMint = (amountToMint * baseInflationPerSec);
         require(internalToken.inflationaryMint(amountToMint));
         subunitPerSec[address(this)][1] = block.timestamp;
@@ -394,12 +345,11 @@ contract DAOinstance {
         emit inflationaryMint(amountToMint);
     }
 
-    function redistributeSubDAO(address subDAO_) public returns (bool s) {
+    function redistributeSubDAO(address subDAO_) public returns (uint256 gotAmt ) {
         mintInflation();
-        uint256 amt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
-
-        s = internalToken.transfer(subDAO_, amt);
+        gotAmt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
         subunitPerSec[subDAO_][1] = block.timestamp;
+        if (! internalToken.transfer(subDAO_, gotAmt)) revert DAOinstance__itTransferFailed();
     }
 
 
@@ -477,6 +427,6 @@ contract DAOinstance {
     }
 
     function isMember(address who_) public view returns (bool) {
-        return (iMR.balanceOf(msg.sender, baseID) > 0);
+        return (iMR.balanceOf(who_, baseID) > 0);
     }
 }

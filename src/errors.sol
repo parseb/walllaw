@@ -21,3 +21,4 @@ error DAOinstance__NotCallMaker();
 error DAOinstance__alreadySet();
 error DAOinstance__OnlyDAO();
 error DAOinstance__HasNoSay();
+error DAOinstance__itTransferFailed();

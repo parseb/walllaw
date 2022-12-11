@@ -77,7 +77,6 @@ contract GravityFeed is Test, MyUtils {
             DAOS[i].signalInflation(inflationRate);
             console.log(i);
             if(i < howMany-1) DAOS[i].distributiveSignal(distributionAmts);
-            console.log("############# I DID EXIT DISTRI ###################");
             sum += DAOS[i].baseInflationRate();
             if (skipBetweenSignals > 0) skip(skipBetweenSignals);
         }
@@ -116,14 +115,30 @@ contract GravityFeed is Test, MyUtils {
     }
 
     /// @dev fuzz : uint howMany
-    uint howMany =5;
+    uint howMany =11;
     function testDiferentiatedBalances() public {
-        vm.assume(howMany < 99);
-        vm.assume(howMany > 3);
+        // vm.assume(howMany < 99);
+        // vm.assume(howMany > 2);
         iInstanceDAO[] memory DsszNuts;
         DsszNuts = _DiferentiatedBalances(howMany);
 
-        O.getTrickleDownPath(address(DsszNuts[DsszNuts.length-2]));
+        address[] memory fullPath = new address[](DsszNuts.length);
+        iInstanceDAO lastNut = DsszNuts[DsszNuts.length-1];
+        fullPath = O.getTrickleDownPath(address(lastNut));
+
+        assertTrue(fullPath[fullPath.length-1] == address(0), 'chain end is not 0');
+        assertTrue(fullPath[0] == lastNut.parentDAO(), 'fist in path is not parent');
+
+
+        uint256 i=0;
+        for (i; i < fullPath.length-2; ) {
+            assertTrue(fullPath[i+1] == iInstanceDAO(fullPath[i]).parentDAO(), "expected parent - subdao relations");
+            iInstanceDAO(fullPath[i+1]).feedMe();
+            skip(10);
+            unchecked { ++ i;}
+
+        }
+
 
     }
 

@@ -10,13 +10,12 @@ import "./interfaces/IoDAO.sol";
 contract ODAO {
     mapping(uint256 => address) daoOfId;
     mapping(address => address[]) daosOfToken;
-    mapping(address => mapping(address => address)) userTokenDAO;
+    // mapping(address => mapping(address => address)) userTokenDAO;
     /// @dev useless? : allegience dynamic
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
-
     mapping(uint256 => ExternallCall) getExternalCall;
 
     IMemberRegistry MR;
@@ -56,7 +55,7 @@ contract ODAO {
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
         daosOfToken[BaseTokenAddress_].push(newDAO);
         /// @dev make sure membership determination (allegience) accounts for overwrites
-        userTokenDAO[msg.sender][BaseTokenAddress_] = newDAO;
+        // userTokenDAO[msg.sender][BaseTokenAddress_] = newDAO;
 
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
@@ -196,8 +195,8 @@ contract ODAO {
         return childParentDAO[child_];
     }
 
-    function getTrickleDownPath(address floor_) external view returns (address[] memory) {
-        return topLevelPath[floor_];
+    function getTrickleDownPath(address floor_) external view returns (address[] memory path) {
+        path = topLevelPath[floor_].length > 0 ? topLevelPath[floor_] : new address[](1);
     }
 
     function getDAOsOfToken(address parentToken) external view returns (address[] memory) {
