@@ -26,15 +26,6 @@ contract GravityFeed is Test, MyUtils {
         vm.stopPrank();
     }
 
-    // function testFeedStart() public {
-    //     vm.prank(Agent1);
-    //     BaseE20.approve(DAO.internalTokenAddress(), type(uint256).max);
-    //     vm.prank(Agent1);
-    //     IDAO20(DAO.internalTokenAddress()).wrapMint(1 ether);
-    //     skip(1);
-    //     assertTrue(DAO.feedStart() > 0, "feed didn't start");
-
-    // }
 
     function _initNestedConstantRates(
         uint256 howMany,
@@ -115,7 +106,7 @@ contract GravityFeed is Test, MyUtils {
     }
 
     /// @dev fuzz : uint howMany
-    uint howMany =11;
+    uint howMany =12;
     function testDiferentiatedBalances() public {
         // vm.assume(howMany < 99);
         // vm.assume(howMany > 2);
@@ -132,13 +123,27 @@ contract GravityFeed is Test, MyUtils {
 
         uint256 i=0;
         for (i; i < fullPath.length-2; ) {
+            IERC20 baseT = IERC20(iInstanceDAO(fullPath[i+1]).baseTokenAddress());
+            IERC20 internalT = IERC20(iInstanceDAO(fullPath[i+1]).internalTokenAddress());
+            uint baseBalanceBeforeFeed = baseT.balanceOf(fullPath[i+1]);
+            uint internalTBeforeFeed =  internalT.balanceOf(fullPath[i+1]);
             assertTrue(fullPath[i+1] == iInstanceDAO(fullPath[i]).parentDAO(), "expected parent - subdao relations");
             iInstanceDAO(fullPath[i+1]).feedMe();
             skip(10);
+            uint baseBalanceAfterFeed = baseT.balanceOf(fullPath[i+1]);
+            uint internalTAfterFeed =  internalT.balanceOf(fullPath[i+1]);
+            console.log(baseBalanceBeforeFeed);
+            console.log(internalTBeforeFeed);
+            console.log("------beforeFeed^----afterFeed >");
+            console.log(baseBalanceAfterFeed);
+            console.log(internalTAfterFeed);
+
+            assertTrue(baseBalanceAfterFeed > baseBalanceBeforeFeed);
+            assertTrue(internalTBeforeFeed == internalTAfterFeed);
+
             unchecked { ++ i;}
 
         }
-
 
     }
 

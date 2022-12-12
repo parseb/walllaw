@@ -6,7 +6,7 @@ import "./utils/functionality.t.sol";
 contract CheckTrickle is Test, MyUtils {
     iInstanceDAO DAO;
 
-    function setup() public {
+    function setUp() public {
         DAO = iInstanceDAO(_createDAO(address(BaseE20)));
         uint256 membrane = _createBasicMembrane();
         // _createSubDaos();

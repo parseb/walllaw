@@ -122,7 +122,7 @@ contract DAOinstance {
         return callId_ > 0;
     }
 
-    /// for un-delayed execution
+    /// for un-delayed execution todo
     function whitelistCall(uint256 callId_) external onlyOwner returns (uint256 oneTwo) {}
 
     function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
@@ -181,32 +181,26 @@ contract DAOinstance {
     /// @notice rollsback last user preference signal proportional to withdrawn amount
     function rollbackInfluence(address ofWhom_, uint256 amnt_) private {}
 
-    // /// @dev @todo: @security review token wrap
-    // function wrapMint(uint256 amount_) public returns (bool s) {
-
-    //     s = internalToken.wrapMint(msg.sender, amount_);
-    //     if (!s ) revert DAOinstance__TransferFailed();
-
-    //     // _balanceReWeigh(amount_);
-    //     require(s);
-    // }
 
     function unwrapBurn(uint256 amount_) public returns (bool s) {
-        rollbackInfluence(msg.sender, amount_);
+        // rollbackInfluence(msg.sender, amount_);
 
-        if (!internalToken.unwrapBurn(msg.sender, amount_)) revert DAOinstance__TransferFailed();
+        // if (!internalToken.transferFrom(msg.sender, address(this), amount_)) revert DAOinstance__TransferFailed();
+        // internalToken
+        // // = BaseToken.transfer(msg.sender, amount_);
+        // s = BaseToken.transferFrom([1], msg.sender, amount_);
 
-        // = BaseToken.transfer(msg.sender, amount_);
-        s = BaseToken.transferFrom(ownerStore[1], msg.sender, amount_);
-
-        // _balanceReWeigh(amount_);
-        /// @dev q: shoudl unwrapping be tied to exit module
-        require(s);
+        // // _balanceReWeigh(amount_);
+        // /// @dev q: shoudl unwrapping be tied to exit module
+        // require(s);
     }
 
     function feedMe() external returns (uint256 fed) {
         address[] memory feedPath = IoDAO(ODAO).getTrickleDownPath(address(this));
-        if (feedPath[0] == address(0)) return fed = 0;
+        if (feedPath[0] == address(0))  {
+            return fed = iInstanceDAO(parentDAO).redistributeSubDAO(address(this)); 
+        }
+
         uint i = 1;
         for (i; i < feedPath.length;) {
             if (feedPath[i] == address(0)) break;
