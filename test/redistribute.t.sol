@@ -4,8 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "./utils/functionality.t.sol";
 
-contract RedistributiveTest is Test, MyUtils { 
-
+contract RedistributiveTest is Test, MyUtils {
     uint256 basicMembraneId;
     uint256 initBaseSupply;
     uint256 initPerSec;
@@ -14,91 +13,85 @@ contract RedistributiveTest is Test, MyUtils {
     iInstanceDAO DAO;
     address[] subDaos;
 
-function setUp() public {
-    baseT = IERC20(_createAnERC20());
-    DAO = iInstanceDAO( _createDAO(address(baseT)));
-    internalT = IDAO20(DAO.internalTokenAddress());
+    function setUp() public {
+        baseT = IERC20(_createAnERC20());
+        DAO = iInstanceDAO(_createDAO(address(baseT)));
+        internalT = IDAO20(DAO.internalTokenAddress());
+    }
 
+    function testRedistrubutes() public {
+        /// nrOfSubDaos to fuzz
+        vm.startPrank(Agent1);
+
+        DAO.mintMembershipToken(Agent1);
+        subDaos = _createSubDaos(5, address(DAO));
+        assertTrue(internalT.balanceOf(Agent1) == 0);
+        baseT.approve(address(internalT), type(uint256).max);
+        internalT.wrapMint(100 ether);
+        skip(100);
+        DAO.signalInflation(50);
+        internalT.wrapMint(100 ether);
+        uint256[] memory distributiveSignal = new uint256[](5);
+        distributiveSignal[0] = 20;
+        distributiveSignal[1] = 20;
+        distributiveSignal[2] = 20;
+        distributiveSignal[3] = 20;
+        distributiveSignal[4] = 20;
+
+        DAO.distributiveSignal(distributiveSignal);
+        skip(365);
+
+        uint256 balance1 = internalT.balanceOf(subDaos[0]);
+        uint256 balance2 = internalT.balanceOf(subDaos[1]);
+        uint256 balance5 = internalT.balanceOf(subDaos[4]);
+
+        assertTrue(balance1 + balance2 + balance5 == 0);
+
+        DAO.redistributeSubDAO(subDaos[0]);
+        assertTrue(balance1 < internalT.balanceOf(subDaos[0]));
+        assertTrue(balance2 == internalT.balanceOf(subDaos[1]));
+        DAO.redistributeSubDAO(subDaos[1]);
+        assertTrue(balance2 < internalT.balanceOf(subDaos[1]));
+        assertTrue(internalT.balanceOf(subDaos[0]) == internalT.balanceOf(subDaos[1]));
+
+        skip(3);
+        DAO.redistributeSubDAO(subDaos[4]);
+        assertTrue(balance5 < internalT.balanceOf(subDaos[4]));
+        balance2 = internalT.balanceOf(subDaos[1]);
+        balance5 = internalT.balanceOf(subDaos[4]);
+
+        /// ###
+        assertTrue(balance5 > balance2 + ((DAO.baseInflationPerSec() / 5) * 2));
+        assertFalse(balance5 > balance2 + ((DAO.baseInflationPerSec() / 5) * 3));
+
+        vm.stopPrank();
+    }
+
+    function testIsOnlyMember0Balance() public {
+        vm.startPrank(Agent1);
+
+        DAO.mintMembershipToken(Agent1);
+
+        uint256 startI = DAO.baseInflationRate();
+
+        if (startI != 99) {
+            DAO.signalInflation(99);
+            assertTrue(DAO.baseInflationRate() == 99, "f to set inflation");
+            assertTrue(DAO.baseInflationPerSec() == 0, "fake base per sec");
+        }
+
+        skip(1);
+        uint256 membrane1 = O.inUseMembraneId(address(DAO));
+        DAO.changeMembrane(_createBasicMembrane());
+        uint256 membrane2 = O.inUseMembraneId(address(DAO));
+        assertTrue(membrane1 != membrane2, "failed to change membrane");
+
+        //// @dev assumed all majoritarian functions execute of 0 balance
+        vm.stopPrank();
+    }
 }
 
-
-function testRedistrubutes() public {
-    /// nrOfSubDaos to fuzz
-    vm.startPrank(Agent1);
-
-    DAO.mintMembershipToken(Agent1);
-    subDaos = _createSubDaos(5, address(DAO));
-    assertTrue(internalT.balanceOf(Agent1) == 0);
-    baseT.approve(address(internalT), type(uint256).max);
-    internalT.wrapMint(100 ether);
-    skip(100);
-    DAO.signalInflation(50);
-    internalT.wrapMint(100 ether);
-    uint256[] memory distributiveSignal = new uint256[](5);
-    distributiveSignal[0] = 20;
-    distributiveSignal[1] = 20;
-    distributiveSignal[2] = 20;
-    distributiveSignal[3] = 20;
-    distributiveSignal[4] = 20;
-
-    DAO.distributiveSignal(distributiveSignal);
-    skip(365);
-
-    uint balance1 =  internalT.balanceOf(subDaos[0]);
-    uint balance2 =  internalT.balanceOf(subDaos[1]);
-    uint balance5 =  internalT.balanceOf(subDaos[4]);
-    
-    assertTrue (balance1 + balance2 + balance5 == 0);
-
-    DAO.redistributeSubDAO(subDaos[0]);
-    assertTrue(balance1 < internalT.balanceOf(subDaos[0]));
-    assertTrue(balance2 == internalT.balanceOf(subDaos[1]));
-    DAO.redistributeSubDAO(subDaos[1]);
-    assertTrue(balance2 < internalT.balanceOf(subDaos[1]));
-    assertTrue(internalT.balanceOf(subDaos[0]) == internalT.balanceOf(subDaos[1]));
-
-    skip(3);
-    DAO.redistributeSubDAO(subDaos[4]);
-    assertTrue(balance5 < internalT.balanceOf(subDaos[4]));
-    balance2 = internalT.balanceOf(subDaos[1]);
-    balance5 = internalT.balanceOf(subDaos[4]);
-
-    /// ### 
-    assertTrue( balance5 > balance2 + ((DAO.baseInflationPerSec() /5) * 2 ));
-    assertFalse( balance5 > balance2 + ((DAO.baseInflationPerSec() /5) * 3 ));
-    
-
-    vm.stopPrank();
-}
-
-
-function testIsOnlyMember0Balance() public {
-    vm.startPrank(Agent1);
-
-    DAO.mintMembershipToken(Agent1);
-
-    uint startI = DAO.baseInflationRate();
-
-    if(startI != 99 ) {
-    DAO.signalInflation(99);
-    assertTrue(DAO.baseInflationRate() == 99, 'f to set inflation');
-    assertTrue(DAO.baseInflationPerSec() == 0, 'fake base per sec');
-    } 
-    
-    skip(1);
-    uint membrane1 = O.inUseMembraneId(address(DAO));
-    DAO.changeMembrane(_createBasicMembrane());
-    uint membrane2 = O.inUseMembraneId(address(DAO));
-    assertTrue(membrane1 != membrane2, "failed to change membrane");
-
-    //// @dev assumed all majoritarian functions execute of 0 balance
-    vm.stopPrank();
-}
-
-}
-
-
-// contract RedistributiveTest is Test, inflationtest  ..import { 
+// contract RedistributiveTest is Test, inflationtest  ..import {
 //     uint256 basicMembraneId;
 //     uint256 initBaseSupply;
 

@@ -102,7 +102,7 @@ contract redistributiveInflation is Test {
 
         uint256 minted = DAO.mintInflation();
         uint256 basePerSec1 = DAO.baseInflationPerSec();
-        assertTrue(minted   < (DAO.baseInflationPerSec() * 2000), "math went wrong");
+        assertTrue(minted < (DAO.baseInflationPerSec() * 2000), "math went wrong");
         /// @dev todo calculate match rise in basePerSec given increase in totalSupply
 
         skip(3000);

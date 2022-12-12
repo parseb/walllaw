@@ -31,7 +31,6 @@ contract ODAO {
     error nullTopLayer();
     error NotCoreMember(address who_);
     error aDAOnot();
-    error NotDAOOwner();
     error membraneNotFound();
     error SubDAOLimitReached();
     error NonR();
@@ -103,27 +102,26 @@ contract ODAO {
         topLevelPath[subDAOaddr] = new address[](parentPath.length + 1);
 
         if (parentPath.length > 0) {
-        
-        uint i= 1;
-        for (i; i<=parentPath.length;) {
-            topLevelPath[subDAOaddr][i] = parentPath[i-1];
-            unchecked { ++i;}
-        }
+            uint256 i = 1;
+            for (i; i <= parentPath.length;) {
+                topLevelPath[subDAOaddr][i] = parentPath[i - 1];
+                unchecked {
+                    ++i;
+                }
+            }
             topLevelPath[subDAOaddr][0] = parentDAO_;
         }
 
-    
         subDAOaddr = address(childInstance);
 
-        childInstance.__initSetParentAddress(parentDAO_);
-        childInstance.memberOnCreate();
+        childInstance.mintMembershipToken(msg.sender);
 
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
     }
 
     function setMembrane(address DAO_, uint256 membraneID_) external returns (bool) {
         if (!isDAO(DAO_)) revert aDAOnot();
-        if (!(msg.sender == DAO_ || msg.sender == iInstanceDAO(DAO_).owner())) revert NotDAOOwner();
+        if (!(msg.sender == DAO_)) revert aDAOnot();
         if (getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
 
         usesMembrane[DAO_] = membraneID_;

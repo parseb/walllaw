@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "./utils/functionality.t.sol";
 
-
 contract reageQuit is Test, MyUtils {
     /// like ragequit, withrdawals bubble up but not sideways
     iInstanceDAO DAO;
@@ -26,24 +25,19 @@ contract reageQuit is Test, MyUtils {
         _setCreateMembrane(address(DAO));
     }
 
-
     function testSimpleMint() public {
         uint256 howM = 12423423253453453535;
         assertTrue(address(baseT) != address(internalT));
         uint256 b0 = internalT.balanceOf(Agent3);
-        assertTrue(b0 == 0, 'should not have balance');
-        vm.prank(Agent3,Agent3);
-        baseT.approve(address(internalT),type(uint256).max);
+        assertTrue(b0 == 0, "should not have balance");
+        vm.prank(Agent3, Agent3);
+        baseT.approve(address(internalT), type(uint256).max);
         console.log("I approve: ", internalT.base());
-        vm.prank(Agent3,Agent3);
+        vm.prank(Agent3, Agent3);
         internalT.wrapMint(howM);
-        uint256 b1 =  internalT.balanceOf(Agent3);
-        assertTrue(b1 >= howM, 'should now have balance');
-
+        uint256 b1 = internalT.balanceOf(Agent3);
+        assertTrue(b1 >= howM, "should now have balance");
     }
 
-    function testSimpleBurn() public {
-        
-    }
-
+    function testSimpleBurn() public {}
 }

@@ -53,22 +53,22 @@ contract oDao is Test {
 
         assertTrue(address(DAO) != address(0));
         // assertTrue(DAO.baseID() == uint160(bytes20(address(DAO))));
-        assertTrue(DAO.owner() == deployer);
+        // assertTrue(DAO.owner() == deployer); /// removed owner role
     }
 
-    function testTransferOwnership() public {
-        testCreateNewDao();
+    // function testTransferOwnership() public {
+    //     testCreateNewDao();
 
-        assertTrue(DAO.owner() == deployer);
-        vm.prank(deployer, deployer);
-        BaseE20.approve(address(DAO), type(uint256).max - 1);
-        vm.prank(deployer);
-        DAO.giveOwnership(Agent1);
-        assertFalse(DAO.owner() == Agent1);
-        vm.prank(deployer);
-        DAO.giveOwnership(Agent1);
-        assertTrue(DAO.owner() == Agent1);
-    }
+    //     // assertTrue(DAO.owner() == deployer);
+    //     vm.prank(deployer, deployer);
+    //     BaseE20.approve(address(DAO), type(uint256).max - 1);
+    //     vm.prank(deployer);
+    //     DAO.giveOwnership(Agent1);
+    //     assertFalse(DAO.owner() == Agent1);
+    //     vm.prank(deployer);
+    //     DAO.giveOwnership(Agent1);
+    //     assertTrue(DAO.owner() == Agent1);
+    // }
 
     function testCreatesSubDAO() public {
         iInstanceDAO DI = iInstanceDAO(testCreateNewDao());
@@ -130,7 +130,7 @@ contract oDao is Test {
         a[0] = address(token2);
         u[0] = 101_000;
         uint256 membrane2 = O.createMembrane(a, u, bytes("url://deployer_noaccess"));
-        assertTrue(DAO.owner() == deployer, "owned not deployer");
+        // assertTrue(DAO.owner() == deployer, "owned not deployer");
 
         vm.expectRevert(); // membraneNotFound();
         O.setMembrane(dInstance, 2121);

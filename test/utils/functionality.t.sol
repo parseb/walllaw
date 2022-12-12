@@ -51,7 +51,7 @@ contract MyUtils is Test {
     }
 
     function _createSubDaos(uint256 howMany_, address parentDAO_) public returns (address[] memory subDs) {
-        uint basicMembrane = _createBasicMembrane();
+        uint256 basicMembrane = _createBasicMembrane();
         uint256 i;
         for (i; i < howMany_;) {
             O.createSubDAO(basicMembrane, parentDAO_);

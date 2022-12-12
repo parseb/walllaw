@@ -13,7 +13,6 @@ contract DAO20 is ERC20 {
     address public base;
     IERC20 baseToken;
 
-
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
         ERC20(name_, symbol_)
     {
@@ -35,7 +34,7 @@ contract DAO20 is ERC20 {
             _mint(msg.sender, amt);
             iInstanceDAO(owner).mintInflation();
         }
-        require(s, "pffff");
+        require(s, "ngmi");
     }
 
     function unwrapBurn(address from, uint256 amt) external OnlyOwner returns (bool) {
@@ -45,6 +44,12 @@ contract DAO20 is ERC20 {
     function inflationaryMint(uint256 amt) public OnlyOwner returns (bool) {
         _mint(owner, amt);
         return true;
+    }
+
+    function mintInitOne(address to_) external returns (bool) {
+        require(msg.sender == owner, "ngmi");
+        _mint(to_, 1);
+        return balanceOf(to_) == 1;
     }
 
     /// ////////////////////
@@ -72,7 +77,7 @@ contract DAO20 is ERC20 {
         /// limit transfers
         bool o = msg.sender == owner;
         o = !o ? iInstanceDAO(owner).parentDAO() == msg.sender : o;
-        o = !o ? (IDAO20(msg.sender).base() == address(this) ) : o;
+        o = !o ? (IDAO20(msg.sender).base() == address(this)) : o;
         require(o, "unauthorized - transferFrom");
 
         if (from == owner) _mint(owner, amount);

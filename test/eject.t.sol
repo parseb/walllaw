@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "./utils/functionality.t.sol";
 
-
 contract reageQuit is Test, MyUtils {
     /// like ragequit, withrdawals bubble up but not sideways
     iInstanceDAO DAO;
@@ -15,13 +14,10 @@ contract reageQuit is Test, MyUtils {
     }
 
     function setUp() public {
-
         DAO = iInstanceDAO(_createDAO(address(baseT)));
         internalT = IDAO20(DAO.internalTokenAddress());
         baseT.approve(address(internalT), type(uint256).max);
         internalT.wrapMint(1000 ether);
         _setCreateMembrane(address(DAO));
-
-        
     }
 }

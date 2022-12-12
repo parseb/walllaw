@@ -62,7 +62,7 @@ contract MemberRegistry is ERC1155 {
         _mint(who_, id_, 1, abi.encode(tokenUri[id_]));
 
         emit isNowMember(who_, id_, msg.sender);
-        return true;
+        return balanceOf[who_][id_] == 1;
     }
 
     function setUri(bytes32 uri_) external onlyDAO returns (bytes32) {

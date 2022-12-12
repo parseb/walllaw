@@ -16,7 +16,7 @@ interface iInstanceDAO {
 
     function changeMembrane(uint256 membraneId_) external returns (uint256 membraneID);
 
-    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external returns (uint);
+    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external returns (uint256);
 
     function multicall(bytes[] memory) external returns (bytes[] memory results);
 
