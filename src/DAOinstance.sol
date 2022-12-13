@@ -20,8 +20,8 @@ contract DAOinstance {
     address ODAO;
     address public parentDAO;
     IERC20 public BaseToken;
-    IMemberRegistry iMR;
     DAO20 public internalToken;
+    IMemberRegistry iMR;
 
     /// # EOA => subunit => [percentage, amt]
     mapping(address => mapping(address => uint256[2])) userSignal;
@@ -50,6 +50,7 @@ contract DAOinstance {
         localID = 1;
         iMR = IMemberRegistry(MemberRegistry_);
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
+        BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
         subunitPerSec[address(this)][1] = block.timestamp;
 
@@ -137,7 +138,9 @@ contract DAOinstance {
         returns (uint256 i)
     {
         uint256 senderForce = internalToken.balanceOf(_msgSender());
-        if (senderForce == 0) revert DAOinstance__HasNoSay();
+        if (senderForce == 0 && (!(cronoOrderedDistributionAmts.length == 0))) revert DAOinstance__HasNoSay();
+
+        if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[_msgSender()];
         redistributiveSignal[_msgSender()] = cronoOrderedDistributionAmts;
         /// cronoOrderedDistributionAmts
         address[] memory subDAOs = IoDAO(ODAO).getDAOsOfToken(internalTokenAddress());
@@ -155,7 +158,6 @@ contract DAOinstance {
             if (submittedValue == subunitPerSec[subDAOs[i]][0]) continue;
 
             address entity = subDAOs[i];
-            // uint256 prevValue = subunitPerSec[entity][0];
 
             unchecked {
                 centum += cronoOrderedDistributionAmts[i];
@@ -176,14 +178,6 @@ contract DAOinstance {
                 ++i;
             }
         }
-    }
-
-    /// @notice rollsback last user preference signal proportional to withdrawn amount
-    function rollbackInfluence(address ofWhom_, uint256 amnt_) private {}
-
-    function _preBurnRelease(uint256 amount_) external returns (bool s) {
-        // rollbackInfluence(msg.sender, amount_);
-        ///
     }
 
     function feedMe() external returns (uint256 fed) {
@@ -228,6 +222,7 @@ contract DAOinstance {
         s = iMR.makeMember(to_, baseID) && s;
     }
 
+    ///////////////////
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
         if (msg.sig == this.mintInflation.selector) {
             baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
@@ -343,7 +338,8 @@ contract DAOinstance {
     }
 
     function _msgSender() private view returns (address) {
-        ///
+        if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
+
         return msg.sender;
     }
 

@@ -22,3 +22,4 @@ error DAOinstance__alreadySet();
 error DAOinstance__OnlyDAO();
 error DAOinstance__HasNoSay();
 error DAOinstance__itTransferFailed();
+error DAOinstance__NotIToken();

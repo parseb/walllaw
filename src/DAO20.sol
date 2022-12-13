@@ -11,6 +11,7 @@ import "./interfaces/IDAO20.sol";
 contract DAO20 is ERC20 {
     address public owner;
     address public base;
+    address public burnInProgress;
     IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
@@ -31,8 +32,23 @@ contract DAO20 is ERC20 {
     function wrapMint(uint256 amt) external returns (bool s) {
         s = baseToken.transferFrom(msg.sender, owner, amt);
         if (s) {
-            _mint(msg.sender, amt);
             iInstanceDAO(owner).mintInflation();
+            _mint(msg.sender, amt);
+        }
+        require(s, "ngmi");
+    }
+
+    function unwrapBurn(uint256 amtToBurn_) external returns (bool s) {
+        require(balanceOf(msg.sender) >= amtToBurn_, "Insufficient balance");
+        require(burnInProgress == address(0), "burnInProgress");
+        burnInProgress = msg.sender;
+        uint256 amtToRefund = baseToken.balanceOf(owner) * amtToBurn_ / totalSupply();
+        _burn(msg.sender, amtToBurn_);
+        s = baseToken.transferFrom(owner, msg.sender, amtToRefund);
+
+        if (s) {
+            iInstanceDAO(owner).distributiveSignal(new uint256[](0));
+            burnInProgress = address(0);
         }
         require(s, "ngmi");
     }
