@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
+import "./interfaces/IMembrane.sol";
 import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
@@ -14,11 +15,12 @@ contract DAOinstance {
     uint256 public baseInflationPerSec;
     uint256 public localID;
     uint256 public instantiatedAt;
-    address ODAO;
     address public parentDAO;
+    address ODAO;
     IERC20 public BaseToken;
     DAO20 public internalToken;
     IMemberRegistry iMR;
+    IMembrane iMB;
 
     /// # EOA => subunit => [percentage, amt]
     mapping(address => mapping(address => uint256[2])) userSignal;
@@ -43,6 +45,7 @@ contract DAOinstance {
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
         localID = 1;
         iMR = IMemberRegistry(MemberRegistry_);
+        iMB = IMembrane(iMR.MembraneRegistryAddress());
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
         BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
@@ -98,7 +101,7 @@ contract DAOinstance {
 
         membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) <= 2))
             ? _majoritarianUpdate(membraneId_)
-            : IoDAO(ODAO).inUseMembraneId(address(this));
+            : iMB.inUseMembraneId(address(this));
     }
 
     //// @security with great power comes the need of great awareness
@@ -116,7 +119,7 @@ contract DAOinstance {
     function whitelistCall(uint256 callId_) external returns (uint256 oneTwo) {}
 
     function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
-        if (uint256(uri_) < 101 || IoDAO(ODAO).isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
+        if (uint256(uri_) < 101 || iMB.isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
         _expressPreference(uint256(uri_));
 
         currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) <= 2)
@@ -196,7 +199,7 @@ contract DAOinstance {
     /// @param who_ checked address
     function gCheck(address who_) external returns (bool s) {
         if (iMR.balanceOf(who_, baseID) == 0) return false;
-        s = checkG(who_);
+        s = iMB.checkG(who_);
         if (s) return true;
         if (!s) iMR.gCheckBurn(who_);
 
@@ -211,7 +214,7 @@ contract DAOinstance {
             if (internalToken.mintInitOne(to_)) return iMR.makeMember(to_, baseID);
         }
 
-        s = checkG(to_);
+        s = iMB.checkG(to_);
         if (!s) revert DAOinstance__Unqualified();
         s = iMR.makeMember(to_, baseID) && s;
     }
@@ -231,7 +234,7 @@ contract DAOinstance {
         }
 
         if (msg.sig == this.changeMembrane.selector) {
-            require(IoDAO(ODAO).setMembrane(address(this), newVal_), "f O.setM.");
+            require(iMB.setMembrane(newVal_), "f O.setM.");
             return _postMajorityCleanup(newVal_);
         }
 
@@ -340,18 +343,6 @@ contract DAOinstance {
     /*//////////////////////////////////////////////////////////////
                                  VIEW
     //////////////////////////////////////////////////////////////*/
-
-    function checkG(address _custard) public view returns (bool s) {
-        Membrane memory M = IoDAO(ODAO).getInUseMembraneOfDAO(address(this));
-        uint256 i;
-        s = true;
-        for (i; i < M.tokens.length;) {
-            s = s && (IERC20(M.tokens[i]).balanceOf(_custard) >= M.balances[i]);
-            unchecked {
-                ++i;
-            }
-        }
-    }
 
     function internalTokenAddress() external view returns (address) {
         return address(internalToken);

@@ -13,10 +13,10 @@ import "../src/Member1155.sol";
 import "./mocks/mockERC20.sol";
 
 contract redistributiveInflation is Test {
-    ODAO O;
+    IoDAO O;
     IERC20 BaseE20;
     IMemberRegistry iMR;
-
+    IMembrane iMB;
     DAOinstance DAO;
 
     address deployer = address(4896);
@@ -26,9 +26,10 @@ contract redistributiveInflation is Test {
 
     function setUp() public {
         vm.prank(deployer, deployer);
-        O = new ODAO();
         BaseE20 = IERC20(address(new M20()));
-        iMR = IMemberRegistry(O.getMemberRegistryAddr());
+        iMR = IMemberRegistry(address(new MemberRegistry()));
+        iMB = IMembrane(iMR.MembraneRegistryAddress());
+        O = IoDAO(iMR.ODAOaddress());
     }
 
     function _createAnERC20() public returns (address) {
@@ -42,7 +43,8 @@ contract redistributiveInflation is Test {
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
         skip(skipSeconds);
-        basicMid = O.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
+        basicMid =
+            iMB.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
     }
 
     function _membraneContext() public {
@@ -53,7 +55,7 @@ contract redistributiveInflation is Test {
         /// active membrane of dInstance
         uint256 currentMembrane;
 
-        currentMembrane = O.inUseMembraneId(dInstance);
+        currentMembrane = iMB.inUseMembraneId(dInstance);
         assertTrue(currentMembrane == 0, "has unexpected default membrane");
 
         address[] memory a = new address[](1);
@@ -61,12 +63,12 @@ contract redistributiveInflation is Test {
 
         a[0] = DAO.baseTokenAddress();
         u[0] = 101_000;
-        uint256 membrane1 = O.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
+        uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
 
         vm.prank(dInstance);
-        O.setMembrane(dInstance, membrane1);
+        iMB.setMembrane(membrane1);
 
-        assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
+        assertTrue((iMB.inUseMembraneId(dInstance) == membrane1), "failed to set");
     }
 
     //// #######################################

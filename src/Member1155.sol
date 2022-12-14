@@ -1,18 +1,30 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "./oDAO.sol";
+import "./MembraneRegistry.sol";
+
 import "solmate/tokens/ERC1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
+import "./interfaces/IMembrane.sol";
+import "./interfaces/IERC20.sol";
 
 contract MemberRegistry is ERC1155 {
     IoDAO oDAO;
+    IMembrane IMB;
+    address public ODAOaddress;
+    address public MembraneRegistryAddress;
 
     mapping(uint256 => bytes32) tokenUri;
+
     mapping(uint256 => uint256) uidTotalSupply;
 
     constructor() {
-        oDAO = IoDAO(msg.sender);
+        ODAOaddress = address(new ODAO());
+        MembraneRegistryAddress = address(new MembraneRegistry());
+        oDAO = IoDAO(ODAOaddress);
+        IMB = IMembrane(MembraneRegistryAddress);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -42,8 +54,6 @@ contract MemberRegistry is ERC1155 {
     //////////////////////////////////////////////////////////////*/
 
     /// mints membership token to provided address
-
-    /// todo - replace
 
     function makeMember(address who_, uint256 id_) external onlyDAO returns (bool) {
         /// the id_ of any subunit  is a multiple of DAO address

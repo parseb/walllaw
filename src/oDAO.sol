@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "./Member1155.sol";
 import "./DAOinstance.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
+import "./interfaces/IMembrane.sol";
 
 contract ODAO {
     mapping(uint256 => address) daoOfId;
     mapping(address => address[]) daosOfToken;
     // mapping(address => mapping(address => address)) userTokenDAO;
     /// @dev useless? : allegience dynamic
-    mapping(uint256 => Membrane) getMembraneById;
-    mapping(address => uint256) usesMembrane;
+
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
     mapping(uint256 => ExternallCall) getExternalCall;
@@ -21,7 +20,7 @@ contract ODAO {
     IMemberRegistry MR;
 
     constructor() {
-        MR = IMemberRegistry(address(new MemberRegistry()));
+        MR = IMemberRegistry(msg.sender);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -59,22 +58,6 @@ contract ODAO {
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
 
-    function createMembrane(address[] memory tokens_, uint256[] memory balances_, bytes memory meta_)
-        public
-        returns (uint256 id)
-    {
-        /// @dev consider negative as feature . [] <- isZero. sybil f
-        /// @dev @security erc165 check
-        Membrane memory M;
-        M.tokens = tokens_;
-        M.balances = balances_;
-        M.meta = meta_;
-        id = uint256(keccak256(abi.encode(M)));
-        getMembraneById[id] = M;
-
-        emit CreatedMembrane(id, meta_);
-    }
-
     /// @notice enshrines exclusionary sub-unit
     /// @param membraneID_: border materiality
     /// @param parentDAO_: parent
@@ -93,7 +76,8 @@ contract ODAO {
         subDAOaddr = createDAO(internalT);
         childInstance = iInstanceDAO(subDAOaddr);
 
-        usesMembrane[subDAOaddr] = membraneID_;
+        // usesMembrane[subDAOaddr] = membraneID_;
+
         daoOfId[entityID] = parentDAO_;
 
         childParentDAO[subDAOaddr] = parentDAO_;
@@ -117,16 +101,6 @@ contract ODAO {
         childInstance.mintMembershipToken(msg.sender);
 
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
-    }
-
-    function setMembrane(address DAO_, uint256 membraneID_) external returns (bool) {
-        if (!isDAO(DAO_)) revert aDAOnot();
-        if (!(msg.sender == DAO_)) revert aDAOnot();
-        if (getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
-
-        usesMembrane[DAO_] = membraneID_;
-        emit DAOchangedMembrane(DAO_, membraneID_);
-        return true;
     }
 
     function createExternalCall(address callPoint_, bytes memory callData_) external returns (uint256 id) {
@@ -165,28 +139,8 @@ contract ODAO {
         return daoOfId[id_];
     }
 
-    function entityData(uint256 id_) external view returns (bytes memory) {
-        return getMembraneById[id_].meta;
-    }
-
-    function getMembrane(uint256 id_) external view returns (Membrane memory) {
-        return getMembraneById[id_];
-    }
-
-    function isMembrane(uint256 id_) external view returns (bool) {
-        return (getMembraneById[id_].tokens.length > 0);
-    }
-
     function getMemberRegistryAddr() external view returns (address) {
         return address(MR);
-    }
-
-    function inUseMembraneId(address DAOaddress_) public view returns (uint256 ID) {
-        return usesMembrane[DAOaddress_];
-    }
-
-    function getInUseMembraneOfDAO(address DAOAddress_) public view returns (Membrane memory) {
-        return getMembraneById[usesMembrane[DAOAddress_]];
     }
 
     function getParentDAO(address child_) public view returns (address) {

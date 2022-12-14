@@ -7,16 +7,17 @@ import "../src/interfaces/IMember1155.sol";
 import "../src/interfaces/iInstanceDAO.sol";
 import "../src/interfaces/IDAO20.sol";
 import "../src/interfaces/IERC721.sol";
+import "../src/interfaces/IMembrane.sol";
 
 import "../src/oDAO.sol";
 import "../src/Member1155.sol";
 import "./mocks/mockERC20.sol";
 
 contract oDao is Test {
-    ODAO O;
+    IoDAO O;
     IERC20 BaseE20;
     IMemberRegistry iMR;
-
+    IMembrane iMB;
     DAOinstance DAO;
 
     address deployer = address(4896);
@@ -26,9 +27,10 @@ contract oDao is Test {
 
     function setUp() public {
         vm.prank(deployer, deployer);
-        O = new ODAO();
+        iMR = IMemberRegistry(address(new MemberRegistry()));
+        iMB = IMembrane(iMR.MembraneRegistryAddress());
+        O = IoDAO(iMR.ODAOaddress());
         BaseE20 = IERC20(address(new M20()));
-        iMR = IMemberRegistry(O.getMemberRegistryAddr());
     }
 
     function _createAnERC20() public returns (address) {
@@ -43,7 +45,7 @@ contract oDao is Test {
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
 
-        basicMid = O.createMembrane(tokens_, balances_, bytes("veryMeta"));
+        basicMid = iMB.createMembrane(tokens_, balances_, bytes("veryMeta"));
     }
 
     function testCreateNewDao() public returns (address Dinstnace) {
@@ -86,7 +88,7 @@ contract oDao is Test {
         subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
         assertTrue(subDAOaddr != address(0), "subdao is 0");
 
-        assertTrue(O.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
+        assertTrue(iMB.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
     }
 
     function testAddMembertoDAO() public {
@@ -114,7 +116,7 @@ contract oDao is Test {
         /// active membrane of dInstance
         uint256 currentMembrane;
 
-        currentMembrane = O.inUseMembraneId(dInstance);
+        currentMembrane = iMB.inUseMembraneId(dInstance);
         assertTrue(currentMembrane == 0, "has unexpected default membrane");
 
         address[] memory a = new address[](1);
@@ -122,22 +124,22 @@ contract oDao is Test {
 
         a[0] = DAO.baseTokenAddress();
         u[0] = 101_000;
-        uint256 membrane1 = O.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
+        uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
 
         vm.prank(Agent3);
         IERC20 token2 = IERC20(_createAnERC20());
 
         a[0] = address(token2);
         u[0] = 101_000;
-        uint256 membrane2 = O.createMembrane(a, u, bytes("url://deployer_noaccess"));
+        uint256 membrane2 = iMB.createMembrane(a, u, bytes("url://deployer_noaccess"));
         // assertTrue(DAO.owner() == deployer, "owned not deployer");
 
         vm.expectRevert(); // membraneNotFound();
-        O.setMembrane(dInstance, 2121);
+        iMB.setMembrane(2121);
 
         vm.prank(dInstance);
-        O.setMembrane(dInstance, membrane1);
-        assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
+        iMB.setMembrane(membrane1);
+        assertTrue((iMB.inUseMembraneId(dInstance) == membrane1), "failed to set");
         /// #### 1
 
         skip(1);
@@ -151,10 +153,10 @@ contract oDao is Test {
         vm.prank(address(343), address(343));
         DAO.mintMembershipToken(Agent3);
 
-        assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
+        assertTrue((iMB.inUseMembraneId(dInstance) == membrane1), "failed to set");
         vm.prank(Agent3, Agent3);
         DAO.changeMembrane(membrane1);
-        assertTrue((O.inUseMembraneId(dInstance) == membrane1), "failed to set");
+        assertTrue((iMB.inUseMembraneId(dInstance) == membrane1), "failed to set");
 
         //// basic interest rate flip
         uint256 newInteresRate;
@@ -190,7 +192,7 @@ contract oDao is Test {
         IERC20 token3 = IERC20(_createAnERC20());
         a[0] = address(token3);
         u[0] = 4294967294;
-        uint256 membrane3 = O.createMembrane(a, u, bytes("url://deployer_noaccess"));
+        uint256 membrane3 = iMB.createMembrane(a, u, bytes("url://deployer_noaccess"));
 
         vm.prank(Agent1, Agent1);
         token3.approve(address(this), type(uint256).max);
@@ -222,6 +224,6 @@ contract oDao is Test {
         subDAOaddr = address(O.createSubDAO(membraneID, address(DI)));
         assertTrue(subDAOaddr != address(0), "subdao is 0");
 
-        assertTrue(O.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
+        assertTrue(iMB.inUseMembraneId(subDAOaddr) != 0, "Has no membrane");
     }
 }

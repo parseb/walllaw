@@ -5,15 +5,16 @@ import "forge-std/Test.sol";
 import "../../src/interfaces/IMember1155.sol";
 import "../../src/interfaces/iInstanceDAO.sol";
 import "../../src/interfaces/IDAO20.sol";
+import "../../src/interfaces/IMembrane.sol";
 
-import "../../src/oDAO.sol";
 import "../../src/Member1155.sol";
 import "../mocks/mockERC20.sol";
 
 contract MyUtils is Test {
-    ODAO O;
+    IoDAO O;
     IERC20 BaseE20;
     IMemberRegistry iMR;
+    IMembrane iMB;
 
     address deployer = address(4896);
     address Agent1 = address(16);
@@ -22,9 +23,10 @@ contract MyUtils is Test {
 
     constructor() {
         vm.prank(deployer, deployer);
-        O = new ODAO();
+        iMR = IMemberRegistry(address(new MemberRegistry()));
+        O = IoDAO(iMR.ODAOaddress());
+        iMB = IMembrane(iMR.MembraneRegistryAddress());
         BaseE20 = IERC20(address(new M20()));
-        iMR = IMemberRegistry(O.getMemberRegistryAddr());
     }
 
     function _createAnERC20() public returns (address) {
@@ -42,7 +44,8 @@ contract MyUtils is Test {
 
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
-        basicMid = O.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
+        basicMid =
+            iMB.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
     }
 
     function _setInflation(uint256 percent_, address _DAOaddr) public {
@@ -89,7 +92,7 @@ contract MyUtils is Test {
         /// active membrane of dInstance
         uint256 currentMembrane;
 
-        currentMembrane = O.inUseMembraneId(DAO_);
+        currentMembrane = iMB.inUseMembraneId(DAO_);
         assertTrue(currentMembrane == 0, "has unexpected default membrane");
 
         address[] memory a = new address[](1);
@@ -97,12 +100,12 @@ contract MyUtils is Test {
 
         a[0] = DAO.baseTokenAddress();
         u[0] = 101_000;
-        uint256 membrane1 = O.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
+        uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
 
         vm.prank(DAO_);
-        O.setMembrane(DAO_, membrane1);
+        iMB.setMembrane(membrane1);
 
-        assertTrue((O.inUseMembraneId(DAO_) == membrane1), "failed to set");
+        assertTrue((iMB.inUseMembraneId(DAO_) == membrane1), "failed to set");
     }
 
     function _setNewInflation(address DAO_, uint256 inflation_) public {
