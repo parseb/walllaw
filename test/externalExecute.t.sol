@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "./utils/functionality.t.sol";
 import "./mocks/mExtern.sol";
 
-contract CheckTrickle is Test, MyUtils {
+contract ExternalCall is Test, MyUtils {
     iInstanceDAO DAO;
     DelegStore MockExt;
     address mxt;
@@ -15,14 +15,14 @@ contract CheckTrickle is Test, MyUtils {
         DAO = iInstanceDAO(_createDAO(address(BaseE20)));
     }
 
-    function setup() public {
-        vm.startPrank(Agent1);
+    // function setUp() public {
+    //     vm.startPrank(Agent1);
 
-        IDAO20(DAO.internalTokenAddress()).wrapMint(1000 ether);
-        _setCreateMembrane(address(DAO));
-        // _createSubDaos();
-        vm.stopPrank();
-    }
+    //     IDAO20(DAO.internalTokenAddress()).wrapMint(1000 ether);
+    //     _setCreateMembrane(address(DAO));
+    //     // _createSubDaos();
+    //     vm.stopPrank();
+    // }
 
     function _createSimpleExternalCall() public returns (uint256) {
         return O.createExternalCall(mxt, abi.encodeWithSignature("changeODAOAddress(uint256)", 999999999));

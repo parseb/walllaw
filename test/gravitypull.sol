@@ -46,7 +46,7 @@ contract GravityFeed is Test, MyUtils {
         address[] memory nestedDAOS = new address[](howMany);
 
         vm.startPrank(Agent1, Agent1);
-        assertTrue(DAO.isMember(Agent1), "not member of base");
+        assertTrue(iMR.balanceOf(Agent1, DAO.baseID()) == 1, "not member of base");
 
         nestedDAOS = _createNestedDAOs(DDD, 0, howMany);
 

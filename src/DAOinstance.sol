@@ -8,9 +8,6 @@ import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
 
-////DEEV
-import "forge-std/console.sol";
-
 contract DAOinstance {
     uint256 public baseID;
     uint256 public baseInflationRate;
@@ -37,9 +34,6 @@ contract DAOinstance {
 
     /// list of expressors for id/percent/uri
     mapping(uint256 => address[]) expressors;
-
-    //// DEV
-    uint256 timesCalled;
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;
@@ -74,19 +68,18 @@ contract DAOinstance {
                                  modifiers
     //////////////////////////////////////////////////////////////*/
 
-    modifier onlyOwner() {
-        if (msg.sender == ODAO) revert DAOinstance__NotOwner();
-        _;
-    }
-
     modifier onlyMember() {
-        if (!isMember(_msgSender())) revert DAOinstance__NotMember();
-        _;
+        if (msg.sender == address(internalToken)) {
+            _;
+        } else {
+            if (!isMember(_msgSender())) revert DAOinstance__NotMember();
+            _;
+        }
     }
 
     modifier onlyEndpoint() {
         if (iMR.howManyTotal(baseID) > 1) revert DAOinstance__NotEndpoint1();
-        if (iMR.balanceOf(msg.sender, baseID) == 1) revert DAOinstance__NotEndpoint2();
+        // if (iMR.balanceOf(msg.sender, baseID) == 1) revert DAOinstance__NotEndpoint2();
         _;
     }
 
@@ -120,7 +113,7 @@ contract DAOinstance {
     }
 
     /// for un-delayed execution todo
-    function whitelistCall(uint256 callId_) external onlyOwner returns (uint256 oneTwo) {}
+    function whitelistCall(uint256 callId_) external returns (uint256 oneTwo) {}
 
     function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
         if (uint256(uri_) < 101 || IoDAO(ODAO).isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
@@ -137,13 +130,14 @@ contract DAOinstance {
         onlyMember
         returns (uint256 i)
     {
-        uint256 senderForce = internalToken.balanceOf(_msgSender());
+        address sender = _msgSender();
+        uint256 senderForce = internalToken.balanceOf(sender);
         if (senderForce == 0 && (!(cronoOrderedDistributionAmts.length == 0))) revert DAOinstance__HasNoSay();
-
-        if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[_msgSender()];
-        redistributiveSignal[_msgSender()] = cronoOrderedDistributionAmts;
+        if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[sender];
+        redistributiveSignal[sender] = cronoOrderedDistributionAmts;
+        // mintInflation();
         /// cronoOrderedDistributionAmts
-        address[] memory subDAOs = IoDAO(ODAO).getDAOsOfToken(internalTokenAddress());
+        address[] memory subDAOs = IoDAO(ODAO).getDAOsOfToken(address(internalToken));
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
         uint256 centum;
@@ -168,11 +162,11 @@ contract DAOinstance {
             perSec = (senderForce * 100 / internalToken.totalSupply()) * perSec / 100;
             /// @dev senderForce < 1%
 
-            subunitPerSec[entity][0] = (subunitPerSec[entity][0] - userSignal[_msgSender()][entity][1]) + perSec;
+            subunitPerSec[entity][0] = (subunitPerSec[entity][0] - userSignal[sender][entity][1]) + perSec;
             /// @dev fuzz  (subunitPerSec[entity][0] > userSignal[_msgSender()][entity][1])
 
-            userSignal[_msgSender()][entity][1] = perSec;
-            userSignal[_msgSender()][entity][0] = submittedValue;
+            userSignal[sender][entity][1] = perSec;
+            userSignal[sender][entity][0] = submittedValue;
 
             unchecked {
                 ++i;
@@ -359,20 +353,20 @@ contract DAOinstance {
         }
     }
 
-    function internalTokenAddress() public view returns (address) {
+    function internalTokenAddress() external view returns (address) {
         return address(internalToken);
     }
 
-    function baseTokenAddress() public view returns (address) {
+    function baseTokenAddress() external view returns (address) {
         return address(BaseToken);
     }
 
-    function getUserReDistribution(address user_) public view returns (uint256[] memory) {
+    function getUserReDistribution(address user_) external view returns (uint256[] memory) {
         return redistributiveSignal[user_];
     }
 
-    function isMember(address who_) public view returns (bool) {
-        return (iMR.balanceOf(who_, baseID) > 0);
+    function isMember(address who_) private view returns (bool) {
+        return ((who_ == address(internalToken)) || iMR.balanceOf(who_, baseID) > 0);
     }
 
     function getUserSignal(address who_, address subUnit_) external view returns (uint256[2] memory) {

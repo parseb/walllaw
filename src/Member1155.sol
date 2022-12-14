@@ -9,7 +9,6 @@ contract MemberRegistry is ERC1155 {
     IoDAO oDAO;
 
     mapping(uint256 => bytes32) tokenUri;
-
     mapping(uint256 => uint256) uidTotalSupply;
 
     constructor() {
@@ -43,6 +42,8 @@ contract MemberRegistry is ERC1155 {
     //////////////////////////////////////////////////////////////*/
 
     /// mints membership token to provided address
+
+    /// todo - replace
 
     function makeMember(address who_, uint256 id_) external onlyDAO returns (bool) {
         /// the id_ of any subunit  is a multiple of DAO address

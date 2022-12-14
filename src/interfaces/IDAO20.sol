@@ -7,6 +7,8 @@ interface IDAO20 {
 
     function owner() external view returns (address o);
 
+    function unwrapBurn(uint256 amtToBurn_) external returns (bool s);
+
     //////////////////
 
     /**

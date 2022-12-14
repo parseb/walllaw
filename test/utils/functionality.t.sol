@@ -70,7 +70,7 @@ contract MyUtils is Test {
         uint256 i;
         nestedBaseIs0 = new address[](levels_);
         nestedBaseIs0[i] = startDAO_;
-        assertTrue(iInstanceDAO(nestedBaseIs0[i]).isMember(Agent1), "not member");
+        assertTrue(iMR.balanceOf(Agent1, iInstanceDAO(nestedBaseIs0[i]).baseID()) > 0, "not member");
         membrane = membrane == 0 ? _createBasicMembrane() : membrane;
 
         i = 1;
