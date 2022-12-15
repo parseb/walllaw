@@ -6,13 +6,16 @@ import "./structs.sol";
 interface IMemberRegistry {
     function makeMember(address who_, uint256 id_) external returns (bool);
 
-    function gCheckBurn(address who_) external returns (bool);
+    function gCheckBurn(address who_, address DAO_) external returns (bool);
+
+    /// onlyMembrane
     function howManyTotal(uint256 id_) external view returns (uint256);
     function setUri(bytes32 uri_) external returns (bytes32);
     function uri(uint256 id) external view returns (string memory);
 
     function ODAOaddress() external view returns (address);
     function MembraneRegistryAddress() external view returns (address);
+    function LongCallAddress() external view returns (address);
 
     //////////////////////// ERC1155
 

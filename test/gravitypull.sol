@@ -27,51 +27,51 @@ contract GravityFeed is Test, MyUtils {
     }
 
     function _initNestedConstantRates(
-        uint256 howMany,
+        uint256 howMany_,
         /// nr SubDAOS
-        uint256 inflationRate,
+        uint256 inflationRate_,
         /// all use same inflation rate
-        uint256 distributionRate,
+        uint256 distributionRate_,
         /// percentage of inflation for pull down
-        uint256 baseWrapAmount,
+        uint256 baseWrapAmount_,
         /// base DAO capital
-        uint256 divTrickleWrap,
+        uint256 divTrickleWrap_,
         ///  divided by wrapped to lower level
-        uint256 skipBetweenSignals
+        uint256 skipBetweenSignals_
     )
         /// sec time increment between inflation and distri. signal
         public
         returns (iInstanceDAO[] memory DAOS)
     {
-        address[] memory nestedDAOS = new address[](howMany);
+        address[] memory nestedDAOS = new address[](howMany_);
 
         vm.startPrank(Agent1, Agent1);
         assertTrue(iMR.balanceOf(Agent1, DAO.baseID()) == 1, "not member of base");
 
-        nestedDAOS = _createNestedDAOs(DDD, 0, howMany);
+        nestedDAOS = _createNestedDAOs(DDD, 0, howMany_);
 
         uint256[] memory distributionAmts = new uint256[](1);
-        distributionAmts[0] = distributionRate;
+        distributionAmts[0] = distributionRate_;
 
         BaseE20.approve(address(DAO), 100 ether);
-        IDAO20(DAO.internalTokenAddress()).wrapMint(baseWrapAmount);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(baseWrapAmount_);
 
-        DAOS = new iInstanceDAO[](howMany);
+        DAOS = new iInstanceDAO[](howMany_);
         uint256 i;
         uint256 sum;
         for (i; i < nestedDAOS.length; i++) {
-            uint256 amtToTrickle = baseWrapAmount / divTrickleWrap;
+            uint256 amtToTrickle = baseWrapAmount_ / divTrickleWrap_;
             DAOS[i] = iInstanceDAO(nestedDAOS[i]);
             IERC20(DAOS[i].baseTokenAddress()).approve(DAOS[i].internalTokenAddress(), amtToTrickle);
             IDAO20(DAOS[i].internalTokenAddress()).wrapMint(amtToTrickle);
-            DAOS[i].signalInflation(inflationRate);
+            DAOS[i].signalInflation(inflationRate_);
             console.log(i);
-            if (i < howMany - 1) DAOS[i].distributiveSignal(distributionAmts);
+            if (i < howMany_ - 1) DAOS[i].distributiveSignal(distributionAmts);
             sum += DAOS[i].baseInflationRate();
-            if (skipBetweenSignals > 0) skip(skipBetweenSignals);
+            if (skipBetweenSignals_ > 0) skip(skipBetweenSignals_);
         }
 
-        require(sum == (howMany * inflationRate));
+        require(sum == (howMany_ * inflationRate_));
 
         vm.stopPrank();
     }

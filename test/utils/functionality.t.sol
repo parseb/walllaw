@@ -6,6 +6,7 @@ import "../../src/interfaces/IMember1155.sol";
 import "../../src/interfaces/iInstanceDAO.sol";
 import "../../src/interfaces/IDAO20.sol";
 import "../../src/interfaces/IMembrane.sol";
+import "../../src/interfaces/ILongCall.sol";
 
 import "../../src/Member1155.sol";
 import "../mocks/mockERC20.sol";
@@ -15,6 +16,7 @@ contract MyUtils is Test {
     IERC20 BaseE20;
     IMemberRegistry iMR;
     IMembrane iMB;
+    ILongCall iLG;
 
     address deployer = address(4896);
     address Agent1 = address(16);
@@ -27,6 +29,7 @@ contract MyUtils is Test {
         O = IoDAO(iMR.ODAOaddress());
         iMB = IMembrane(iMR.MembraneRegistryAddress());
         BaseE20 = IERC20(address(new M20()));
+        iLG = ILongCall(iMR.LongCallAddress());
     }
 
     function _createAnERC20() public returns (address) {
@@ -103,7 +106,7 @@ contract MyUtils is Test {
         uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
 
         vm.prank(DAO_);
-        iMB.setMembrane(membrane1);
+        iMB.setMembrane(membrane1, DAO_);
 
         assertTrue((iMB.inUseMembraneId(DAO_) == membrane1), "failed to set");
     }

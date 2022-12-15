@@ -66,7 +66,7 @@ contract redistributiveInflation is Test {
         uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
 
         vm.prank(dInstance);
-        iMB.setMembrane(membrane1);
+        iMB.setMembrane(membrane1, dInstance);
 
         assertTrue((iMB.inUseMembraneId(dInstance) == membrane1), "failed to set");
     }

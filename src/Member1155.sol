@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./oDAO.sol";
 import "./MembraneRegistry.sol";
+import "./LongCall.sol";
 
 import "solmate/tokens/ERC1155.sol";
 import "./interfaces/IoDAO.sol";
@@ -15,6 +16,7 @@ contract MemberRegistry is ERC1155 {
     IMembrane IMB;
     address public ODAOaddress;
     address public MembraneRegistryAddress;
+    address public LongCallAddress;
 
     mapping(uint256 => bytes32) tokenUri;
 
@@ -22,7 +24,8 @@ contract MemberRegistry is ERC1155 {
 
     constructor() {
         ODAOaddress = address(new ODAO());
-        MembraneRegistryAddress = address(new MembraneRegistry());
+        MembraneRegistryAddress = address(new MembraneRegistry(ODAOaddress));
+        LongCallAddress = address(new LongCall());
         oDAO = IoDAO(ODAOaddress);
         IMB = IMembrane(MembraneRegistryAddress);
     }
@@ -37,12 +40,17 @@ contract MemberRegistry is ERC1155 {
     error MR1155_UnauthorizedID();
     error MR1155_InvalidMintID();
     error MR1155_AlreadyIn();
+    error MR1155_OnlyMembraneRegistry();
 
     modifier onlyDAO() {
         if (!oDAO.isDAO(msg.sender)) revert MR1155_UnregisteredDAO();
         _;
     }
 
+    modifier onlyMembraneR() {
+        if (msg.sender != MembraneRegistryAddress) revert MR1155_OnlyMembraneRegistry();
+        _;
+    }
     /*//////////////////////////////////////////////////////////////
                                  events
     //////////////////////////////////////////////////////////////*/
@@ -103,8 +111,8 @@ contract MemberRegistry is ERC1155 {
     }
 
     /// @notice custom burn for gCheck functionality
-    function gCheckBurn(address who_) external onlyDAO returns (bool) {
-        uint256 id_ = uint160(bytes20(msg.sender));
+    function gCheckBurn(address who_, address DAO_) external onlyMembraneR returns (bool) {
+        uint256 id_ = uint160(bytes20(DAO_));
         _burn(who_, id_, balanceOf[who_][id_]);
         return balanceOf[who_][id_] == 0;
     }
@@ -123,24 +131,24 @@ contract MemberRegistry is ERC1155 {
         uidTotalSupply[id] -= 1;
     }
 
-    function _batchBurn(address from, uint256[] memory ids, uint256[] memory amounts) internal override {
-        revert("_batchBurn");
-    }
+    // function _batchBurn(address from, uint256[] memory ids, uint256[] memory amounts) internal override {
+    //     revert("_batchBurn");
+    // }
 
-    function _batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-        internal
-        override
-    {
-        revert("_batchMint");
-    }
+    // function _batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+    //     internal
+    //     override
+    // {
+    //     revert("_batchMint");
+    // }
 
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] calldata ids,
-        uint256[] calldata amounts,
-        bytes calldata data
-    ) public override {
-        revert("safeBatchTransferFrom");
-    }
+    // function safeBatchTransferFrom(
+    //     address from,
+    //     address to,
+    //     uint256[] calldata ids,
+    //     uint256[] calldata amounts,
+    //     bytes calldata data
+    // ) public override {
+    //     revert("safeBatchTransferFrom");
+    // }
 }

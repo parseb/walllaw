@@ -12,20 +12,25 @@ import "./errors.sol";
 
 contract MembraneRegistry {
     address MRaddress;
+    IoDAO ODAO;
     IMemberRegistry iMR;
 
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
 
-    constructor() {
+    constructor(address ODAO_) {
         iMR = IMemberRegistry(msg.sender);
+        ODAO = IoDAO(ODAO_);
     }
 
-    error membraneNotFound();
-    error aDAOnot();
+    error Membrane__membraneNotFound();
+    error Membrane__aDAOnot();
+    error Membrane__ExpectedODorD();
+    error Membrane__MembraneChangeLimited();
 
     event CreatedMembrane(uint256 id, bytes metadata);
     event ChangedMembrane(address they, uint256 membrane);
+    event gCheckKick(address indexed who);
 
     function createMembrane(address[] memory tokens_, uint256[] memory balances_, bytes memory meta_)
         public
@@ -43,23 +48,38 @@ contract MembraneRegistry {
         emit CreatedMembrane(id, meta_);
     }
 
-    function setMembrane(uint256 membraneID_) external returns (bool) {
-        if (getMembraneById[membraneID_].tokens.length == 0) revert membraneNotFound();
-        usesMembrane[msg.sender] = membraneID_;
-        emit ChangedMembrane(msg.sender, membraneID_);
+    function setMembrane(uint256 membraneID_, address dao_) external returns (bool) {
+        if ((msg.sender != dao_) && (msg.sender != address(ODAO))) revert Membrane__MembraneChangeLimited();
+
+        if (getMembraneById[membraneID_].tokens.length == 0) revert Membrane__membraneNotFound();
+        usesMembrane[dao_] = membraneID_;
+        emit ChangedMembrane(dao_, membraneID_);
         return true;
     }
 
-    function checkG(address _custard) public view returns (bool s) {
-        Membrane memory M = getInUseMembraneOfDAO(address(this));
+    function checkG(address who_, address DAO_) public view returns (bool s) {
+        Membrane memory M = getInUseMembraneOfDAO(DAO_);
         uint256 i;
         s = true;
         for (i; i < M.tokens.length;) {
-            s = s && (IERC20(M.tokens[i]).balanceOf(_custard) >= M.balances[i]);
+            s = s && (IERC20(M.tokens[i]).balanceOf(who_) >= M.balances[i]);
             unchecked {
                 ++i;
             }
         }
+    }
+
+    //// @notice burns membership token of check entity if ineligible
+    /// @param who_ checked address
+    function gCheck(address who_, address DAO_) external returns (bool s) {
+        if (iMR.balanceOf(who_, uint160(bytes20(DAO_))) == 0) return false;
+        s = checkG(who_, DAO_);
+        if (s) return true;
+        if (!s) iMR.gCheckBurn(who_, DAO_);
+
+        //// removed liquidate on kick . this burns membership token but lets user own internaltoken. @security consider
+
+        emit gCheckKick(who_);
     }
 
     function entityData(uint256 id_) external view returns (bytes memory) {

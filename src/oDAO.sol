@@ -10,14 +10,10 @@ import "./interfaces/IMembrane.sol";
 contract ODAO {
     mapping(uint256 => address) daoOfId;
     mapping(address => address[]) daosOfToken;
-    // mapping(address => mapping(address => address)) userTokenDAO;
-    /// @dev useless? : allegience dynamic
-
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
-    mapping(uint256 => ExternallCall) getExternalCall;
-
     IMemberRegistry MR;
+    address public MB;
 
     constructor() {
         MR = IMemberRegistry(msg.sender);
@@ -39,11 +35,9 @@ contract ODAO {
     //////////////////////////////////////////////////////////////*/
 
     event newDAOCreated(address indexed DAO, address indexed token);
-    event isNowMember(address indexed who, uint256 indexed where, address indexed DAO);
-    event CreatedMembrane(uint256 id, bytes metadata);
+    event isNowMember(address indexed DAO, address indexed who, uint256 indexed where);
     event DAOchangedMembrane(address DAO, uint256 membrane);
     event subDAOCreated(address indexed parentDAO, address indexed subDAO, address indexed creator);
-    event CreatedExternalCall(address indexed willCall, address indexed createdBy, bytes callData);
     /*//////////////////////////////////////////////////////////////
                                  public
     //////////////////////////////////////////////////////////////*/
@@ -52,8 +46,6 @@ contract ODAO {
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR)));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
         daosOfToken[BaseTokenAddress_].push(newDAO);
-        /// @dev make sure membership determination (allegience) accounts for overwrites
-        // userTokenDAO[msg.sender][BaseTokenAddress_] = newDAO;
 
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
@@ -63,23 +55,16 @@ contract ODAO {
     /// @param parentDAO_: parent
     /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
-        address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
+        address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
         if (daosOfToken[internalT].length > 99) revert SubDAOLimitReached();
         /// @dev membership sufficient for base layer grieffing attack
 
-        iInstanceDAO parentInstance = iInstanceDAO(parentDAO_);
-        iInstanceDAO childInstance;
-
-        uint256 entityID = parentInstance.incrementSubDAO() * parentInstance.baseID();
+        if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
 
         subDAOaddr = createDAO(internalT);
-        childInstance = iInstanceDAO(subDAOaddr);
 
-        // usesMembrane[subDAOaddr] = membraneID_;
-
-        daoOfId[entityID] = parentDAO_;
-
+        IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
         childParentDAO[subDAOaddr] = parentDAO_;
 
         address[] memory parentPath = topLevelPath[parentDAO_];
@@ -96,31 +81,8 @@ contract ODAO {
             topLevelPath[subDAOaddr][0] = parentDAO_;
         }
 
-        subDAOaddr = address(childInstance);
-
-        childInstance.mintMembershipToken(msg.sender);
-
+        iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
-    }
-
-    function createExternalCall(address callPoint_, bytes memory callData_) external returns (uint256 id) {
-        ExternallCall memory ecALL;
-        ecALL.callPointAddress = callPoint_;
-        ecALL.callData = callData_;
-        ecALL.lastCalledAt = block.timestamp + 5 days;
-        /// @dev is this feature worth the risks?
-        ecALL.eligibleCaller = tx.origin;
-
-        id = uint256(keccak256(callData_)) - block.timestamp;
-        getExternalCall[id] = ecALL;
-
-        emit CreatedExternalCall(callPoint_, msg.sender, callData_);
-    }
-
-    function prepLongDistanceCall(uint256 id_) external returns (ExternallCall memory) {
-        if ((getExternalCall[id_].lastCalledAt) >= block.timestamp) revert NonR();
-        getExternalCall[id_].lastCalledAt = block.timestamp + 5 days;
-        return getExternalCall[id_];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -132,11 +94,6 @@ contract ODAO {
     /// @param toCheck_: address to check if registered as DAO
     function isDAO(address toCheck_) public view returns (bool) {
         return (daoOfId[uint160(bytes20(toCheck_))] == toCheck_);
-    }
-
-    /// @notice returns the DAO instance to which the given id_ belongs to
-    function getDAOfromID(uint256 id_) public view returns (address) {
-        return daoOfId[id_];
     }
 
     function getMemberRegistryAddr() external view returns (address) {
@@ -153,9 +110,5 @@ contract ODAO {
 
     function getDAOsOfToken(address parentToken) external view returns (address[] memory) {
         return daosOfToken[parentToken];
-    }
-
-    function getLongDistanceCall(uint256 id_) external view returns (ExternallCall memory) {
-        return getExternalCall[id_];
     }
 }

@@ -5,6 +5,7 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
+import "./interfaces/ILongCall.sol";
 import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
@@ -13,7 +14,6 @@ contract DAOinstance {
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
-    uint256 public localID;
     uint256 public instantiatedAt;
     address public parentDAO;
     address ODAO;
@@ -21,6 +21,7 @@ contract DAOinstance {
     DAO20 public internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
+    ILongCall iLG;
 
     /// # EOA => subunit => [percentage, amt]
     mapping(address => mapping(address => uint256[2])) userSignal;
@@ -43,9 +44,9 @@ contract DAOinstance {
         BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
-        localID = 1;
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
+        iLG = ILongCall(iMR.LongCallAddress());
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
         BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
@@ -58,13 +59,11 @@ contract DAOinstance {
                                  events
     //////////////////////////////////////////////////////////////*/
 
-    event LocalIncrement(uint256 localID);
     event StateAdjusted();
     event AdjustedRate();
     event UserPreferedGuidance();
     event GlobalInflationUpdated(uint256 RatePerYear, uint256 perSecInflation);
     event inflationaryMint(uint256 amount);
-    event gCheckKick(address indexed who);
     event NewInstance(address indexed at, address indexed baseToken, address owner);
 
     /*//////////////////////////////////////////////////////////////
@@ -78,12 +77,6 @@ contract DAOinstance {
             if (!isMember(_msgSender())) revert DAOinstance__NotMember();
             _;
         }
-    }
-
-    modifier onlyEndpoint() {
-        if (iMR.howManyTotal(baseID) > 1) revert DAOinstance__NotEndpoint1();
-        // if (iMR.balanceOf(msg.sender, baseID) == 1) revert DAOinstance__NotEndpoint2();
-        _;
     }
 
     /// percentage anualized 1-100 as relative to the totalSupply of base token
@@ -115,9 +108,6 @@ contract DAOinstance {
         return callId_ > 0;
     }
 
-    /// for un-delayed execution todo
-    function whitelistCall(uint256 callId_) external returns (uint256 oneTwo) {}
-
     function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
         if (uint256(uri_) < 101 || iMB.isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
         _expressPreference(uint256(uri_));
@@ -127,7 +117,6 @@ contract DAOinstance {
             : bytes32(abi.encode(iMR.uri(baseID)));
     }
 
-    /// @dev max length and sum of cronoOrderedDistributionAmts is 100
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts)
         external
         onlyMember
@@ -138,8 +127,7 @@ contract DAOinstance {
         if (senderForce == 0 && (!(cronoOrderedDistributionAmts.length == 0))) revert DAOinstance__HasNoSay();
         if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[sender];
         redistributiveSignal[sender] = cronoOrderedDistributionAmts;
-        // mintInflation();
-        /// cronoOrderedDistributionAmts
+
         address[] memory subDAOs = IoDAO(ODAO).getDAOsOfToken(address(internalToken));
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
@@ -150,7 +138,7 @@ contract DAOinstance {
 
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
             if (subunitPerSec[subDAOs[i]][1] == 0) {
-                subunitPerSec[subDAOs[i]][1] = iInstanceDAO(subDAOs[i]).initiatedAt();
+                subunitPerSec[subDAOs[i]][1] = iInstanceDAO(subDAOs[i]).instantiatedAt();
             }
             if (submittedValue == subunitPerSec[subDAOs[i]][0]) continue;
 
@@ -162,7 +150,7 @@ contract DAOinstance {
             if (centum > 100) revert DAOinstance__Over100();
 
             perSec = submittedValue * baseInflationPerSec / 100;
-            perSec = (senderForce * 100 / internalToken.totalSupply()) * perSec / 100;
+            perSec = (senderForce * 1 ether / internalToken.totalSupply()) * perSec / 1 ether;
             /// @dev senderForce < 1%
 
             subunitPerSec[entity][0] = (subunitPerSec[entity][0] - userSignal[sender][entity][1]) + perSec;
@@ -195,26 +183,13 @@ contract DAOinstance {
         fed = iInstanceDAO(feedPath[0]).redistributeSubDAO(address(this));
     }
 
-    //// @notice burns membership token of check entity if ineligible
-    /// @param who_ checked address
-    function gCheck(address who_) external returns (bool s) {
-        if (iMR.balanceOf(who_, baseID) == 0) return false;
-        s = iMB.checkG(who_);
-        if (s) return true;
-        if (!s) iMR.gCheckBurn(who_);
-
-        //// removed liquidate on kick . this burns membership token but lets user own internaltoken. @security consider
-
-        emit gCheckKick(who_);
-    }
-
     function mintMembershipToken(address to_) external returns (bool s) {
         if (msg.sender == ODAO) {
             parentDAO = IoDAO(ODAO).getParentDAO(address(this));
             if (internalToken.mintInitOne(to_)) return iMR.makeMember(to_, baseID);
         }
 
-        s = iMB.checkG(to_);
+        s = iMB.checkG(to_, address(this));
         if (!s) revert DAOinstance__Unqualified();
         s = iMR.makeMember(to_, baseID) && s;
     }
@@ -223,18 +198,16 @@ contract DAOinstance {
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
         if (msg.sig == this.mintInflation.selector) {
             baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
-            // subunitPerSec[address(this)][0] = baseInflationPerSec;
         }
 
         if (msg.sig == this.signalInflation.selector) {
             baseInflationRate = newVal_;
             baseInflationPerSec = internalToken.totalSupply() * newVal_ / 365 days / 100;
-            // subunitPerSec[address(this)][0] = baseInflationPerSec;
             return _postMajorityCleanup(newVal_);
         }
 
         if (msg.sig == this.changeMembrane.selector) {
-            require(iMB.setMembrane(newVal_), "f O.setM.");
+            require(iMB.setMembrane(newVal_, address(this)), "f O.setM.");
             return _postMajorityCleanup(newVal_);
         }
 
@@ -245,7 +218,7 @@ contract DAOinstance {
 
         if (msg.sig == this.executeExternalLogic.selector) {
             bool s;
-            ExternallCall memory ExT = IoDAO(ODAO).prepLongDistanceCall(newVal_);
+            ExternallCall memory ExT = iLG.prepLongDistanceCall(newVal_);
             if (ExT.eligibleCaller != msg.sender) revert DAOinstance__NotCallMaker();
 
             (s,) = address(ExT.callPointAddress).delegatecall(ExT.callData);
@@ -311,19 +284,6 @@ contract DAOinstance {
         gotAmt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
         subunitPerSec[subDAO_][1] = block.timestamp;
         if (!internalToken.transfer(subDAO_, gotAmt)) revert DAOinstance__itTransferFailed();
-    }
-
-    function incrementSubDAO() external returns (uint256) {
-        require(msg.sender == ODAO, "root only");
-        return _incrementID();
-    }
-
-    function _incrementID() private returns (uint256) {
-        unchecked {
-            ++localID;
-        }
-        emit LocalIncrement(localID);
-        return localID;
     }
 
     function multicall(bytes[] calldata data) external returns (bytes[] memory results) {

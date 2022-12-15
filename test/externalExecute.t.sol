@@ -25,7 +25,7 @@ contract ExternalCall is Test, MyUtils {
     // }
 
     function _createSimpleExternalCall() public returns (uint256) {
-        return O.createExternalCall(mxt, abi.encodeWithSignature("changeODAOAddress(uint256)", 999999999));
+        return iLG.createExternalCall(mxt, abi.encodeWithSignature("changeODAOAddress(uint256)", 999999999));
     }
 
     function testCreateExternalCall() public {

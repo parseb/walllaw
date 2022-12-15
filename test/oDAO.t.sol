@@ -95,7 +95,7 @@ contract oDao is Test {
         iInstanceDAO DI = iInstanceDAO(testCreateNewDao());
 
         assertFalse(iMR.balanceOf(deployer, DI.baseID()) == 1, "isNotCoreMember");
-        assertTrue(O.getDAOfromID(DI.baseID()) == address(DI), "NOT!!!");
+        assertTrue(O.isDAO(address(DI)), "NOT!!!");
 
         assertTrue(iMR.balanceOf(Agent2, DI.baseID()) == 0, "is alreadly member");
         DI.mintMembershipToken(Agent2);
@@ -135,10 +135,10 @@ contract oDao is Test {
         // assertTrue(DAO.owner() == deployer, "owned not deployer");
 
         vm.expectRevert(); // membraneNotFound();
-        iMB.setMembrane(2121);
+        iMB.setMembrane(2121, address(DAO));
 
         vm.prank(dInstance);
-        iMB.setMembrane(membrane1);
+        iMB.setMembrane(membrane1, address(DAO));
         assertTrue((iMB.inUseMembraneId(dInstance) == membrane1), "failed to set");
         /// #### 1
 
@@ -166,8 +166,6 @@ contract oDao is Test {
         /// DAOinstance__NotMember()
         newInteresRate = DAO.signalInflation(5);
 
-        IERC20 internalT = IERC20(DAO.internalToken());
-
         vm.startPrank(Agent1, Agent1);
         BaseE20.approve(DAO.internalTokenAddress(), type(uint256).max);
         IDAO20(DAO.internalTokenAddress()).wrapMint(3144960000 * 10000000);
@@ -186,8 +184,8 @@ contract oDao is Test {
 
         /// gCheck
 
-        assertTrue(DAO.gCheck(Agent1), "expected Agent1 to be g");
-        assertFalse(DAO.gCheck(address(33335433)));
+        assertTrue(iMB.gCheck(Agent1, address(DAO)), "expected Agent1 to be g");
+        assertFalse(iMB.gCheck(address(33335433), address(DAO)));
 
         IERC20 token3 = IERC20(_createAnERC20());
         a[0] = address(token3);
@@ -202,8 +200,8 @@ contract oDao is Test {
         vm.prank(Agent1, Agent1);
         DAO.changeMembrane(membrane3);
 
-        assertFalse(DAO.gCheck(Agent1), "expected Agent1 to be g");
-        assertFalse(DAO.gCheck(address(111)));
+        assertFalse(iMB.gCheck(Agent1, address(DAO)), "expected Agent1 to be g");
+        assertFalse(iMB.gCheck(address(111), address(DAO)));
 
         /// #### test tipping point
     }

@@ -10,7 +10,7 @@ interface IMembrane {
 
     function getMembrane(uint256 id) external view returns (Membrane memory);
 
-    function setMembrane(uint256 membraneID_) external returns (bool);
+    function setMembrane(uint256 membraneID_, address DAO_) external returns (bool);
 
     function inUseMembraneId(address DAOaddress_) external view returns (uint256 Id);
 
@@ -21,5 +21,7 @@ interface IMembrane {
         returns (uint256);
     function isMembrane(uint256 id_) external view returns (bool);
 
-    function checkG(address _custard) external view returns (bool s);
+    function checkG(address who, address DAO_) external view returns (bool s);
+
+    function gCheck(address who_, address DAO_) external returns (bool);
 }

@@ -1,23 +1,38 @@
 pragma solidity ^0.8.13;
 
+import "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import "../../src/DAO20.sol";
+import "../../src/interfaces/IMembrane.sol";
+import "../../src/interfaces/ILongCall.sol";
+
 contract DelegStore {
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
     uint256 public localID;
     uint256 public instantiatedAt;
-    address public ODAO;
-    address[2] private ownerStore;
-    // IERC20 public BaseToken;
-    // IMemberRegistry iMR;
-    // DAO20 public internalToken;
-    mapping(address => mapping(address => uint256[2])) userSignal;
-    mapping(address => uint256[2]) subunitPerSec;
-    mapping(address => uint256[]) redistributiveSignal;
-    mapping(uint256 => mapping(address => uint256)) public expressed;
-    mapping(uint256 => address[]) expressors;
+    address public parentDAO;
+    address ODAO;
+    IERC20 public BaseToken;
+    DAO20 public internalToken;
+    IMemberRegistry iMR;
+    IMembrane iMB;
+    ILongCall iLG;
 
-    address miniOwner;
+    /// # EOA => subunit => [percentage, amt]
+    mapping(address => mapping(address => uint256[2])) userSignal;
+
+    /// #subunit id => [perSecond, timestamp]
+    mapping(address => uint256[2]) subunitPerSec;
+
+    /// last user distributive signal
+    mapping(address => uint256[]) redistributiveSignal;
+
+    /// expressed: id/percent/uri | msgSender()/address(0) | value/0
+    mapping(uint256 => mapping(address => uint256)) expressed;
+
+    /// list of expressors for id/percent/uri
+    mapping(uint256 => address[]) expressors;
 
     constructor() {
         baseID = 5;
