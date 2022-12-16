@@ -12,6 +12,8 @@ interface IMembrane {
 
     function setMembrane(uint256 membraneID_, address DAO_) external returns (bool);
 
+    function setMembraneEndpoint(uint256 membraneID_, address subDAOaddr, address owner) external returns (bool);
+
     function inUseMembraneId(address DAOaddress_) external view returns (uint256 Id);
 
     function getInUseMembraneOfDAO(address DAOAddress_) external view returns (Membrane memory);

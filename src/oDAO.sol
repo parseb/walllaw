@@ -14,6 +14,7 @@ contract ODAO {
     mapping(address => address[]) topLevelPath;
     IMemberRegistry MR;
     address public MB;
+    uint256 constant MAX_160 = type(uint160).max;
 
     constructor() {
         MR = IMemberRegistry(msg.sender);
@@ -29,15 +30,16 @@ contract ODAO {
     error membraneNotFound();
     error SubDAOLimitReached();
     error NonR();
+    error FailedToSetMembrane();
+
 
     /*//////////////////////////////////////////////////////////////
                                  events
     //////////////////////////////////////////////////////////////*/
 
     event newDAOCreated(address indexed DAO, address indexed token);
-    event isNowMember(address indexed DAO, address indexed who, uint256 indexed where);
-    event DAOchangedMembrane(address DAO, uint256 membrane);
     event subDAOCreated(address indexed parentDAO, address indexed subDAO, address indexed creator);
+
     /*//////////////////////////////////////////////////////////////
                                  public
     //////////////////////////////////////////////////////////////*/
@@ -48,8 +50,7 @@ contract ODAO {
         daosOfToken[BaseTokenAddress_].push(newDAO);
 
         emit newDAOCreated(newDAO, BaseTokenAddress_);
-        if (MB == address(0)) MB = MR.MembraneRegistryAddress();
-
+        if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
     }
 
     /// @notice enshrines exclusionary sub-unit
@@ -57,18 +58,14 @@ contract ODAO {
     /// @param parentDAO_: parent
     /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
-
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
-        if (daosOfToken[internalT].length > 100_00) revert SubDAOLimitReached();
-        /// @dev membership sufficient for base layer grieffing attack
-
-
+        if (daosOfToken[internalT].length > 9_999) revert SubDAOLimitReached();
 
         subDAOaddr = createDAO(internalT);
-
-
-        IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
+        bool isEndpoint = ( membraneID_ < MAX_160 ) && ( address(uint160(membraneID_))  == msg.sender);
+        isEndpoint ? IMembrane(MB).setMembraneEndpoint(membraneID_, subDAOaddr, msg.sender) : IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
+        
         childParentDAO[subDAOaddr] = parentDAO_;
 
         address[] memory parentPath = topLevelPath[parentDAO_];
@@ -85,8 +82,9 @@ contract ODAO {
             topLevelPath[subDAOaddr][0] = parentDAO_;
         }
 
-        iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
+        if (! isEndpoint ) iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
+
     }
 
     /*//////////////////////////////////////////////////////////////
