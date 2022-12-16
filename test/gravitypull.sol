@@ -5,8 +5,6 @@ import "./utils/functionality.t.sol";
 import "./mocks/mExtern.sol";
 
 contract GravityFeed is Test, MyUtils {
-    /// pull and mint inflation from upper to lower
-
     iInstanceDAO DAO;
     address DDD;
 
@@ -104,7 +102,7 @@ contract GravityFeed is Test, MyUtils {
     }
 
     /// @dev fuzz : uint howMany
-    uint256 howMany = 12;
+    uint256 howMany = 21;
 
     function testDiferentiatedBalances() public {
         // vm.assume(howMany < 99);

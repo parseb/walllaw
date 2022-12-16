@@ -323,4 +323,8 @@ contract DAOinstance {
     function getUserSignal(address who_, address subUnit_) external view returns (uint256[2] memory) {
         return userSignal[who_][subUnit_];
     }
+
+    function getILongDistanceAddress() external view returns (address) {
+        return address(iLG);
+    }
 }

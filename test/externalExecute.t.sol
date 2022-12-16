@@ -3,26 +3,20 @@ pragma solidity ^0.8.13;
 
 import "./utils/functionality.t.sol";
 import "./mocks/mExtern.sol";
+import "./mocks/mNewLongCallLogic.sol";
 
 contract ExternalCall is Test, MyUtils {
     iInstanceDAO DAO;
     DelegStore MockExt;
+    LongCallUpgrade100 newLongCallLogic100;
     address mxt;
 
     constructor() {
         MockExt = new DelegStore();
         mxt = address(MockExt);
         DAO = iInstanceDAO(_createDAO(address(BaseE20)));
+        newLongCallLogic100 = new LongCallUpgrade100(100);
     }
-
-    // function setUp() public {
-    //     vm.startPrank(Agent1);
-
-    //     IDAO20(DAO.internalTokenAddress()).wrapMint(1000 ether);
-    //     _setCreateMembrane(address(DAO));
-    //     // _createSubDaos();
-    //     vm.stopPrank();
-    // }
 
     function _createSimpleExternalCall() public returns (uint256) {
         return iLG.createExternalCall(mxt, abi.encodeWithSignature("changeODAOAddress(uint256)", 999999999));
@@ -30,7 +24,7 @@ contract ExternalCall is Test, MyUtils {
 
     function testCreateExternalCall() public {
         DAO.mintMembershipToken(Agent1);
-        vm.prank(Agent1, Agent1); // tx.origin
+        vm.prank(Agent1, Agent1);
         uint256 id = _createSimpleExternalCall();
 
         assertTrue(id > 0);
@@ -66,5 +60,49 @@ contract ExternalCall is Test, MyUtils {
 
         assertTrue(t);
         assertTrue(DAO.baseID() == 999999999);
+    }
+
+    function _createReplaceExternalCallLogic() public returns (uint256) {
+        return iLG.createExternalCall(
+            mxt, abi.encodeWithSignature("replaceILongDistanceCalLogic(address)", address(newLongCallLogic100))
+        );
+    }
+
+    function testReplaceLongCallLogic() public {
+        vm.prank(Agent1, Agent1);
+        uint256 id = _createReplaceExternalCallLogic();
+
+        address current = DAO.getILongDistanceAddress();
+
+        DAO.mintMembershipToken(Agent1);
+        vm.prank(Agent1, Agent1);
+        vm.expectRevert(); //"LongCall__NonR()"
+        bool t = DAO.executeExternalLogic(id);
+
+        vm.prank(Agent1, Agent1);
+        skip(10 days);
+        t = DAO.executeExternalLogic(id);
+
+        assertTrue(current != DAO.getILongDistanceAddress());
+
+        iLG = ILongCall(DAO.getILongDistanceAddress());
+        uint256 id2 = iLG.createExternalCall(mxt, abi.encodeWithSignature("changeODAOAddress(uint256)", 999999999));
+
+        skip(9);
+        vm.prank(Agent1, Agent1); // 10
+        vm.expectRevert();
+        /// "LongCall__NonR()"
+        t = DAO.executeExternalLogic(id2);
+
+        skip(10 days);
+        vm.prank(Agent1, Agent1); // 10
+        vm.expectRevert();
+        /// "LongCall__NonR()"
+        t = DAO.executeExternalLogic(id2);
+
+        skip(99 days);
+        vm.prank(Agent1, Agent1); // 10
+        t = DAO.executeExternalLogic(id2);
+        assertTrue(t);
     }
 }

@@ -9,7 +9,6 @@ contract DelegStore {
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
-    uint256 public localID;
     uint256 public instantiatedAt;
     address public parentDAO;
     address ODAO;
@@ -40,5 +39,9 @@ contract DelegStore {
 
     function changeODAOAddress(uint256 O_O) external {
         baseID = O_O;
+    }
+
+    function replaceILongDistanceCalLogic(address newLongDistanceCallLogic_) external {
+        iLG = ILongCall(newLongDistanceCallLogic_);
     }
 }

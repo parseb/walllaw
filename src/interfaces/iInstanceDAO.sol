@@ -41,4 +41,6 @@ interface iInstanceDAO {
     function isMember(address who_) external view returns (bool);
 
     function parentDAO() external view returns (address);
+
+    function getILongDistanceAddress() external view returns (address);
 }

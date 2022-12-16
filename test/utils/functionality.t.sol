@@ -39,7 +39,6 @@ contract MyUtils is Test {
     function _createDAO(address _baseToken) public returns (address DAO) {
         return address(O.createDAO(address(_baseToken)));
     }
-    /// @dev if you use this in a loop, skip(1) second between iterations
 
     function _createBasicMembrane() public returns (uint256 basicMid) {
         address[] memory tokens_ = new address[](1);
@@ -88,11 +87,9 @@ contract MyUtils is Test {
         }
     }
 
-    /// @notice creates and assigns basic membrane (A1) to given DAOaddr
     function _setCreateMembrane(address DAO_) public {
         iInstanceDAO DAO = iInstanceDAO(DAO_);
 
-        /// active membrane of dInstance
         uint256 currentMembrane;
 
         currentMembrane = iMB.inUseMembraneId(DAO_);
