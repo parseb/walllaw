@@ -48,6 +48,8 @@ contract ODAO {
         daosOfToken[BaseTokenAddress_].push(newDAO);
 
         emit newDAOCreated(newDAO, BaseTokenAddress_);
+        if (MB == address(0)) MB = MR.MembraneRegistryAddress();
+
     }
 
     /// @notice enshrines exclusionary sub-unit
@@ -55,14 +57,16 @@ contract ODAO {
     /// @param parentDAO_: parent
     /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
+
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
-        if (daosOfToken[internalT].length > 99) revert SubDAOLimitReached();
+        if (daosOfToken[internalT].length > 100_00) revert SubDAOLimitReached();
         /// @dev membership sufficient for base layer grieffing attack
 
-        if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
+
 
         subDAOaddr = createDAO(internalT);
+
 
         IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
         childParentDAO[subDAOaddr] = parentDAO_;

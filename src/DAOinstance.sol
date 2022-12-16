@@ -147,9 +147,9 @@ contract DAOinstance {
             unchecked {
                 centum += cronoOrderedDistributionAmts[i];
             }
-            if (centum > 100) revert DAOinstance__Over100();
+            if (centum > 100_00) revert DAOinstance__Over100();
 
-            perSec = submittedValue * baseInflationPerSec / 100;
+            perSec = submittedValue * baseInflationPerSec / 100_00;
             perSec = (senderForce * 1 ether / internalToken.totalSupply()) * perSec / 1 ether;
             /// @dev senderForce < 1%
 

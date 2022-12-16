@@ -34,11 +34,11 @@ contract RedistributiveTest is Test, MyUtils {
         DAO.signalInflation(50);
         internalT.wrapMint(100 ether);
         uint256[] memory distributiveSignal = new uint256[](5);
-        distributiveSignal[0] = 20;
-        distributiveSignal[1] = 20;
-        distributiveSignal[2] = 20;
-        distributiveSignal[3] = 20;
-        distributiveSignal[4] = 20;
+        distributiveSignal[0] = 2000;
+        distributiveSignal[1] = 2000;
+        distributiveSignal[2] = 2000;
+        distributiveSignal[3] = 2000;
+        distributiveSignal[4] = 2000;
 
         DAO.distributiveSignal(distributiveSignal);
         skip(365);
