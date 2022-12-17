@@ -22,9 +22,13 @@ interface iInstanceDAO {
 
     function feedStart() external returns (uint256 minted);
 
+    function withdrawBurn(uint256 amt_) external returns (uint256 amtWithdrawn);
+
     /// view
 
     function internalTokenAddress() external view returns (address);
+
+    function endpoint() external view returns (address);
 
     function baseTokenAddress() external view returns (address);
 

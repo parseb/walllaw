@@ -20,6 +20,8 @@ contract DAO20 is ERC20 {
         owner = msg.sender;
         base = baseToken_;
         baseToken = IERC20(baseToken_);
+
+        
     }
 
     error NotOwner();
@@ -53,8 +55,9 @@ contract DAO20 is ERC20 {
         require(s, "ngmi");
     }
 
-    function unwrapBurn(address from, uint256 amt) external OnlyOwner returns (bool) {
-        _burn(from, amt);
+    function unwrapBurn(address from, uint256 amtToBurn_) external OnlyOwner {
+        require(balanceOf(msg.sender) >= amtToBurn_, "Insufficient balance");
+        _burn(from, amtToBurn_);
     }
 
     function inflationaryMint(uint256 amt) public OnlyOwner returns (bool) {

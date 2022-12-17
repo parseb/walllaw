@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./utils/functionality.t.sol";
 import "./mocks/mExtern.sol";
-import "./mocks/mNewLongCallLogic.sol";
+import "./mocks/mNewLC.sol";
 
 contract ExternalCall is Test, MyUtils {
     iInstanceDAO DAO;

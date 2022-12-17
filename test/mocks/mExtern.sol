@@ -11,6 +11,7 @@ contract DelegStore {
     uint256 public baseInflationPerSec;
     uint256 public instantiatedAt;
     address public parentDAO;
+    address public endpoint;
     address ODAO;
     IERC20 public BaseToken;
     DAO20 public internalToken;

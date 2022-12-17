@@ -82,7 +82,7 @@ contract ODAO {
             topLevelPath[subDAOaddr][0] = parentDAO_;
         }
 
-        if (! isEndpoint ) iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
+        iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
 
     }

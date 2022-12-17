@@ -16,6 +16,7 @@ contract DAOinstance {
     uint256 public baseInflationPerSec;
     uint256 public instantiatedAt;
     address public parentDAO;
+    address public endpoint;
     address ODAO;
     IERC20 public BaseToken;
     DAO20 public internalToken;
@@ -37,6 +38,7 @@ contract DAOinstance {
 
     /// list of expressors for id/percent/uri
     mapping(uint256 => address[]) expressors;
+
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;
@@ -78,6 +80,8 @@ contract DAOinstance {
             _;
         }
     }
+
+
 
     /// percentage anualized 1-100 as relative to the totalSupply of base token
     function signalInflation(uint256 percentagePerYear_) external onlyMember returns (uint256 inflationRate) {
@@ -124,7 +128,7 @@ contract DAOinstance {
     {
         address sender = _msgSender();
         uint256 senderForce = internalToken.balanceOf(sender);
-        if (senderForce == 0 && (!(cronoOrderedDistributionAmts.length == 0))) revert DAOinstance__HasNoSay();
+        if ((senderForce == 0 && ( ! (cronoOrderedDistributionAmts.length == 0))) ) revert DAOinstance__HasNoSay();
         if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[sender];
         redistributiveSignal[sender] = cronoOrderedDistributionAmts;
 
@@ -186,6 +190,10 @@ contract DAOinstance {
     function mintMembershipToken(address to_) external returns (bool s) {
         if (msg.sender == ODAO) {
             parentDAO = IoDAO(ODAO).getParentDAO(address(this));
+            if (to_ ==  address(uint160(iMB.inUseMembraneId(address(this))))) {
+                endpoint = to_;
+                return true;
+            }
             if (internalToken.mintInitOne(to_)) return iMR.makeMember(to_, baseID);
         }
 
@@ -193,6 +201,15 @@ contract DAOinstance {
         if (!s) revert DAOinstance__Unqualified();
         s = iMR.makeMember(to_, baseID) && s;
     }
+
+
+    function withdrawBurn(uint256 amt_) external returns (uint256 amtWithdrawn) {
+        if (endpoint != msg.sender) revert DAOinstance__NotEnpoint();
+        internalToken.unwrapBurn(endpoint, amt_);
+        require(BaseToken.transfer(endpoint, amt_), 'transfer failed');
+
+    } 
+
 
     ///////////////////
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
@@ -316,7 +333,7 @@ contract DAOinstance {
         return redistributiveSignal[user_];
     }
 
-    function isMember(address who_) private view returns (bool) {
+    function isMember(address who_) public view returns (bool) {
         return ((who_ == address(internalToken)) || iMR.balanceOf(who_, baseID) > 0);
     }
 

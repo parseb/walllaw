@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./utils/functionality.t.sol";
 
-contract reageQuit is Test, MyUtils {
+contract mintBurn is Test, MyUtils {
     /// like ragequit, withrdawals bubble up but not sideways
     iInstanceDAO DAO;
     IDAO20 internalT;
