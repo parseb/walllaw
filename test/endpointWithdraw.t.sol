@@ -5,6 +5,7 @@ import "./utils/functionality.t.sol";
 
 contract EndpWithdraw is Test, MyUtils {
     /// like ragequit, withrdawals bubble up but not sideways
+    /// trickels through redistribute subDAo and feedMe
     iInstanceDAO DAO;
     IDAO20 internalT;
     IERC20 baseT;
@@ -47,10 +48,8 @@ contract EndpWithdraw is Test, MyUtils {
         vm.prank(Agent3);
         DAO.mintMembershipToken(Agent3);
         
-        // vm.prank(Agent1);
         agents = [Agent1,Agent2,Agent3];  
 
-        address[] memory sd;
         vm.prank(Agent1);
         basicMembrane = _createBasicMembrane();
 
@@ -69,12 +68,6 @@ contract EndpWithdraw is Test, MyUtils {
             unchecked { ++ i;}
         }
 
-
-        // vm.prank(Agent2);
-        // iInstanceDAO(subDS[1]).mintMembershipToken(Agent2);
-
-        // vm.prank(Agent3);
-        // iInstanceDAO(subDS[2]).mintMembershipToken(Agent3);
         
         D1d = iInstanceDAO(endpoints[0]);
         D2d = iInstanceDAO(endpoints[1]);
@@ -110,8 +103,6 @@ function testExpected() public {
 }
 
 function testOneGivesTwo() public {
-    iInstanceDAO DD22 = iInstanceDAO( endpoints[1]);
-
     vm.startPrank(Agent1,Agent1);
     
     internalT.approve(address(D2t), type(uint256).max);
@@ -143,7 +134,6 @@ function testOneGivesTwo() public {
     iInstanceDAO(subDS[1]).distributiveSignal(signalSub1);
 
     assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
-    // assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
 
     skip(365 days);
 
@@ -159,13 +149,16 @@ function testOneGivesTwo() public {
 
     expectedMaxWithdraw = IERC20(D2d.baseTokenAddress()).totalSupply();
 
-    assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
-    assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) < 2, "expected something?" ); 
+    assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); /// X
+    assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) < 2, "expected something?" ); /// X
 
-    D2d.feedMe();
+    D2d.feedMe(); ///---- dupliate redistributeSubDAO and feedME. X
 
-    assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
-    assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) < 2, "expected something?" ); 
+
+    expectedMaxWithdraw = IERC20(D2d.baseTokenAddress()).totalSupply();
+
+    assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); /// X
+    assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) < 2, "expected something?" ); /// X
 
     uint baseAddr2 = IERC20(D2d.baseTokenAddress()).balanceOf(address(D2d));
     uint internalAddr2 = IERC20(D2d.baseTokenAddress()).balanceOf(address(D2d));
@@ -174,9 +167,9 @@ function testOneGivesTwo() public {
     uint internalB2 =  IERC20(iInstanceDAO(subDS[1]).baseTokenAddress()).balanceOf(subDS[1]);
     
 
-    assertTrue(baseAddr1 < baseAddr2);
-    assertTrue(internalAddr1 < internalAddr2);
-    assertTrue(internalB1 < internalB2);
+    assertTrue(baseAddr1 < baseAddr2); /// X
+    assertTrue(internalAddr1 < internalAddr2); /// X
+    assertTrue(internalB1 < internalB2); /// X
     vm.stopPrank();
 
 
@@ -189,8 +182,8 @@ function testOneGivesTwo() public {
     D2d.withdrawBurn(howmuchToWithdraw);
 
     uint balanceinParentAfterEndpointWithdraw = IERC20(D2d.baseTokenAddress()).balanceOf(Agent2);
-    assertTrue(D2d.baseTokenAddress() == iInstanceDAO(subDS[1]).internalTokenAddress(), "zzz");
-    assertTrue(balanceinParentBeforeEndpointWithdraw < balanceinParentAfterEndpointWithdraw, "xxx");
+    assertTrue(D2d.baseTokenAddress() == iInstanceDAO(subDS[1]).internalTokenAddress(), "zzz"); /// X
+    assertTrue(balanceinParentBeforeEndpointWithdraw < balanceinParentAfterEndpointWithdraw, "xxx"); /// X
 
 
 
