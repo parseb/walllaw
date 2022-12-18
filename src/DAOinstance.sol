@@ -188,6 +188,8 @@ contract DAOinstance {
     }
 
     function mintMembershipToken(address to_) external returns (bool s) {
+        if (endpoint != address(0)) revert DAOinstance__isEndpoint();
+
         if (msg.sender == ODAO) {
             parentDAO = IoDAO(ODAO).getParentDAO(address(this));
             if (to_ ==  address(uint160(iMB.inUseMembraneId(address(this))))) {
@@ -203,10 +205,9 @@ contract DAOinstance {
     }
 
 
-    function withdrawBurn(uint256 amt_) external returns (uint256 amtWithdrawn) {
-        if (endpoint != msg.sender) revert DAOinstance__NotEnpoint();
-        internalToken.unwrapBurn(endpoint, amt_);
-        require(BaseToken.transfer(endpoint, amt_), 'transfer failed');
+    function withdrawBurn(uint256 amt_) external returns (bool s) {
+        if (endpoint != msg.sender) revert DAOinstance__NotYourEnpoint();
+        s = BaseToken.transfer(endpoint, amt_);
 
     } 
 
@@ -291,6 +292,7 @@ contract DAOinstance {
         amountToMint = (amountToMint * baseInflationPerSec);
         require(internalToken.inflationaryMint(amountToMint));
         subunitPerSec[address(this)][1] = block.timestamp;
+
         _majoritarianUpdate(0);
 
         emit inflationaryMint(amountToMint);

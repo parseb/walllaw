@@ -22,6 +22,10 @@ contract EndpWithdraw is Test, MyUtils {
     IDAO20 D3t;
     uint basicMembrane;
 
+    IDAO20 D1Parent;
+    IDAO20 D2Parent;
+    IDAO20 D3Parent;
+
     constructor() {
         baseT = IERC20(new M20());
     }
@@ -80,6 +84,10 @@ contract EndpWithdraw is Test, MyUtils {
         D2t = IDAO20(D2d.internalTokenAddress());
         D3t = IDAO20(D3d.internalTokenAddress());
 
+        D1Parent = IDAO20(D1d.baseTokenAddress());
+        D2Parent = IDAO20(D2d.baseTokenAddress());
+        D3Parent = IDAO20(D3d.baseTokenAddress());
+
     }
 
 function testExpected() public {
@@ -104,9 +112,6 @@ function testExpected() public {
 function testOneGivesTwo() public {
     iInstanceDAO DD22 = iInstanceDAO( endpoints[1]);
 
-    DD22.mintMembershipToken(Agent1);
-
-
     vm.startPrank(Agent1,Agent1);
     
     internalT.approve(address(D2t), type(uint256).max);
@@ -124,11 +129,18 @@ function testOneGivesTwo() public {
     
     assertTrue(IERC20(iInstanceDAO(D2d).internalTokenAddress()).balanceOf(Agent2) == 0, "expected Agent2 to have no balance");
 
-
+    DAO.signalInflation(100);
     iInstanceDAO(subDS[1]).signalInflation(100);
-    uint256[] memory signal = new uint256[](1);
-    signal[0] = 10_000;
-    iInstanceDAO(subDS[1]).distributiveSignal(signal);
+    uint256[] memory signalSub1 = new uint256[](1);
+    uint256[] memory signalPrimary = new uint256[](3);
+
+    signalSub1[0] = 10_000;
+    signalPrimary[0] = 3_000;
+    signalPrimary[1] = 3_000; 
+    signalPrimary[2] = 3_000; 
+    
+    DAO.distributiveSignal(signalPrimary);
+    iInstanceDAO(subDS[1]).distributiveSignal(signalSub1);
 
     assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
     // assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
@@ -138,12 +150,22 @@ function testOneGivesTwo() public {
     uint baseAddr1 = IERC20(D2d.baseTokenAddress()).balanceOf(address(D2d));
     uint internalAddr1 = IERC20(D2d.baseTokenAddress()).balanceOf(address(D2d));
 
+
+    uint expectedMaxWithdraw = IERC20(D2d.baseTokenAddress()).totalSupply();
+    expectedMaxWithdraw = IERC20(D2d.baseTokenAddress()).totalSupply();
+
+    DAO.redistributeSubDAO(subDS[1]);
+    iInstanceDAO(subDS[1]).redistributeSubDAO(address(D2d));
+
+    expectedMaxWithdraw = IERC20(D2d.baseTokenAddress()).totalSupply();
+
+    assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
+    assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) < 2, "expected something?" ); 
+
     D2d.feedMe();
 
-    // assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
-    // assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) == 0, "expected something?" ); 
-
-
+    assertTrue(IERC20(D2d.internalTokenAddress()).balanceOf(Agent2) == 0, "expected nada" ); 
+    assertTrue(IERC20(D2d.baseTokenAddress()).balanceOf(Agent2) < 2, "expected something?" ); 
 
     uint baseAddr2 = IERC20(D2d.baseTokenAddress()).balanceOf(address(D2d));
     uint internalAddr2 = IERC20(D2d.baseTokenAddress()).balanceOf(address(D2d));
@@ -154,12 +176,36 @@ function testOneGivesTwo() public {
 
     assertTrue(baseAddr1 < baseAddr2);
     assertTrue(internalAddr1 < internalAddr2);
-    assertTrue(internalB1 == internalB2);
+    assertTrue(internalB1 < internalB2);
     vm.stopPrank();
+
+
+    uint balanceinParentBeforeEndpointWithdraw = IERC20(D2d.baseTokenAddress()).balanceOf(Agent2);
+
+    uint howmuchToWithdraw = 100_000;
+
+    uint snap = vm.snapshot();
     vm.prank(Agent2);
+    D2d.withdrawBurn(howmuchToWithdraw);
 
-    D2d.withdrawBurn(1000);
+    uint balanceinParentAfterEndpointWithdraw = IERC20(D2d.baseTokenAddress()).balanceOf(Agent2);
+    assertTrue(D2d.baseTokenAddress() == iInstanceDAO(subDS[1]).internalTokenAddress(), "zzz");
+    assertTrue(balanceinParentBeforeEndpointWithdraw < balanceinParentAfterEndpointWithdraw, "xxx");
 
+
+
+    vm.revertTo(snap);
+
+    vm.expectRevert();
+    vm.prank(Agent2);
+    D2d.withdrawBurn(expectedMaxWithdraw);
+
+    vm.expectRevert();
+    vm.prank(Agent2);
+    D2d.withdrawBurn(expectedMaxWithdraw / 2);
+
+    vm.prank(Agent2);
+    D2d.withdrawBurn(expectedMaxWithdraw / 3);
 
 }
 

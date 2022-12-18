@@ -55,9 +55,9 @@ contract DAO20 is ERC20 {
         require(s, "ngmi");
     }
 
-    function unwrapBurn(address from, uint256 amtToBurn_) external OnlyOwner {
-        require(balanceOf(msg.sender) >= amtToBurn_, "Insufficient balance");
-        _burn(from, amtToBurn_);
+    function unwrapBurn(address from_, uint256 amtToBurn_) external OnlyOwner {
+        require(balanceOf(from_) >= amtToBurn_, "Insufficient balance");
+        _burn(from_, amtToBurn_);
     }
 
     function inflationaryMint(uint256 amt) public OnlyOwner returns (bool) {
@@ -84,6 +84,8 @@ contract DAO20 is ERC20 {
         bool o = msg.sender == owner;
         address parent = iInstanceDAO(owner).parentDAO();
         o = !o ? parent == msg.sender : o;
+        o = !o ? to == iInstanceDAO(msg.sender).endpoint() : o;
+
         // o = !o ? iInstanceDAO(iInstanceDAO(owner).parentDAO()).isMember(msg.sender) : o;
         // o = !o ? (parent == address(0)) && (msg.sig == this.wrapMint.selector) : o;
         // o = !o ? (iInstanceDAO(owner).baseTokenAddress() == msg.sender ) : o;
