@@ -131,24 +131,24 @@ contract MemberRegistry is ERC1155 {
         uidTotalSupply[id] -= 1;
     }
 
-    // function _batchBurn(address from, uint256[] memory ids, uint256[] memory amounts) internal override {
-    //     revert("_batchBurn");
-    // }
+    function _batchBurn(address from, uint256[] memory ids, uint256[] memory amounts) internal override {
+        revert("_batchBurn");
+    }
 
-    // function _batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-    //     internal
-    //     override
-    // {
-    //     revert("_batchMint");
-    // }
+    function _batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override
+    {
+        revert("_batchMint");
+    }
 
-    // function safeBatchTransferFrom(
-    //     address from,
-    //     address to,
-    //     uint256[] calldata ids,
-    //     uint256[] calldata amounts,
-    //     bytes calldata data
-    // ) public override {
-    //     revert("safeBatchTransferFrom");
-    // }
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) public override {
+        revert("safeBatchTransferFrom");
+    }
 }

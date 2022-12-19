@@ -103,6 +103,7 @@ contract DAOinstance {
 
     //// @security with great power comes the need of great awareness
     function executeExternalLogic(uint256 callId_) external onlyMember returns (bool) {
+                if (uint256(callId_) < 101 || iMB.isMembrane(uint256(callId_))) revert DAOinstance__YouCantDoThat();
         _expressPreference(callId_);
 
         callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) <= 2))

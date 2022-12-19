@@ -7,7 +7,6 @@ import "./interfaces/IMembrane.sol";
 import "./interfaces/IMember1155.sol";
 
 import "openzeppelin-contracts/token/ERC20/IERC20.sol";
-
 import "./errors.sol";
 
 contract MembraneRegistry {

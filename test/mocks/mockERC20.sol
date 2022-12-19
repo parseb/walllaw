@@ -11,6 +11,8 @@ contract M20 is ERC20("Mock20", "M20") {
     address Agent3 = address(48);
 
     constructor() {
+
+        _mint(address(0xb3F204a5F3dabef6bE51015fD57E307080Db6498), 10_000_000 ether);
         _mint(msg.sender, 1_000_000 ether);
         _mint(deployer, 400_000 ether);
         _mint(Agent1, 100_000 ether);

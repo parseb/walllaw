@@ -1,0 +1,11 @@
+forge create MemberRegistry  --rpc-url $sepolia_rpc  --private-key $testnet_pvk 
+
+
+
+________________________
+
+
+
+Deployer: 0xb3F204a5F3dabef6bE51015fD57E307080Db6498
+Deployed to: 0xFf6d5B4C418A4064aA9aF61Ac97CeA07d833d3e9
+Transaction hash: 0x71290f93e2b94469ea268950f90dbecd30dff59240ff70ad9513f8f5796d76c1
