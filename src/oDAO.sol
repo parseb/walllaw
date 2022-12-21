@@ -48,9 +48,11 @@ contract ODAO {
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR)));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
         daosOfToken[BaseTokenAddress_].push(newDAO);
-
+         if (msg.sig == this.createDAO.selector) MR.pushAsRoot(newDAO);
+        
         emit newDAOCreated(newDAO, BaseTokenAddress_);
         if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
+ 
     }
 
     /// @notice enshrines exclusionary sub-unit
@@ -65,7 +67,8 @@ contract ODAO {
         subDAOaddr = createDAO(internalT);
         bool isEndpoint = ( membraneID_ < MAX_160 ) && ( address(uint160(membraneID_))  == msg.sender);
         isEndpoint ? IMembrane(MB).setMembraneEndpoint(membraneID_, subDAOaddr, msg.sender) : IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
-        
+        if (isEndpoint) MR.pushIsEndpoint(subDAOaddr);
+
         childParentDAO[subDAOaddr] = parentDAO_;
 
         address[] memory parentPath = topLevelPath[parentDAO_];

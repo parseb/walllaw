@@ -17,6 +17,14 @@ interface IMemberRegistry {
     function MembraneRegistryAddress() external view returns (address);
     function LongCallAddress() external view returns (address);
 
+    function getRoots(uint256 startAt_) external view returns (address[] memory);
+    function getEndpoints(uint256 startAt_) external view returns (address[] memory);
+
+
+    //// only ODAO
+
+    function pushIsEndpoint(address) external;
+    function pushAsRoot(address) external;
     //////////////////////// ERC1155
 
     /**
