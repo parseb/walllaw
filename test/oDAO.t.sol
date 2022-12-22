@@ -110,6 +110,9 @@ contract oDao is Test {
 
         // unatisfied token balances
         // assertFalse(DI.mintMembershipToken(address(934591)));
+        address[] memory memberships = iMR.getActiveMembershipsOf(Agent2);
+        assertTrue(memberships.length >0);
+        assertTrue(memberships[0] == address(DI));
     }
 
     function testChangesMembrane() public {
