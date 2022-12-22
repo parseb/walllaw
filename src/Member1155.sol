@@ -22,6 +22,7 @@ contract MemberRegistry is ERC1155 {
     address[] private endpoints;
     mapping(uint256 => bytes32) tokenUri;
     mapping(uint256 => uint256) uidTotalSupply;
+    mapping(address => uint256[]) idsOf;
 
 
     constructor() {
@@ -82,6 +83,7 @@ contract MemberRegistry is ERC1155 {
 
         /// mint membership token
         _mint(who_, id_, 1, abi.encode(tokenUri[id_]));
+        idsOf[who_].push(id_);
 
         emit isNowMember(who_, id_, msg.sender);
         return balanceOf[who_][id_] == 1;
@@ -122,6 +124,16 @@ contract MemberRegistry is ERC1155 {
         }
     }
 
+    function getActiveMembershipsOf(address who_) external view returns (address[] memory entities) {
+        uint256[] memory ids = idsOf[who_];
+        uint256 i;
+        entities = new address[](ids.length);
+        for (i; i < ids.length;) {
+            if (balanceOf[who_][ids[i]] > 0) entities[i] = address(uint160(ids[i]));
+            unchecked { i ++;}
+        }
+    }
+
 
     function pushIsEndpoint(address dao_)  external  {
         if(msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
@@ -132,6 +144,8 @@ contract MemberRegistry is ERC1155 {
         if(msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
         roots.push(dao_);
     }
+
+
 
     /*//////////////////////////////////////////////////////////////
                                  override
