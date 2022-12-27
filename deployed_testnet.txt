@@ -1,0 +1,21 @@
+parseb@parseb-m1:~/Desktop/odao.lol$ forge create MemberRegistry  --rpc-url $MUMBAI_ALCHEMY  --private-key $X
+[⠘] Compiling...
+No files changed, compilation skipped
+Deployer: 0x65Cf1e0f55BD97696ce430aAcC97b5E7831E0fC2
+Deployed to: 0xF66d63301C39c9e42250896FAfb43fCbE7102674
+Transaction hash: 0x1a9836f825abe36e7a84f70a3632e7a469f3f73b50e76a056449751f5238aae9
+
+
+For more information try '--help'
+parseb@parseb-m1:~/Desktop/odao.lol$ forge create MemberRegistry  --rpc-url $sepolia_rpc  --private-key $PVK2_test 
+
+Deployer: 0x65Cf1e0f55BD97696ce430aAcC97b5E7831E0fC2
+Deployed to: 0xF66d63301C39c9e42250896FAfb43fCbE7102674
+Transaction hash: 0x7e8a13b9f7f75c0a84f9189ba94f434d202a6d9a7ef70c5b94da706c5cc98a34
+
+parseb@parseb-m1:~/Desktop/odao.lol$ forge create MemberRegistry  --rpc-url $goerli_rpc  --private-key $PVK2_test 
+
+
+Deployer: 0x65Cf1e0f55BD97696ce430aAcC97b5E7831E0fC2
+Deployed to: 0xF66d63301C39c9e42250896FAfb43fCbE7102674
+Transaction hash: 0x2407206913200ce891a102c990392a444fc8b2f85fd02db7ba8e7f94ff231495

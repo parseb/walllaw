@@ -1,0 +1,18 @@
+rseb@parseb-m1:~/Desktop/odao.lol$ forge create M20  --rpc-url $MUMBAI_ALCHEMY  --private-key $PVK2_test 
+[⠒] Compiling...
+No files changed, compilation skipped
+Deployer: 0x65Cf1e0f55BD97696ce430aAcC97b5E7831E0fC2
+Deployed to: 0xfA72E14E0cDB3dD6F3E8Ad783B13FE85BfdE3Dd8
+Transaction hash: 0x6562184e75656b774e835d2d1191eb080134d7c7c3135a7b23c8c9b747307411
+parseb@parseb-m1:~/Desktop/odao.lol$ forge create M20  --rpc-url $goerli_rpc  --private-key $PVK2_test 
+[⠒] Compiling...
+No files changed, compilation skipped
+Deployer: 0x65Cf1e0f55BD97696ce430aAcC97b5E7831E0fC2
+Deployed to: 0xfA72E14E0cDB3dD6F3E8Ad783B13FE85BfdE3Dd8
+Transaction hash: 0xada032fb168d5bf9e39ec8f03d9e22bdfb6a5a73b51ee1dfb65d2a96cc0cfbf4
+parseb@parseb-m1:~/Desktop/odao.lol$ forge create M20  --rpc-url $sepolia_rpc  --private-key $PVK2_test 
+[⠒] Compiling...
+No files changed, compilation skipped
+Deployer: 0x65Cf1e0f55BD97696ce430aAcC97b5E7831E0fC2
+Deployed to: 0xfA72E14E0cDB3dD6F3E8Ad783B13FE85BfdE3Dd8
+Transaction hash: 0

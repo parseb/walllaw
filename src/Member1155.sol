@@ -103,7 +103,7 @@ contract MemberRegistry is ERC1155 {
     }
 
     function getRoots(uint256 howMany_) external view returns (address[] memory r) {
-        if (roots.length < howMany_) return r;
+        if (roots.length < howMany_) howMany_ = endpoints.length;
 
         uint i;
         r= new address[](howMany_);
@@ -114,7 +114,7 @@ contract MemberRegistry is ERC1155 {
     }
 
     function getEndpoints(uint256 howMany_) external view returns (address[] memory r) {
-        if (endpoints.length < howMany_) return r;
+        if (endpoints.length < howMany_) howMany_ = endpoints.length;
 
         uint i;
         r= new address[](howMany_);
