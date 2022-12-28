@@ -20,8 +20,6 @@ contract DAO20 is ERC20 {
         owner = msg.sender;
         base = baseToken_;
         baseToken = IERC20(baseToken_);
-
-        
     }
 
     error NotOwner();

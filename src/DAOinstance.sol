@@ -39,7 +39,6 @@ contract DAOinstance {
     /// list of expressors for id/percent/uri
     mapping(uint256 => address[]) expressors;
 
-
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;
         instantiatedAt = block.timestamp;
@@ -81,8 +80,6 @@ contract DAOinstance {
         }
     }
 
-
-
     /// percentage anualized 1-100 as relative to the totalSupply of base token
     function signalInflation(uint256 percentagePerYear_) external onlyMember returns (uint256 inflationRate) {
         require(percentagePerYear_ <= 100, ">100!");
@@ -103,7 +100,7 @@ contract DAOinstance {
 
     //// @security with great power comes the need of great awareness
     function executeExternalLogic(uint256 callId_) external onlyMember returns (bool) {
-                if (uint256(callId_) < 101 || iMB.isMembrane(uint256(callId_))) revert DAOinstance__YouCantDoThat();
+        if (uint256(callId_) < 101 || iMB.isMembrane(uint256(callId_))) revert DAOinstance__YouCantDoThat();
         _expressPreference(callId_);
 
         callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) <= 2))
@@ -129,7 +126,7 @@ contract DAOinstance {
     {
         address sender = _msgSender();
         uint256 senderForce = internalToken.balanceOf(sender);
-        if ((senderForce == 0 && ( ! (cronoOrderedDistributionAmts.length == 0))) ) revert DAOinstance__HasNoSay();
+        if ((senderForce == 0 && (!(cronoOrderedDistributionAmts.length == 0)))) revert DAOinstance__HasNoSay();
         if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[sender];
         redistributiveSignal[sender] = cronoOrderedDistributionAmts;
 
@@ -193,7 +190,7 @@ contract DAOinstance {
 
         if (msg.sender == ODAO) {
             parentDAO = IoDAO(ODAO).getParentDAO(address(this));
-            if (to_ ==  address(uint160(iMB.inUseMembraneId(address(this))))) {
+            if (to_ == address(uint160(iMB.inUseMembraneId(address(this))))) {
                 endpoint = to_;
                 return true;
             }
@@ -205,13 +202,10 @@ contract DAOinstance {
         s = iMR.makeMember(to_, baseID) && s;
     }
 
-
     function withdrawBurn(uint256 amt_) external returns (bool s) {
         if (endpoint != msg.sender) revert DAOinstance__NotYourEnpoint();
         s = BaseToken.transfer(endpoint, amt_);
-
-    } 
-
+    }
 
     ///////////////////
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {

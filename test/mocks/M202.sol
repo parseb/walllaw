@@ -18,9 +18,7 @@ contract M202 is ERC20("Mockv2", "M22") {
     address anvil_4 = 0xEdc4E5c7FfAD492dE7c0c5889986aD3e8B578627;
     address anvil_5 = 0x9424C74e27398a0EB9e994FFeBf6239fa4515cd2;
 
-
     constructor() {
-
         _mint(address(0xb3F204a5F3dabef6bE51015fD57E307080Db6498), 10_000_000 ether);
         _mint(msg.sender, 1_000_000 ether);
         _mint(deployer, 400_000 ether);

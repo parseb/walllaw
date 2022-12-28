@@ -1,24 +1,30 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "../src/Member1155.sol";
+
 import "forge-std/Script.sol";
 import "test/mocks/M202.sol";
+import "test/mocks/mockERC20.sol";
+import "test/mocks/M721.sol";
 
-import "../test/utils/functionality.t.sol";
-
+// import "../test/utils/functionality.t.sol";
+import "../src/interfaces/IMember1155.sol";
+import "../src/interfaces/iInstanceDAO.sol";
+import "../src/interfaces/IDAO20.sol";
+import "../src/interfaces/IMembrane.sol";
+import "../src/interfaces/ILongCall.sol";
 
 contract LocalDeploy is Script {
     M20 Mock20;
     M202 Mock202;
+    M721222 M721;
     MemberRegistry M;
     IoDAO O;
     iInstanceDAO instance;
     IMembrane MembraneR;
 
-
-    function setUp() public {
-
-    }
+    function setUp() public {}
 
     // Transaction: 0x739e031c195face8ba4a33d61e042ab3756e9d39930a0e2fa659283c38fde2e8
     // Contract created: 0x5b97542891ca4c71112865cacfee6a4361c913a6
@@ -42,8 +48,7 @@ contract LocalDeploy is Script {
 
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
-        basicMid =
-            MembraneR.createMembrane(tokens_, balances_, bytes("QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq"));
+        basicMid = MembraneR.createMembrane(tokens_, balances_, bytes("QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq"));
     }
 
     function _createSubDaos(uint256 howMany_, address parentDAO_) private returns (address[] memory subDs) {
@@ -79,8 +84,6 @@ contract LocalDeploy is Script {
         }
     }
 
-
-
     function run() public {
         vm.startBroadcast(vm.envUint("ANVIL_1"));
         M = new MemberRegistry();
@@ -88,9 +91,8 @@ contract LocalDeploy is Script {
         Mock202 = new M202();
         O = IoDAO(M.ODAOaddress());
         MembraneR = IMembrane(M.MembraneRegistryAddress());
-
+        M721 = new M721222();
         vm.stopBroadcast();
-
 
         vm.startBroadcast(vm.envUint("ANVIL_2"));
         address baseDAO = O.createDAO(address(Mock202));
@@ -100,7 +102,8 @@ contract LocalDeploy is Script {
 
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
-        uint basicMembraneID = MembraneR.createMembrane(tokens_, balances_, bytes("QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq"));
+        uint256 basicMembraneID =
+            MembraneR.createMembrane(tokens_, balances_, bytes("QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq"));
 
         iInstanceDAO(baseDAO).mintMembershipToken(0x5457d92f47212E9287c1A1c31e708f574ab66125);
         iInstanceDAO(baseDAO).signalInflation(50);
@@ -108,13 +111,8 @@ contract LocalDeploy is Script {
         iInstanceDAO(baseDAO).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
         iInstanceDAO(baseDAO).mintMembershipToken(0x5df6cF21815ca55057bb5cA159A3130c193bb0a1);
 
-
-
-
         _createNestedDAOs(baseDAO, basicMembraneID, 3);
-   
+
         vm.stopBroadcast();
-
     }
-
 }

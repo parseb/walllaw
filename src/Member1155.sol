@@ -24,7 +24,6 @@ contract MemberRegistry is ERC1155 {
     mapping(uint256 => uint256) uidTotalSupply;
     mapping(address => uint256[]) idsOf;
 
-
     constructor() {
         ODAOaddress = address(new ODAO());
         MembraneRegistryAddress = address(new MembraneRegistry(ODAOaddress));
@@ -68,7 +67,6 @@ contract MemberRegistry is ERC1155 {
     /// mints membership token to provided address
 
     function makeMember(address who_, uint256 id_) external onlyDAO returns (bool) {
-
         /// the id_ of any subunit  is a multiple of DAO address
         if (!(id_ % uint160(bytes20(msg.sender)) == 0)) {
             /// @dev
@@ -105,22 +103,26 @@ contract MemberRegistry is ERC1155 {
     function getRoots(uint256 howMany_) external view returns (address[] memory r) {
         if (roots.length < howMany_) howMany_ = endpoints.length;
 
-        uint i;
-        r= new address[](howMany_);
+        uint256 i;
+        r = new address[](howMany_);
         for (i; i < howMany_;) {
             r[i] = roots[i];
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
     }
 
     function getEndpoints(uint256 howMany_) external view returns (address[] memory r) {
         if (endpoints.length < howMany_) howMany_ = endpoints.length;
 
-        uint i;
-        r= new address[](howMany_);
+        uint256 i;
+        r = new address[](howMany_);
         for (i; i < howMany_;) {
             r[i] = endpoints[i];
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -130,22 +132,21 @@ contract MemberRegistry is ERC1155 {
         entities = new address[](ids.length);
         for (i; i < ids.length;) {
             if (balanceOf[who_][ids[i]] > 0) entities[i] = address(uint160(ids[i]));
-            unchecked { i ++;}
+            unchecked {
+                i++;
+            }
         }
     }
 
-
-    function pushIsEndpoint(address dao_)  external  {
-        if(msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
+    function pushIsEndpoint(address dao_) external {
+        if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
         endpoints.push(dao_);
     }
 
-    function pushAsRoot(address dao_) external  {
-        if(msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
+    function pushAsRoot(address dao_) external {
+        if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
         roots.push(dao_);
     }
-
-
 
     /*//////////////////////////////////////////////////////////////
                                  override
@@ -201,6 +202,4 @@ contract MemberRegistry is ERC1155 {
     ) public override {
         revert("safeBatchTransferFrom");
     }
-
-    
 }
