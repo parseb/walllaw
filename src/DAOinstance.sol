@@ -5,7 +5,7 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
-import "./interfaces/ILongCall.sol";
+// import "./interfaces/ILongCall.sol";
 import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
@@ -18,11 +18,12 @@ contract DAOinstance {
     address public parentDAO;
     address public endpoint;
     address ODAO;
+    address purgeorExternalCall;
     IERC20 public BaseToken;
     DAO20 public internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
-    ILongCall iLG;
+    // ILongCall iLG;
 
     /// # EOA => subunit => [percentage, amt]
     mapping(address => mapping(address => uint256[2])) userSignal;
@@ -39,6 +40,8 @@ contract DAOinstance {
     /// list of expressors for id/percent/uri
     mapping(uint256 => address[]) expressors;
 
+    uint256[] private activeIndecisions;
+
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;
         instantiatedAt = block.timestamp;
@@ -47,8 +50,8 @@ contract DAOinstance {
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
-        iLG = ILongCall(iMR.LongCallAddress());
-        internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "Odao",18);
+        // iLG = ILongCall(iMR.LongCallAddress());
+        internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "walllaw",18);
         BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
         subunitPerSec[address(this)][1] = block.timestamp;
@@ -72,7 +75,7 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyMember() {
-        if (msg.sender == address(internalToken)) {
+        if (msg.sender == address(internalToken) || msg.sender == address(this) ) {
             _;
         } else {
             if (!isMember(_msgSender())) revert DAOinstance__NotMember();
@@ -99,16 +102,16 @@ contract DAOinstance {
     }
 
     //// @security with great power comes the need of great awareness
-    function executeExternalLogic(uint256 callId_) external onlyMember returns (bool) {
-        if (uint256(callId_) < 101 || iMB.isMembrane(uint256(callId_))) revert DAOinstance__YouCantDoThat();
-        _expressPreference(callId_);
+    // function executeExternalLogic(uint256 callId_) external onlyMember returns (bool) {
+    //     if (uint256(callId_) < 101 || iMB.isMembrane(uint256(callId_))) revert DAOinstance__YouCantDoThat();
+    //     _expressPreference(callId_);
 
-        callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) <= 2))
-            ? _majoritarianUpdate(callId_)
-            : 0;
+    //     callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) <= 2))
+    //         ? _majoritarianUpdate(callId_)
+    //         : 0;
 
-        return callId_ > 0;
-    }
+    //     return callId_ > 0;
+    // }
 
     function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
         if (uint256(uri_) < 101 || iMB.isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
@@ -207,6 +210,20 @@ contract DAOinstance {
         s = BaseToken.transfer(endpoint, amt_);
     }
 
+
+    function gCheckPurge(address who_) external retunrs (bool) {
+        if (msg.sender != address(iMR))   revert DAOinstance__onlyMR();
+
+        delete redistributiveSignal[who_];
+        address keepExtCall = purgeorExternalCall;
+        purgeorExternalCall = who_;
+        this.distributiveSignal(redistributiveSignal[who_]);
+        delete purgeorExternalCall;
+        purgeorExternalCall = keepExtCall;
+
+        return true;
+    }
+
     ///////////////////
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
         if (msg.sig == this.mintInflation.selector) {
@@ -229,15 +246,15 @@ contract DAOinstance {
             return _postMajorityCleanup(newVal_);
         }
 
-        if (msg.sig == this.executeExternalLogic.selector) {
-            bool s;
-            ExternallCall memory ExT = iLG.prepLongDistanceCall(newVal_);
-            if (ExT.eligibleCaller != msg.sender) revert DAOinstance__NotCallMaker();
+        // if (msg.sig == this.executeExternalLogic.selector) {
+        //     bool s;
+        //     // ExternallCall memory ExT = iLG.prepLongDistanceCall(newVal_);
+        //     if (ExT.eligibleCaller != msg.sender) revert DAOinstance__NotCallMaker();
 
-            (s,) = address(ExT.callPointAddress).delegatecall(ExT.callData);
+        //     // (s,) = address(ExT.callPointAddress).delegatecall(ExT.callData);
 
-            newVal = s ? 1 : 0;
-        }
+        //     newVal = s ? 1 : 0;
+        // }
     }
 
     function _expressPreference(uint256 preference_) private {
@@ -247,7 +264,10 @@ contract DAOinstance {
         if (previous > 0) expressed[preference_][address(0)] -= previous;
         expressed[preference_][address(0)] += pressure;
         expressed[preference_][_msgSender()] = pressure;
-        if (previous == 0) expressors[preference_].push(_msgSender());
+        if (previous == 0) {
+        expressors[preference_].push(_msgSender());
+        activeIndecisions.push( preference_);
+        }
     }
 
     function _postMajorityCleanup(uint256 target_) private returns (uint256 outcome) {
@@ -280,6 +300,18 @@ contract DAOinstance {
         outcome = sum;
     }
 
+    function getActiveIndecisions() external view returns (uint256[] memory) {
+    return activeIndecisions;
+    }
+
+    function cleanIndecisionLog() external {
+    uint256 c;
+    for(c; c< activeIndecisions.length;) {
+        if ( expressors[activeIndecisions[c]].length == 0) delete activeIndecisions[c];
+        unchecked { ++c;}
+    }
+    }
+
     function mintInflation() public returns (uint256 amountToMint) {
         amountToMint = (block.timestamp - subunitPerSec[address(this)][1]);
         if (amountToMint == 0) return amountToMint;
@@ -310,6 +342,7 @@ contract DAOinstance {
 
     function _msgSender() private view returns (address) {
         if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
+        if (msg.sender == address(this) && msg.sig == this.distributiveSignal.selector) return purgeorExternalCall;
 
         return msg.sender;
     }
@@ -338,7 +371,7 @@ contract DAOinstance {
         return userSignal[who_][subUnit_];
     }
 
-    function getILongDistanceAddress() external view returns (address) {
-        return address(iLG);
-    }
+    // function getILongDistanceAddress() external view returns (address) {
+    //     return address(iLG);
+    // }
 }

@@ -85,8 +85,12 @@ contract LocalDeploy is Script {
     }
 
     function run() public {
-        vm.startBroadcast(vm.envUint("ANVIL_1"));
+        vm.startBroadcast(vm.envUint("ANVIL_DEPLOY1"));
         M = new MemberRegistry();
+        console.log( "MemberR ADDRESS OS ______________####_____ : ", address(M));
+        console.log( "ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
+        console.log( "MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
+
         Mock20 = new M20();
         Mock202 = new M202();
         O = IoDAO(M.ODAOaddress());
@@ -96,6 +100,8 @@ contract LocalDeploy is Script {
 
         vm.startBroadcast(vm.envUint("ANVIL_2"));
         address baseDAO = O.createDAO(address(Mock202));
+        O.createDAO(address(Mock20));
+        O.createDAO(address(Mock20));
 
         address[] memory tokens_ = new address[](1);
         uint256[] memory balances_ = new uint[](1);
