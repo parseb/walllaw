@@ -75,7 +75,7 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyMember() {
-        if (msg.sender == address(internalToken) || msg.sender == address(this) ) {
+        if (msg.sender == address(internalToken) || msg.sender == address(this)) {
             _;
         } else {
             if (!isMember(_msgSender())) revert DAOinstance__NotMember();
@@ -95,6 +95,7 @@ contract DAOinstance {
 
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
         _expressPreference(membraneId_);
+        if (!iMB.isMembrane(membraneId_)) revert DAOinstance__invalidMembrane();
 
         membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) <= 2))
             ? _majoritarianUpdate(membraneId_)
@@ -210,9 +211,8 @@ contract DAOinstance {
         s = BaseToken.transfer(endpoint, amt_);
     }
 
-
-    function gCheckPurge(address who_) external retunrs (bool) {
-        if (msg.sender != address(iMR))   revert DAOinstance__onlyMR();
+    function gCheckPurge(address who_) external returns (bool) {
+        if (msg.sender != address(iMR)) revert DAOinstance__onlyMR();
 
         delete redistributiveSignal[who_];
         address keepExtCall = purgeorExternalCall;
@@ -265,8 +265,8 @@ contract DAOinstance {
         expressed[preference_][address(0)] += pressure;
         expressed[preference_][_msgSender()] = pressure;
         if (previous == 0) {
-        expressors[preference_].push(_msgSender());
-        activeIndecisions.push( preference_);
+            expressors[preference_].push(_msgSender());
+            activeIndecisions.push(preference_);
         }
     }
 
@@ -300,16 +300,14 @@ contract DAOinstance {
         outcome = sum;
     }
 
-    function getActiveIndecisions() external view returns (uint256[] memory) {
-    return activeIndecisions;
-    }
-
     function cleanIndecisionLog() external {
-    uint256 c;
-    for(c; c< activeIndecisions.length;) {
-        if ( expressors[activeIndecisions[c]].length == 0) delete activeIndecisions[c];
-        unchecked { ++c;}
-    }
+        uint256 c;
+        for (c; c < activeIndecisions.length;) {
+            if (expressors[activeIndecisions[c]].length == 0) delete activeIndecisions[c];
+            unchecked {
+                ++c;
+            }
+        }
     }
 
     function mintInflation() public returns (uint256 amountToMint) {
@@ -370,6 +368,28 @@ contract DAOinstance {
     function getUserSignal(address who_, address subUnit_) external view returns (uint256[2] memory) {
         return userSignal[who_][subUnit_];
     }
+
+    function getActiveIndecisions() external view returns (uint256[] memory) {
+        return activeIndecisions;
+    }
+
+    function stateOfExpressed(address user_, uint256 prefID_) external view returns (uint256[3] memory pref) {
+        pref[0] = expressed[prefID_][user_];
+        pref[1] = expressed[prefID_][address(0)];
+        pref[2] = internalToken.totalSupply();
+    }
+
+    //     function getActiveIndecisionsOf(address user_) external view returns (uint256[] memory indecisions) {
+    // /// expressed: id/percent/uri | msgSender()/address(0) | value/0
+    //     mapping(uint256 => mapping(address => uint256)) expressed;
+
+    //         uint i;
+    //         indecisions = new uint256[](activeIndecisions.length);
+    //         for (i; i < indecisions.length;) {
+    //             if ( expressed[activeIndecisions[i]][address(0)] > 1 && expressed[activeIndecisions[i]][address(user_)] == 0 ) indecisions[i] = activeIndecisions[i];
+    //             unchecked { ++i;}
+    //         }
+    //     }
 
     // function getILongDistanceAddress() external view returns (address) {
     //     return address(iLG);

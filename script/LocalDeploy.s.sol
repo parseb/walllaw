@@ -87,9 +87,9 @@ contract LocalDeploy is Script {
     function run() public {
         vm.startBroadcast(vm.envUint("ANVIL_DEPLOY1"));
         M = new MemberRegistry();
-        console.log( "MemberR ADDRESS OS ______________####_____ : ", address(M));
-        console.log( "ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
-        console.log( "MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
+        console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
+        console.log("ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
+        console.log("MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
 
         Mock20 = new M20();
         Mock202 = new M202();

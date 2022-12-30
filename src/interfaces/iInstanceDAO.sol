@@ -24,9 +24,17 @@ interface iInstanceDAO {
 
     function withdrawBurn(uint256 amt_) external returns (uint256 amtWithdrawn);
 
-    function gCheckPurge(address who_) external; /// only MR
+    function gCheckPurge(address who_) external;
+
+    /// only MR
+
+    function cleanIndecisionLog() external;
 
     /// view
+
+    function getActiveIndecisions() external view returns (uint256[] memory);
+
+    function stateOfExpressed(address user_, uint256 prefID_) external view returns (uint256[3] memory pref);
 
     function internalTokenAddress() external view returns (address);
 

@@ -100,8 +100,7 @@ contract MemberRegistry is ERC1155 {
         return string(abi.encode(tokenUri[id]));
     }
 
-
-/// retrieves base DAOs
+    /// retrieves base DAOs
     function getRoots(uint256 howMany_) external view returns (address[] memory r) {
         if (roots.length < howMany_) howMany_ = endpoints.length;
 
