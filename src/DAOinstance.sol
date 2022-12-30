@@ -88,7 +88,7 @@ contract DAOinstance {
         require(percentagePerYear_ <= 100, ">100!");
         _expressPreference(percentagePerYear_);
 
-        inflationRate = (internalToken.totalSupply() / (expressed[percentagePerYear_][address(0)] + 1) <= 2)
+        inflationRate = (internalToken.totalSupply() / ( (expressed[percentagePerYear_][address(0)] + 1)) < 2)
             ? _majoritarianUpdate(percentagePerYear_)
             : baseInflationRate;
     }
@@ -97,7 +97,7 @@ contract DAOinstance {
         _expressPreference(membraneId_);
         if (!iMB.isMembrane(membraneId_)) revert DAOinstance__invalidMembrane();
 
-        membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) <= 2))
+        membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) < 2))
             ? _majoritarianUpdate(membraneId_)
             : iMB.inUseMembraneId(address(this));
     }
@@ -107,7 +107,7 @@ contract DAOinstance {
     //     if (uint256(callId_) < 101 || iMB.isMembrane(uint256(callId_))) revert DAOinstance__YouCantDoThat();
     //     _expressPreference(callId_);
 
-    //     callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) <= 2))
+    //     callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) < 2))
     //         ? _majoritarianUpdate(callId_)
     //         : 0;
 
@@ -118,7 +118,7 @@ contract DAOinstance {
         if (uint256(uri_) < 101 || iMB.isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
         _expressPreference(uint256(uri_));
 
-        currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) <= 2)
+        currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) < 2)
             ? bytes32(_majoritarianUpdate(uint256(uri_)))
             : bytes32(abi.encode(iMR.uri(baseID)));
     }
