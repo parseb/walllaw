@@ -21,7 +21,7 @@ interface IMemberRegistry {
     function getEndpoints(uint256 startAt_) external view returns (address[] memory);
 
     function getActiveMembershipsOf(address who_) external view returns (address[] memory entities);
-
+    function getUriOf(address who_) external view returns (string memory);
     //// only ODAO
 
     function pushIsEndpoint(address) external;
