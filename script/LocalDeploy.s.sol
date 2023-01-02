@@ -127,7 +127,7 @@ contract LocalDeploy is Script {
         IERC20(iInstanceDAO(baseDAO).baseTokenAddress()).approve(iInstanceDAO(baseDAO).internalTokenAddress(), type(uint256).max);
         IDAO20(iInstanceDAO(baseDAO).internalTokenAddress()).wrapMint(10 ether);
 
-        _createNestedDAOs(baseDAO, basicMembraneID, 3);
+        _createNestedDAOs(baseDAO, 0, 3);
 
         address[] memory subdaoAddresses = _createSubDaos(3,baseDAO);
 
@@ -146,6 +146,18 @@ contract LocalDeploy is Script {
         iInstanceDAO(subdaoAddresses[0]).signalInflation(9);
         iInstanceDAO(subdaoAddresses[1]).signalInflation(90);
         iInstanceDAO(subdaoAddresses[2]).signalInflation(33);
+
+        address[] memory subD2s = _createSubDaos(2, subdaoAddresses[1]);
+        address[] memory subD35s = _createSubDaos(5,subD2s[1]);
+        _createSubDaos(2,subD35s[1]);
+        _createSubDaos(7,subD35s[2]);
+        _createSubDaos(3,subD35s[3]);
+
+        
+        iInstanceDAO(subD35s[1]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        iInstanceDAO(subD35s[2]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        iInstanceDAO(subD35s[3]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+
 
         vm.stopBroadcast(); //// stop 2
 
