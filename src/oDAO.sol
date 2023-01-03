@@ -47,7 +47,7 @@ contract ODAO {
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR)));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
         daosOfToken[BaseTokenAddress_].push(newDAO);
-        if (msg.sig == this.createDAO.selector) MR.pushAsRoot(newDAO);
+        // if (msg.sig == this.createDAO.selector) MR.pushAsRoot(newDAO);
 
         emit newDAOCreated(newDAO, BaseTokenAddress_);
         if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
@@ -67,7 +67,7 @@ contract ODAO {
         isEndpoint
             ? IMembrane(MB).setMembraneEndpoint(membraneID_, subDAOaddr, msg.sender)
             : IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
-        if (isEndpoint) MR.pushIsEndpoint(subDAOaddr);
+        if (isEndpoint) MR.pushIsEndpointOf(subDAOaddr, msg.sender);
 
         childParentDAO[subDAOaddr] = parentDAO_;
 

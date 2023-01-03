@@ -57,8 +57,8 @@ contract oDao is Test {
         // assertTrue(DAO.baseID() == uint160(bytes20(address(DAO))));
         // assertTrue(DAO.owner() == deployer); /// removed owner role
 
-        assertTrue(iMR.getRoots(1).length == 1, "has root 1");
-        assertTrue(iMR.getRoots(1)[0] == Dinstnace, "expected dao 1 to be root 1");
+        // assertTrue(iMR.getRoots(1).length == 1, "has root 1");
+        // assertTrue(iMR.getRoots(1)[0] == Dinstnace, "expected dao 1 to be root 1");
     }
 
     // function testTransferOwnership() public {

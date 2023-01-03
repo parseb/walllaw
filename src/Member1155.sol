@@ -18,8 +18,9 @@ contract MemberRegistry is ERC1155 {
 
     IoDAO oDAO;
     IMembrane IMB;
-    address[] private roots;
-    address[] private endpoints;
+    // address[] private roots;
+    // address[] private endpoints;
+    mapping(address => address[]) endpointsOf;
     mapping(uint256 => bytes32) tokenUri;
     mapping(uint256 => uint256) uidTotalSupply;
     mapping(address => uint256[]) idsOf;
@@ -105,31 +106,31 @@ contract MemberRegistry is ERC1155 {
     }
 
     /// retrieves base DAOs
-    function getRoots(uint256 howMany_) external view returns (address[] memory r) {
-        if (roots.length < howMany_) howMany_ = endpoints.length;
+    // function getRoots(uint256 howMany_) external view returns (address[] memory r) {
+    //     if (roots.length < howMany_) howMany_ = endpoints.length;
 
-        uint256 i;
-        r = new address[](howMany_);
-        for (i; i < howMany_;) {
-            r[i] = roots[i];
-            unchecked {
-                i++;
-            }
-        }
-    }
+    //     uint256 i;
+    //     r = new address[](howMany_);
+    //     for (i; i < howMany_;) {
+    //         r[i] = roots[i];
+    //         unchecked {
+    //             i++;
+    //         }
+    //     }
+    // }
 
-    function getEndpoints(uint256 howMany_) external view returns (address[] memory r) {
-        if (endpoints.length < howMany_) howMany_ = endpoints.length;
+    // function getEndpoints(uint256 howMany_) external view returns (address[] memory r) {
+    //     if (endpoints.length < howMany_) howMany_ = endpoints.length;
 
-        uint256 i;
-        r = new address[](howMany_);
-        for (i; i < howMany_;) {
-            r[i] = endpoints[i];
-            unchecked {
-                i++;
-            }
-        }
-    }
+    //     uint256 i;
+    //     r = new address[](howMany_);
+    //     for (i; i < howMany_;) {
+    //         r[i] = endpoints[i];
+    //         unchecked {
+    //             i++;
+    //         }
+    //     }
+    // }
 
     function getActiveMembershipsOf(address who_) external view returns (address[] memory entities) {
         uint256[] memory ids = idsOf[who_];
@@ -143,14 +144,16 @@ contract MemberRegistry is ERC1155 {
         }
     }
 
-    function pushIsEndpoint(address dao_) external {
+    function pushIsEndpointOf(address dao_, address endpointOwner_ ) external {
         if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
-        endpoints.push(dao_);
+        // endpoints.push(dao_);
+        endpointsOf[endpointOwner_].push(dao_);
+
     }
 
     function pushAsRoot(address dao_) external {
         if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
-        roots.push(dao_);
+        // roots.push(dao_);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -170,9 +173,8 @@ contract MemberRegistry is ERC1155 {
     function gCheckBurn(address who_, address DAO_) external onlyMembraneR returns (bool) {
         uint256 id_ = uint160(bytes20(DAO_));
         _burn(who_, id_, balanceOf[who_][id_]);
-        return balanceOf[who_][id_] == 0;
-
         iInstanceDAO(DAO_).gCheckPurge(who_);
+        return balanceOf[who_][id_] == 0;
     }
 
     function howManyTotal(uint256 id_) public view returns (uint256) {
@@ -199,6 +201,10 @@ contract MemberRegistry is ERC1155 {
     {
         revert("_batchMint");
     }
+
+function getEndpointsOf(address ofWhom_) external view returns (address[] memory) {
+    return endpointsOf[ofWhom_];
+}
 
     function safeBatchTransferFrom(
         address from,
