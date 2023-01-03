@@ -18,7 +18,7 @@ interface IMemberRegistry {
     function LongCallAddress() external view returns (address);
 
     function getRoots(uint256 startAt_) external view returns (address[] memory);
-    function getEndpoints(uint256 startAt_) external view returns (address[] memory);
+    function getEndpointsOf(address who_) external view returns (address[] memory);
 
     function getActiveMembershipsOf(address who_) external view returns (address[] memory entities);
     function getUriOf(address who_) external view returns (string memory);
