@@ -16,9 +16,12 @@ interface IMembrane {
 
     function inUseMembraneId(address DAOaddress_) external view returns (uint256 Id);
 
+    function inUseUriOf(address DAOaddress_) external view returns (string memory);
+
+
     function getInUseMembraneOfDAO(address DAOAddress_) external view returns (Membrane memory);
 
-    function createMembrane(address[] memory tokens_, uint256[] memory balances_, bytes memory meta_)
+    function createMembrane(address[] memory tokens_, uint256[] memory balances_, string memory meta_)
         external
         returns (uint256);
     function isMembrane(uint256 id_) external view returns (bool);
@@ -26,4 +29,6 @@ interface IMembrane {
     function checkG(address who, address DAO_) external view returns (bool s);
 
     function gCheck(address who_, address DAO_) external returns (bool);
+
+    function entityData(uint256 id_) external view returns (string memory);
 }

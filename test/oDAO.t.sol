@@ -45,7 +45,7 @@ contract oDao is Test {
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
 
-        basicMid = iMB.createMembrane(tokens_, balances_, bytes("veryMeta"));
+        basicMid = iMB.createMembrane(tokens_, balances_, "veryMeta");
     }
 
     function testCreateNewDao() public returns (address Dinstnace) {
@@ -130,14 +130,14 @@ contract oDao is Test {
 
         a[0] = DAO.baseTokenAddress();
         u[0] = 101_000;
-        uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
+        uint256 membrane1 = iMB.createMembrane(a, u, "url://deployer_hasaccessmeta");
 
         vm.prank(Agent3);
         IERC20 token2 = IERC20(_createAnERC20());
 
         a[0] = address(token2);
         u[0] = 101_000;
-        uint256 membrane2 = iMB.createMembrane(a, u, bytes("url://deployer_noaccess"));
+        uint256 membrane2 = iMB.createMembrane(a, u, "url://deployer_noaccess");
         // assertTrue(DAO.owner() == deployer, "owned not deployer");
 
         vm.expectRevert(); // membraneNotFound();
@@ -196,7 +196,7 @@ contract oDao is Test {
         IERC20 token3 = IERC20(_createAnERC20());
         a[0] = address(token3);
         u[0] = 4294967294;
-        uint256 membrane3 = iMB.createMembrane(a, u, bytes("url://deployer_noaccess"));
+        uint256 membrane3 = iMB.createMembrane(a, u, "url://deployer_noaccess");
 
         vm.prank(Agent1, Agent1);
         token3.approve(address(this), type(uint256).max);

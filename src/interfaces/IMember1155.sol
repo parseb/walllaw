@@ -10,9 +10,9 @@ interface IMemberRegistry {
 
     /// onlyMembrane
     function howManyTotal(uint256 id_) external view returns (uint256);
-    function setUri(bytes32 uri_) external returns (bytes32);
+    function setUri(string memory uri_) external;
     function uri(uint256 id) external view returns (string memory);
-
+    
     function ODAOaddress() external view returns (address);
     function MembraneRegistryAddress() external view returns (address);
     function LongCallAddress() external view returns (address);

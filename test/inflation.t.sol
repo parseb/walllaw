@@ -44,7 +44,7 @@ contract redistributiveInflation is Test {
         balances_[0] = uint256(1000);
         skip(skipSeconds);
         basicMid =
-            iMB.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
+            iMB.createMembrane(tokens_, balances_, "much membraneeeeeeeeeeeeeeeeeeee");
     }
 
     function _membraneContext() public {
@@ -63,7 +63,7 @@ contract redistributiveInflation is Test {
 
         a[0] = DAO.baseTokenAddress();
         u[0] = 101_000;
-        uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
+        uint256 membrane1 = iMB.createMembrane(a, u, "url://deployer_hasaccessmeta");
 
         vm.prank(dInstance);
         iMB.setMembrane(membrane1, dInstance);

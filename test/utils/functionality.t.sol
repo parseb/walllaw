@@ -47,7 +47,7 @@ contract MyUtils is Test {
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
         basicMid =
-            iMB.createMembrane(tokens_, balances_, bytes(abi.encodePacked(keccak256(abi.encode(block.timestamp)))));
+            iMB.createMembrane(tokens_, balances_, "l0l.wAllAw.l0l");
     }
 
     function _setInflation(uint256 percent_, address _DAOaddr) public {
@@ -100,7 +100,7 @@ contract MyUtils is Test {
 
         a[0] = DAO.baseTokenAddress();
         u[0] = 101_000;
-        uint256 membrane1 = iMB.createMembrane(a, u, bytes("url://deployer_hasaccessmeta"));
+        uint256 membrane1 = iMB.createMembrane(a, u, "l0l.wAllAw.l0l");
 
         vm.prank(DAO_);
         iMB.setMembrane(membrane1, DAO_);

@@ -21,7 +21,7 @@ contract MemberRegistry is ERC1155 {
     // address[] private roots;
     // address[] private endpoints;
     mapping(address => address[]) endpointsOf;
-    mapping(uint256 => bytes32) tokenUri;
+    mapping(uint256 => string) tokenUri;
     mapping(uint256 => uint256) uidTotalSupply;
     mapping(address => uint256[]) idsOf;
 
@@ -88,9 +88,8 @@ contract MemberRegistry is ERC1155 {
         return balanceOf[who_][id_] == 1;
     }
 
-    function setUri(bytes32 uri_) external onlyDAO returns (bytes32) {
+    function setUri(string memory uri_) external onlyDAO {
         tokenUri[uint160(bytes20(msg.sender))] = uri_;
-        return tokenUri[uint160(bytes20(msg.sender))];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -98,10 +97,10 @@ contract MemberRegistry is ERC1155 {
     //////////////////////////////////////////////////////////////*/
 
     function uri(uint256 id) public view override returns (string memory) {
-        return string(abi.encode(tokenUri[id]));
+        return tokenUri[id];
     }
 
-    function getUriOf(address who_) external view returns (bytes32) {
+    function getUriOf(address who_) external view returns (string memory) {
         return tokenUri[uint160(bytes20(who_))];
     }
 

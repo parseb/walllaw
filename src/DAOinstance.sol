@@ -114,14 +114,14 @@ contract DAOinstance {
     //     return callId_ > 0;
     // }
 
-    function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
-        if (uint256(uri_) < 101 || iMB.isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
-        _expressPreference(uint256(uri_));
+    // function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
+    //     if (uint256(uri_) < 101 || iMB.isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
+    //     _expressPreference(uint256(uri_));
 
-        currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) < 2)
-            ? bytes32(_majoritarianUpdate(uint256(uri_)))
-            : bytes32(abi.encode(iMR.uri(baseID)));
-    }
+    //     currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) < 2)
+    //         ? bytes32(_majoritarianUpdate(uint256(uri_)))
+    //         : bytes32(abi.encode(iMR.uri(baseID)));
+    // }
 
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts)
         external
@@ -238,13 +238,14 @@ contract DAOinstance {
 
         if (msg.sig == this.changeMembrane.selector) {
             require(iMB.setMembrane(newVal_, address(this)), "f O.setM.");
+            iMR.setUri(iMB.inUseUriOf(address(this)));
             return _postMajorityCleanup(newVal_);
         }
 
-        if (msg.sig == this.changeUri.selector) {
-            iMR.setUri(bytes32(newVal_));
-            return _postMajorityCleanup(newVal_);
-        }
+        // if (msg.sig == this.changeUri.selector) {
+        //     iMR.setUri(bytes32(newVal_));
+        //     return _postMajorityCleanup(newVal_);
+        // }
 
         // if (msg.sig == this.executeExternalLogic.selector) {
         //     bool s;

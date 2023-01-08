@@ -14,6 +14,7 @@ contract MembraneRegistry {
     IoDAO ODAO;
     IMemberRegistry iMR;
 
+
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
 
@@ -30,17 +31,17 @@ contract MembraneRegistry {
     error Membrane__onlyODAOToSetEndpoint();
     error Membrane__SomethingWentWrong();
 
-    event CreatedMembrane(uint256 id, bytes metadata);
+    event CreatedMembrane(uint256 id, string metadata);
     event ChangedMembrane(address they, uint256 membrane);
     event gCheckKick(address indexed who);
 
-    function createMembrane(address[] memory tokens_, uint256[] memory balances_, bytes memory meta_)
+    function createMembrane(address[] memory tokens_, uint256[] memory balances_, string memory meta_)
         public
         returns (uint256 id)
     {
         /// @dev consider negative as feature . [] <- isZero. sybil f
         /// @dev @security erc165 check
-        if (tokens_.length * balances_.length * meta_.length == 0) revert Membrane__EmptyFieldOnMembraneCreation();
+        if (! ((tokens_.length / balances_.length) * bytes(meta_).length >= 1) ) revert Membrane__EmptyFieldOnMembraneCreation();
         Membrane memory M;
         M.tokens = tokens_;
         M.balances = balances_;
@@ -53,8 +54,8 @@ contract MembraneRegistry {
 
     function setMembrane(uint256 membraneID_, address dao_) external returns (bool) {
         if ((msg.sender != dao_) && (msg.sender != address(ODAO))) revert Membrane__MembraneChangeLimited();
-
         if (getMembraneById[membraneID_].tokens.length == 0) revert Membrane__membraneNotFound();
+        
         usesMembrane[dao_] = membraneID_;
         emit ChangedMembrane(dao_, membraneID_);
         return true;
@@ -63,9 +64,9 @@ contract MembraneRegistry {
     function setMembraneEndpoint(uint256 membraneID_, address dao_, address owner_) external returns (bool) {
         if (msg.sender != address(ODAO)) revert Membrane__onlyODAOToSetEndpoint();
         if (address(uint160(membraneID_)) == owner_) {
-            if (getMembraneById[membraneID_].meta.length == 0) {
+            if (bytes(getMembraneById[membraneID_].meta).length == 0) {
                 Membrane memory M;
-                M.meta = abi.encode(owner_);
+                M.meta = 'endpoint';
                 getMembraneById[membraneID_] = M;
             }
             usesMembrane[dao_] = membraneID_;
@@ -73,7 +74,6 @@ contract MembraneRegistry {
         } else {
             revert Membrane__SomethingWentWrong();
         }
-        return true;
     }
 
     function checkG(address who_, address DAO_) public view returns (bool s) {
@@ -101,7 +101,7 @@ contract MembraneRegistry {
         emit gCheckKick(who_);
     }
 
-    function entityData(uint256 id_) external view returns (bytes memory) {
+    function entityData(uint256 id_) external view returns (string memory) {
         return getMembraneById[id_].meta;
     }
 
@@ -119,5 +119,9 @@ contract MembraneRegistry {
 
     function getInUseMembraneOfDAO(address DAOAddress_) public view returns (Membrane memory) {
         return getMembraneById[usesMembrane[DAOAddress_]];
+    }
+
+    function inUseUriOf(address DAOaddress_) external view returns (string memory) {
+        return getInUseMembraneOfDAO(DAOaddress_).meta;
     }
 }

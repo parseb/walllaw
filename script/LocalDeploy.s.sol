@@ -40,7 +40,7 @@ contract LocalDeploy is Script {
 
     // Block Number: 1
     // Block Hash: 0x19de45fcd7fc1ea9400f02f091b5e5bc213e5c60d6ef0db223d7c3032590c406
-    // Block Time: "Tue, 27 Dec 2022 17:15:52 +0000"
+    // Block Time: "Tue, 27 Dec 2022 17:15:52 +0000"    bytes32("l0l.wAllAw.l0l")
 
     function _createBasicMembrane() public returns (uint256 basicMid) {
         address[] memory tokens_ = new address[](1);
@@ -48,7 +48,7 @@ contract LocalDeploy is Script {
 
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
-        basicMid = MembraneR.createMembrane(tokens_, balances_, bytes("QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq"));
+        basicMid = MembraneR.createMembrane(tokens_, balances_,"QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
     }
 
     function _createSubDaos(uint256 howMany_, address parentDAO_) private returns (address[] memory subDs) {
@@ -110,7 +110,7 @@ contract LocalDeploy is Script {
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
         uint256 basicMembraneID =
-            MembraneR.createMembrane(tokens_, balances_, bytes("QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq"));
+            MembraneR.createMembrane(tokens_, balances_,"QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
         vm.stopBroadcast();  //// stop 1
 
 
