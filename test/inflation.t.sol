@@ -43,8 +43,7 @@ contract redistributiveInflation is Test {
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
         skip(skipSeconds);
-        basicMid =
-            iMB.createMembrane(tokens_, balances_, "much membraneeeeeeeeeeeeeeeeeeee");
+        basicMid = iMB.createMembrane(tokens_, balances_, "much membraneeeeeeeeeeeeeeeeeeee");
     }
 
     function _membraneContext() public {

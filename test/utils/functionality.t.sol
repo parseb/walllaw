@@ -46,8 +46,7 @@ contract MyUtils is Test {
 
         tokens_[0] = address(BaseE20);
         balances_[0] = uint256(1000);
-        basicMid =
-            iMB.createMembrane(tokens_, balances_, "l0l.wAllAw.l0l");
+        basicMid = iMB.createMembrane(tokens_, balances_, "l0l.wAllAw.l0l");
     }
 
     function _setInflation(uint256 percent_, address _DAOaddr) public {

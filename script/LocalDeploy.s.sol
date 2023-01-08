@@ -48,7 +48,7 @@ contract LocalDeploy is Script {
 
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
-        basicMid = MembraneR.createMembrane(tokens_, balances_,"QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
+        basicMid = MembraneR.createMembrane(tokens_, balances_, "QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
     }
 
     function _createSubDaos(uint256 howMany_, address parentDAO_) private returns (address[] memory subDs) {
@@ -98,8 +98,6 @@ contract LocalDeploy is Script {
         MembraneR = IMembrane(M.MembraneRegistryAddress());
         M721 = new M721222();
 
-
-
         O.createDAO(address(Mock202));
         address baseDAO = O.createDAO(address(Mock20));
         O.createDAO(address(Mock20));
@@ -110,11 +108,10 @@ contract LocalDeploy is Script {
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
         uint256 basicMembraneID =
-            MembraneR.createMembrane(tokens_, balances_,"QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
-        vm.stopBroadcast();  //// stop 1
+            MembraneR.createMembrane(tokens_, balances_, "QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
+        vm.stopBroadcast(); //// stop 1
 
-
-        vm.startBroadcast(vm.envUint("ANVIL_2"));  //// start 2
+        vm.startBroadcast(vm.envUint("ANVIL_2")); //// start 2
 
         iInstanceDAO(baseDAO).mintMembershipToken(0x5457d92f47212E9287c1A1c31e708f574ab66125);
         iInstanceDAO(baseDAO).signalInflation(50);
@@ -122,25 +119,28 @@ contract LocalDeploy is Script {
         iInstanceDAO(baseDAO).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
         iInstanceDAO(baseDAO).mintMembershipToken(0x5df6cF21815ca55057bb5cA159A3130c193bb0a1);
 
-
-
-        IERC20(iInstanceDAO(baseDAO).baseTokenAddress()).approve(iInstanceDAO(baseDAO).internalTokenAddress(), type(uint256).max);
+        IERC20(iInstanceDAO(baseDAO).baseTokenAddress()).approve(
+            iInstanceDAO(baseDAO).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(baseDAO).internalTokenAddress()).wrapMint(10 ether);
 
         _createNestedDAOs(baseDAO, 0, 3);
 
-        address[] memory subdaoAddresses = _createSubDaos(3,baseDAO);
+        address[] memory subdaoAddresses = _createSubDaos(3, baseDAO);
 
-        IERC20(iInstanceDAO(subdaoAddresses[0]).baseTokenAddress()).approve(iInstanceDAO(subdaoAddresses[0]).internalTokenAddress()
-,type(uint256).max);
+        IERC20(iInstanceDAO(subdaoAddresses[0]).baseTokenAddress()).approve(
+            iInstanceDAO(subdaoAddresses[0]).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(subdaoAddresses[0]).internalTokenAddress()).wrapMint(2 * 1 ether);
 
-        IERC20(iInstanceDAO(subdaoAddresses[1]).baseTokenAddress()).approve(iInstanceDAO(subdaoAddresses[1]).internalTokenAddress()
-,type(uint256).max);
+        IERC20(iInstanceDAO(subdaoAddresses[1]).baseTokenAddress()).approve(
+            iInstanceDAO(subdaoAddresses[1]).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(subdaoAddresses[1]).internalTokenAddress()).wrapMint(2 * 1 ether);
 
-        IERC20(iInstanceDAO(subdaoAddresses[2]).baseTokenAddress()).approve(iInstanceDAO(subdaoAddresses[2]).internalTokenAddress()
-,type(uint256).max);
+        IERC20(iInstanceDAO(subdaoAddresses[2]).baseTokenAddress()).approve(
+            iInstanceDAO(subdaoAddresses[2]).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(subdaoAddresses[2]).internalTokenAddress()).wrapMint(3 * 1 ether);
 
         iInstanceDAO(subdaoAddresses[0]).signalInflation(9);
@@ -148,39 +148,41 @@ contract LocalDeploy is Script {
         iInstanceDAO(subdaoAddresses[2]).signalInflation(33);
 
         address[] memory subD2s = _createSubDaos(2, subdaoAddresses[1]);
-        address[] memory subD35s = _createSubDaos(5,subD2s[1]);
-        _createSubDaos(2,subD35s[1]);
-        _createSubDaos(7,subD35s[2]);
-        _createSubDaos(3,subD35s[3]);
+        address[] memory subD35s = _createSubDaos(5, subD2s[1]);
+        _createSubDaos(2, subD35s[1]);
+        _createSubDaos(7, subD35s[2]);
+        _createSubDaos(3, subD35s[3]);
 
-        
         iInstanceDAO(subD35s[1]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
         iInstanceDAO(subD35s[2]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
         iInstanceDAO(subD35s[3]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
 
-
         vm.stopBroadcast(); //// stop 2
 
-        vm.startBroadcast(vm.envUint("ANVIL_3")); 
+        vm.startBroadcast(vm.envUint("ANVIL_3"));
 
-        IERC20(iInstanceDAO(baseDAO).baseTokenAddress()).approve(iInstanceDAO(baseDAO).internalTokenAddress(), type(uint256).max);
+        IERC20(iInstanceDAO(baseDAO).baseTokenAddress()).approve(
+            iInstanceDAO(baseDAO).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(baseDAO).internalTokenAddress()).wrapMint(10 ether);
 
         iInstanceDAO(subdaoAddresses[0]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
         iInstanceDAO(subdaoAddresses[1]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
         iInstanceDAO(subdaoAddresses[2]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
 
-
-        IERC20(iInstanceDAO(subdaoAddresses[0]).baseTokenAddress()).approve(iInstanceDAO(subdaoAddresses[0]).internalTokenAddress()
-,type(uint256).max);
+        IERC20(iInstanceDAO(subdaoAddresses[0]).baseTokenAddress()).approve(
+            iInstanceDAO(subdaoAddresses[0]).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(subdaoAddresses[0]).internalTokenAddress()).wrapMint(3 * 1 ether);
 
-        IERC20(iInstanceDAO(subdaoAddresses[1]).baseTokenAddress()).approve(iInstanceDAO(subdaoAddresses[1]).internalTokenAddress()
-,type(uint256).max);
+        IERC20(iInstanceDAO(subdaoAddresses[1]).baseTokenAddress()).approve(
+            iInstanceDAO(subdaoAddresses[1]).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(subdaoAddresses[1]).internalTokenAddress()).wrapMint(3 * 1 ether);
 
-        IERC20(iInstanceDAO(subdaoAddresses[2]).baseTokenAddress()).approve(iInstanceDAO(subdaoAddresses[2]).internalTokenAddress()
-,type(uint256).max);
+        IERC20(iInstanceDAO(subdaoAddresses[2]).baseTokenAddress()).approve(
+            iInstanceDAO(subdaoAddresses[2]).internalTokenAddress(), type(uint256).max
+        );
         IDAO20(iInstanceDAO(subdaoAddresses[2]).internalTokenAddress()).wrapMint(2 * 1 ether);
 
         iInstanceDAO(subdaoAddresses[2]).signalInflation(66);

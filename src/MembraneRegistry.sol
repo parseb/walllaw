@@ -14,7 +14,6 @@ contract MembraneRegistry {
     IoDAO ODAO;
     IMemberRegistry iMR;
 
-
     mapping(uint256 => Membrane) getMembraneById;
     mapping(address => uint256) usesMembrane;
 
@@ -41,7 +40,9 @@ contract MembraneRegistry {
     {
         /// @dev consider negative as feature . [] <- isZero. sybil f
         /// @dev @security erc165 check
-        if (! ((tokens_.length / balances_.length) * bytes(meta_).length >= 1) ) revert Membrane__EmptyFieldOnMembraneCreation();
+        if (!((tokens_.length / balances_.length) * bytes(meta_).length >= 1)) {
+            revert Membrane__EmptyFieldOnMembraneCreation();
+        }
         Membrane memory M;
         M.tokens = tokens_;
         M.balances = balances_;
@@ -55,7 +56,7 @@ contract MembraneRegistry {
     function setMembrane(uint256 membraneID_, address dao_) external returns (bool) {
         if ((msg.sender != dao_) && (msg.sender != address(ODAO))) revert Membrane__MembraneChangeLimited();
         if (getMembraneById[membraneID_].tokens.length == 0) revert Membrane__membraneNotFound();
-        
+
         usesMembrane[dao_] = membraneID_;
         emit ChangedMembrane(dao_, membraneID_);
         return true;
@@ -66,7 +67,7 @@ contract MembraneRegistry {
         if (address(uint160(membraneID_)) == owner_) {
             if (bytes(getMembraneById[membraneID_].meta).length == 0) {
                 Membrane memory M;
-                M.meta = 'endpoint';
+                M.meta = "endpoint";
                 getMembraneById[membraneID_] = M;
             }
             usesMembrane[dao_] = membraneID_;

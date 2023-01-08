@@ -143,11 +143,10 @@ contract MemberRegistry is ERC1155 {
         }
     }
 
-    function pushIsEndpointOf(address dao_, address endpointOwner_ ) external {
+    function pushIsEndpointOf(address dao_, address endpointOwner_) external {
         if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
         // endpoints.push(dao_);
         endpointsOf[endpointOwner_].push(dao_);
-
     }
 
     function pushAsRoot(address dao_) external {
@@ -201,9 +200,9 @@ contract MemberRegistry is ERC1155 {
         revert("_batchMint");
     }
 
-function getEndpointsOf(address ofWhom_) external view returns (address[] memory) {
-    return endpointsOf[ofWhom_];
-}
+    function getEndpointsOf(address ofWhom_) external view returns (address[] memory) {
+        return endpointsOf[ofWhom_];
+    }
 
     function safeBatchTransferFrom(
         address from,

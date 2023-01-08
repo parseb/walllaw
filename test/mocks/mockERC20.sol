@@ -18,8 +18,6 @@ contract M20 is ERC20("Mock20", "M20") {
     address anvil_4 = 0x5df6cF21815ca55057bb5cA159A3130c193bb0a1;
     address anvil_5 = 0xEdc4E5c7FfAD492dE7c0c5889986aD3e8B578627;
 
-
-
     constructor() {
         _mint(address(0xb3F204a5F3dabef6bE51015fD57E307080Db6498), 10_000_000 ether);
         _mint(msg.sender, 1_000_000 ether);

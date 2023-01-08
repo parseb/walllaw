@@ -18,7 +18,6 @@ interface IMembrane {
 
     function inUseUriOf(address DAOaddress_) external view returns (string memory);
 
-
     function getInUseMembraneOfDAO(address DAOAddress_) external view returns (Membrane memory);
 
     function createMembrane(address[] memory tokens_, uint256[] memory balances_, string memory meta_)

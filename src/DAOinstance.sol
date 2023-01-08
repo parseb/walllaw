@@ -88,7 +88,7 @@ contract DAOinstance {
         require(percentagePerYear_ <= 100, ">100!");
         _expressPreference(percentagePerYear_);
 
-        inflationRate = (internalToken.totalSupply() / ( (expressed[percentagePerYear_][address(0)] + 1)) < 2)
+        inflationRate = (internalToken.totalSupply() / ((expressed[percentagePerYear_][address(0)] + 1)) < 2)
             ? _majoritarianUpdate(percentagePerYear_)
             : baseInflationRate;
     }

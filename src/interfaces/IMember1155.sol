@@ -12,7 +12,7 @@ interface IMemberRegistry {
     function howManyTotal(uint256 id_) external view returns (uint256);
     function setUri(string memory uri_) external;
     function uri(uint256 id) external view returns (string memory);
-    
+
     function ODAOaddress() external view returns (address);
     function MembraneRegistryAddress() external view returns (address);
     function LongCallAddress() external view returns (address);
@@ -29,8 +29,7 @@ interface IMemberRegistry {
     //////////////////////// ERC1155
 
     ///// only odao
-    function pushIsEndpointOf(address dao_, address endpointOwner_ ) external;
-
+    function pushIsEndpointOf(address dao_, address endpointOwner_) external;
 
     /**
      * @notice Transfers `_value` amount of an `_id` from the `_from` address to the `_to` address specified (with safety call).
