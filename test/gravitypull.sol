@@ -9,9 +9,10 @@ contract GravityFeed is Test, MyUtils {
     address DDD;
 
     function setUp() public {
-        vm.startPrank(Agent1);
-
+        vm.prank(deployer);
         DDD = _createDAO(address(BaseE20));
+
+        vm.startPrank(Agent1);
         DAO = iInstanceDAO(DDD);
 
         BaseE20.approve(DAO.internalTokenAddress(), type(uint256).max);

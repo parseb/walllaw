@@ -380,6 +380,10 @@ contract DAOinstance {
         pref[2] = internalToken.totalSupply();
     }
 
+    function uri() external view returns (string memory) {
+        return iMB.inUseUriOf(address(this));
+    }
+
     //     function getActiveIndecisionsOf(address user_) external view returns (uint256[] memory indecisions) {
     // /// expressed: id/percent/uri | msgSender()/address(0) | value/0
     //     mapping(uint256 => mapping(address => uint256)) expressed;

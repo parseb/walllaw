@@ -47,7 +47,7 @@ contract MembraneRegistry {
         M.tokens = tokens_;
         M.balances = balances_;
         M.meta = meta_;
-        id = uint256(keccak256(abi.encode(M)));
+        id = uint256(keccak256(abi.encode(M))) % 1 ether;
         getMembraneById[id] = M;
 
         emit CreatedMembrane(id, meta_);

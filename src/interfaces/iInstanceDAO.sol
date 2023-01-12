@@ -57,4 +57,6 @@ interface iInstanceDAO {
     function parentDAO() external view returns (address);
 
     function getILongDistanceAddress() external view returns (address);
+
+    function uri() external view returns (string memory);
 }

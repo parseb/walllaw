@@ -32,9 +32,10 @@ contract EndpWithdraw is Test, MyUtils {
     }
 
     function setUp() public {
-        vm.startPrank(Agent1);
+        vm.prank(deployer);
         DAO = iInstanceDAO(_createDAO(address(baseT)));
 
+        vm.startPrank(Agent1);
         internalT = IDAO20(DAO.internalTokenAddress());
         baseT = IERC20(DAO.baseTokenAddress());
         baseT.approve(address(internalT), type(uint256).max);

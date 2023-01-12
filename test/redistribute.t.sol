@@ -15,6 +15,7 @@ contract RedistributiveTest is Test, MyUtils {
 
     function setUp() public {
         baseT = IERC20(_createAnERC20());
+        vm.prank(deployer);
         DAO = iInstanceDAO(_createDAO(address(baseT)));
         internalT = IDAO20(DAO.internalTokenAddress());
 

@@ -49,7 +49,7 @@ contract oDao is Test {
     }
 
     function testCreateNewDao() public returns (address Dinstnace) {
-        vm.prank(deployer, deployer);
+        vm.prank(Agent3, Agent3);
         Dinstnace = address(O.createDAO(address(BaseE20)));
         DAO = DAOinstance(Dinstnace);
 

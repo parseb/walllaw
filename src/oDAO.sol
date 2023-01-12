@@ -48,10 +48,13 @@ contract ODAO {
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
         daosOfToken[BaseTokenAddress_].push(newDAO);
         // if (msg.sig == this.createDAO.selector) MR.pushAsRoot(newDAO);
-
+        if (msg.sig == this.createDAO.selector) iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
         emit newDAOCreated(newDAO, BaseTokenAddress_);
         if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
     }
+
+    //// @security ?: can endpoint-onEndpoint create. remove multiple endpoit.
+    ///  --------------- create sub-endpoints for endpoint? @todo
 
     /// @notice enshrines exclusionary sub-unit
     /// @param membraneID_: border materiality

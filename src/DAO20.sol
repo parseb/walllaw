@@ -32,7 +32,7 @@ contract DAO20 is ERC20 {
     function wrapMint(uint256 amt) external returns (bool s) {
         s = baseToken.transferFrom(msg.sender, owner, amt);
         if (s) {
-            //iInstanceDAO(owner).mintInflation(); /// @dev this breaks mint on anvil. also maybe bad idea. todo
+            //iInstanceDAO(owner).mintInflation(); /// @dev this breaks mint on anvil. also maybe bad idea. @todo
             _mint(msg.sender, amt);
         }
         require(s, "ngmi");

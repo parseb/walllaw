@@ -7,6 +7,7 @@ contract CheckTrickle is Test, MyUtils {
     iInstanceDAO DAO;
 
     function setUp() public {
+        vm.prank(deployer);
         DAO = iInstanceDAO(_createDAO(address(BaseE20)));
         uint256 membrane = _createBasicMembrane();
         // _createSubDaos();

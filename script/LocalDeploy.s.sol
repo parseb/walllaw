@@ -40,7 +40,7 @@ contract LocalDeploy is Script {
 
     // Block Number: 1
     // Block Hash: 0x19de45fcd7fc1ea9400f02f091b5e5bc213e5c60d6ef0db223d7c3032590c406
-    // Block Time: "Tue, 27 Dec 2022 17:15:52 +0000"    bytes32("l0l.wAllAw.l0l")
+    // Block Time: "Tue, 27 Dec 2022 17:15:52 +0000"    bytes32("l0l.wAllAw.l0l")    /// metadata membrane bafybeidl3kccemfn5qmk57xbw5rl7j5szuvzvfasigkvz2d7wapduuyh2y
 
     function _createBasicMembrane() public returns (uint256 basicMid) {
         address[] memory tokens_ = new address[](1);
@@ -48,7 +48,8 @@ contract LocalDeploy is Script {
 
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
-        basicMid = MembraneR.createMembrane(tokens_, balances_, "QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
+        basicMid =
+            MembraneR.createMembrane(tokens_, balances_, "bafybeidl3kccemfn5qmk57xbw5rl7j5szuvzvfasigkvz2d7wapduuyh2y");
     }
 
     function _createSubDaos(uint256 howMany_, address parentDAO_) private returns (address[] memory subDs) {
@@ -88,10 +89,6 @@ contract LocalDeploy is Script {
         vm.startBroadcast(vm.envUint("ANVIL_DEPLOY1")); //// start 1
 
         M = new MemberRegistry();
-        console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
-        console.log("ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
-        console.log("MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
-
         Mock20 = new M20();
         Mock202 = new M202();
         O = IoDAO(M.ODAOaddress());
@@ -108,7 +105,7 @@ contract LocalDeploy is Script {
         tokens_[0] = address(Mock20);
         balances_[0] = uint256(1000);
         uint256 basicMembraneID =
-            MembraneR.createMembrane(tokens_, balances_, "QmddchiYMQGZYLZf86jhyhkxRqrGfpBNr53b4oiV76q6aq");
+            MembraneR.createMembrane(tokens_, balances_, "bafybeidl3kccemfn5qmk57xbw5rl7j5szuvzvfasigkvz2d7wapduuyh2y");
         vm.stopBroadcast(); //// stop 1
 
         vm.startBroadcast(vm.envUint("ANVIL_2")); //// start 2
@@ -188,5 +185,12 @@ contract LocalDeploy is Script {
         iInstanceDAO(subdaoAddresses[2]).signalInflation(66);
 
         vm.stopBroadcast();
+
+        console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
+        console.log("ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
+        console.log("MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
+        console.log("M20 ADDRESS OS ______________####_____ : ", address(Mock20));
+        console.log("M202 ADDRESS OS ______________####_____ : ", address(Mock202));
+        console.log("M721 ADDRESS OS ______________####_____ : ", address(M721));
     }
 }
