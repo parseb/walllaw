@@ -106,7 +106,7 @@ contract DAOinstance {
     }
 
 
-    /// @notice initiate or support change of membrane in favor of designated
+    /// @notice initiate or support change of membrane in favor of designated by id
     /// @param membraneId_ id of membrane to support change of
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
         _expressPreference(membraneId_);
@@ -137,6 +137,10 @@ contract DAOinstance {
     //         ? bytes32(_majoritarianUpdate(uint256(uri_)))
     //         : bytes32(abi.encode(iMR.uri(baseID)));
     // }
+
+    /// @notice signal prefferred redistribution percentages out of inflation
+    /// @notice beneficiaries are ordered chonologically and expects a value for each item retruend by `getDAOsOfToken`
+    /// @param cronoOrderedDistributionAmts complete array of preffered sub-entity distributions with sum 100
 
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts)
         external
@@ -186,6 +190,8 @@ contract DAOinstance {
         }
     }
 
+
+    /// @notice checks and distributes eligible amounts of inflation balance on path from root to this
     function feedMe() external returns (uint256 fed) {
         address[] memory feedPath = IoDAO(ODAO).getTrickleDownPath(address(this));
         if (feedPath[0] == address(0)) {
@@ -204,6 +210,55 @@ contract DAOinstance {
         fed = iInstanceDAO(feedPath[0]).redistributeSubDAO(address(this));
     }
 
+   function _postMajorityCleanup(address[] memory agents, uint256 target_) public returns (uint256 outcome) {
+        if (expressed[target_][address(0)] < (internalToken.totalSupply() / 2)) revert DAOinstance__notmajority();
+
+        uint256 sum;
+        address a;
+        for (outcome; outcome < agents.length;) {
+            a = agents[outcome];
+            unchecked {
+                sum += expressed[target_][a];
+            }
+            delete expressed[target_][a];
+            unchecked {
+                ++outcome;
+            }
+        }
+        outcome = sum;
+    }
+
+        function mintInflation() public returns (uint256 amountToMint) {
+        amountToMint = (block.timestamp - subunitPerSec[address(this)][1]);
+        if (amountToMint == 0) return amountToMint;
+
+        amountToMint = (amountToMint * baseInflationPerSec);
+        require(internalToken.inflationaryMint(amountToMint));
+        subunitPerSec[address(this)][1] = block.timestamp;
+
+        _majoritarianUpdate(0);
+
+        emit inflationaryMint(amountToMint);
+    }
+
+    function redistributeSubDAO(address subDAO_) public returns (uint256 gotAmt) {
+        mintInflation();
+        gotAmt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
+        subunitPerSec[subDAO_][1] = block.timestamp;
+        if (!internalToken.transfer(subDAO_, gotAmt)) revert DAOinstance__itTransferFailed();
+    }
+
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            results[i] = Address.functionDelegateCall(address(this), data[i]);
+        }
+        return results;
+    }
+
+
+    /// @notice mints membership token to specified address if it fulfills the acceptance criteria of the membrane
+    /// @param to_ address to mint membership token to
     function mintMembershipToken(address to_) external returns (bool s) {
         if (endpoint != address(0)) revert DAOinstance__isEndpoint();
 
@@ -221,11 +276,14 @@ contract DAOinstance {
         s = iMR.makeMember(to_, baseID) && s;
     }
 
+    /// @notice burns internal token and returnes to msg.sender the eligible underlying amount of parent tokens
     function withdrawBurn(uint256 amt_) external returns (bool s) {
         if (endpoint != msg.sender) revert DAOinstance__NotYourEnpoint();
         s = BaseToken.transfer(endpoint, amt_);
     }
 
+    /// @notice immune mechanism to check basis of membership and revoke if invalid
+    /// @param who_ address to check 
     function gCheckPurge(address who_) external returns (bool) {
         if (msg.sender != address(iMR)) revert DAOinstance__onlyMR();
 
@@ -298,24 +356,11 @@ contract DAOinstance {
         outcome = target_;
     }
 
-    function _postMajorityCleanup(address[] memory agents, uint256 target_) public returns (uint256 outcome) {
-        if (expressed[target_][address(0)] < (internalToken.totalSupply() / 2)) revert DAOinstance__notmajority();
+ 
 
-        uint256 sum;
-        address a;
-        for (outcome; outcome < agents.length;) {
-            a = agents[outcome];
-            unchecked {
-                sum += expressed[target_][a];
-            }
-            delete expressed[target_][a];
-            unchecked {
-                ++outcome;
-            }
-        }
-        outcome = sum;
-    }
 
+
+    /// @notice @dev @todo should be part of normal execution chain
     function cleanIndecisionLog() external {
         uint256 c;
         for (c; c < activeIndecisions.length;) {
@@ -326,33 +371,7 @@ contract DAOinstance {
         }
     }
 
-    function mintInflation() public returns (uint256 amountToMint) {
-        amountToMint = (block.timestamp - subunitPerSec[address(this)][1]);
-        if (amountToMint == 0) return amountToMint;
 
-        amountToMint = (amountToMint * baseInflationPerSec);
-        require(internalToken.inflationaryMint(amountToMint));
-        subunitPerSec[address(this)][1] = block.timestamp;
-
-        _majoritarianUpdate(0);
-
-        emit inflationaryMint(amountToMint);
-    }
-
-    function redistributeSubDAO(address subDAO_) public returns (uint256 gotAmt) {
-        mintInflation();
-        gotAmt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
-        subunitPerSec[subDAO_][1] = block.timestamp;
-        if (!internalToken.transfer(subDAO_, gotAmt)) revert DAOinstance__itTransferFailed();
-    }
-
-    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
-        results = new bytes[](data.length);
-        for (uint256 i = 0; i < data.length; i++) {
-            results[i] = Address.functionDelegateCall(address(this), data[i]);
-        }
-        return results;
-    }
 
     function _msgSender() private view returns (address) {
         if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
