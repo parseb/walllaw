@@ -21,13 +21,13 @@ Deployed to: 0xF66d63301C39c9e42250896FAfb43fCbE7102674
 Transaction hash: 0x2407206913200ce891a102c990392a444fc8b2f85fd02db7ba8e7f94ff231495
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+GOERLI
 
-GOERLI LATEST
 == Logs ==
-  Member GOERLI ______________####_____ :  0xAe6324aA0a3Ea810Cd5C40631AA6C93da099b536
-  ODAO GOERLI ______________####_____ :  0xDC866b7c36763064D3FE71B6Ed5B3C429536C37B
-  MembraneR ______________####_____ :  0xe8352CEA93019fEB31BCEC5f99AbE7b0058CdCf8
-  MKR GOERLI  ______________####_____ :  0x6C12dA1b89635367349543981Ea1Be2844e591AE
+  Member GOERLI ______________####_____ :  0x235626Da22545B86f14cf7bD76df92C838eFF038
+  ODAO GOERLI ______________####_____ :  0x33708a895CcDB9F3272EE3dA0c73edeC33Cd1D73
+  MembraneR ______________####_____ :  0xB2bD0180f5168693771176B61459c4FbEB2dab8b
+  MKR GOERLI  ______________####_____ :  0x3C157d0AD9033F2dCc96f8BeD94B07d6efada3E1
 
 ## Setting up (1) EVMs.
 
@@ -35,9 +35,9 @@ GOERLI LATEST
 
 Chain 5
 
-Estimated total gas used for script: 16651350
+Estimated total gas used for script: 16666727
 
-Estimated amount required: 1.3919153584468293 ETH
+Estimated amount required: 1.232141833537290984 ETH
 
 ==========================
 
@@ -50,40 +50,43 @@ Transactions saved to: /home/parseb/Desktop/ODAO/odao.lol/broadcast/GoerliDeploy
 
 ##
 Waiting for receipts.
-⠂ [00:00:34] [#############################################] 5/5 receipts (0.0s)
+⠂ [00:00:14] [###################################################################################] 5/5 receipts (0.0s)
 ##### goerli
-✅ Hash: 0xfab03303878693ff37bb8eaa558aaf712bff7f9557005ab9f959d56a239e98c2
-Contract Address: 0xae6324aa0a3ea810cd5c40631aa6c93da099b536
-Block: 8298814
-Paid: 0.482138751600315096 ETH (8074024 gas * 59.714802879 gwei)
-
-
-##### goerli
-✅ Hash: 0x5bee3979c3c1b3ff823e5dd1b5a0494644642f003245f3c818720719f1fcf174
-Contract Address: 0x550bf2866d439c5db06c7faf95f97d68dbb4072d
-Block: 8298814
-Paid: 0.069887159834634771 ETH (1170349 gas * 59.714802879 gwei)
+✅ Hash: 0xad311569c70147fedf94defa87cb03a8e503dce19c474a92ce81be099b0ded81
+Contract Address: 0x235626da22545b86f14cf7bd76df92c838eff038
+Block: 8303584
+Paid: 0.302920776797334742 ETH (8085853 gas * 37.463057614 gwei)
 
 
 ##### goerli
-✅ Hash: 0x4dabca62c382d3bef217b04c96acaada9802127a5264e045e8035f38681ad11c
-Contract Address: 0x01cca246a13e89863bee1d35df6bfed1332c5d02
-Block: 8298814
-Paid: 0.069887159834634771 ETH (1170349 gas * 59.714802879 gwei)
+✅ Hash: 0x27687bada53c5fea6308f545491e948204ad96fb7f3e2a3a8423a078bba12a06
+Contract Address: 0x103e616fdd331c62d159becf4017a40f5c06bedc
+Block: 8303584
+Paid: 0.043844852015487286 ETH (1170349 gas * 37.463057614 gwei)
 
 
 ##### goerli
-✅ Hash: 0x5b2fdf71b6daf430b9ce326fe908b9285128020454ad0a803dbe33e1b87e72db
-Contract Address: 0xba7bbdb957dfee3ffc22af94fb0337d3adf015aa
-Block: 8298814
-Paid: 0.100435819832262075 ETH (1681925 gas * 59.714802879 gwei)
+✅ Hash: 0x2c3cac484cc5a919fd71a474258c6e2ec86ca1a56f96f46a78b1a90a19f24fe4
+Contract Address: 0x274df88de564549180aed22de2ade44504dd7617
+Block: 8303584
+Paid: 0.043844852015487286 ETH (1170349 gas * 37.463057614 gwei)
 
 
 ##### goerli
-✅ Hash: 0x6240047918f21787e9063e9f71f5da049098d00b5616dbb5dd297ec50257ad38
-Contract Address: 0x6c12da1b89635367349543981ea1be2844e591ae
-Block: 8298814
-Paid: 0.042522075122895594 ETH (712086 gas * 59.714802879 gwei)
+✅ Hash: 0xab2e897993b87f0b0f6db934b2d5fce720cc969dcb0423a9c96a2832d431188e
+Contract Address: 0x219050e1754a2f4ae18e7faf2bd71a37ac20d3b2
+Block: 8303584
+Paid: 0.06301005317742695 ETH (1681925 gas * 37.463057614 gwei)
+
+
+##### goerli
+✅ Hash: 0xefc1a5c3851971af0627e54346c02933cda2fa43a7f7e6f166c7dba4e259fcd8
+Contract Address: 0x3c157d0ad9033f2dcc96f8bed94b07d6efada3e1
+Block: 8303584
+Paid: 0.026676918844122804 ETH (712086 gas * 37.463057614 gwei)
+
+
+Transactions saved to: /home/parseb/Desktop/ODAO/odao.lol/broadcast/GoerliDeploy.s.sol/5/run-latest.json
 
 
 

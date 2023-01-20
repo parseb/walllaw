@@ -26,21 +26,30 @@ contract DAOinstance {
     // ILongCall iLG;
 
     /// # EOA => subunit => [percentage, amt]
+    /// @notice stores broadcasted signal of user about preffered distribution [example: 5% of inflation to subDAO x]
+    /// @notice formed as address of affirming agent => address of subDAO (or endpoint) => 1-100% percentage amount.
     mapping(address => mapping(address => uint256[2])) userSignal;
 
     /// #subunit id => [perSecond, timestamp]
+    /// @notice stores the nominal amount a subunit is entitled to
+    /// @notice formed as address_of_subunit => [amount_of_entitlement_gained_each_second, time_since_last_withdrawal @dev ?]
     mapping(address => uint256[2]) subunitPerSec;
 
+    
     /// last user distributive signal
+    /// @notice stored array of preffered user redistribution percentages. formatted as `address of agent => [array of preferences] 
+    /// @notice minimum value 1, maximum vaule 100. Sum of percentages needs to add up to 100.
     mapping(address => uint256[]) redistributiveSignal;
 
-    /// expressed: id/percent/uri | msgSender()/address(0) | value/0
+    /// expressed: membrane / inflation rate / * | msgSender()/address(0) | value/0
+    /// @notice expressed quantifiable support for specified change of membrane, inflation or *
     mapping(uint256 => mapping(address => uint256)) expressed;
 
     /// list of expressors for id/percent/uri
+    /// @notice stores array of agent addresses that are expressing a change
     mapping(uint256 => address[]) expressors;
 
-    uint256[] private activeIndecisions;
+    uint256[] private activeIndecisions; ///// @todo
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;
@@ -84,6 +93,9 @@ contract DAOinstance {
     }
 
     /// percentage anualized 1-100 as relative to the totalSupply of base token
+    /// @notice signal preferred annual inflation rate. Multiple preferences possible.
+    /// @notice materialized amounts are sensitive to totalSupply. Majoritarian execution.
+    /// @param percentagePerYear_ prefered option in range 0 - 100
     function signalInflation(uint256 percentagePerYear_) external onlyMember returns (uint256 inflationRate) {
         require(percentagePerYear_ <= 100, ">100!");
         _expressPreference(percentagePerYear_);
@@ -93,6 +105,9 @@ contract DAOinstance {
             : baseInflationRate;
     }
 
+
+    /// @notice initiate or support change of membrane in favor of designated
+    /// @param membraneId_ id of membrane to support change of
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
         _expressPreference(membraneId_);
         if (!iMB.isMembrane(membraneId_)) revert DAOinstance__invalidMembrane();
