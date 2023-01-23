@@ -34,6 +34,12 @@ contract MembraneRegistry {
     event ChangedMembrane(address they, uint256 membrane);
     event gCheckKick(address indexed who);
 
+    /// @notice creates membrane. Used to control and define.
+    /// @notice To be read and understood as: Givent this membrane, of each of the tokens_[x], the user needs at least balances_[x].
+    /// @param tokens_ ERC20 or ERC721 token addresses array. Each is used as a constituent item of the membrane and condition for
+    /// @param tokens_ belonging or not. Membership is established by a chain of binary claims whereby
+    /// @param tokens_ the balance of address checked needs to satisfy all balances_ of all tokens_ stated as benchmark for belonging
+    /// @param balances_ amounts required of each of tokens_. The order of required balances needs to map to token addresses.
     function createMembrane(address[] memory tokens_, uint256[] memory balances_, string memory meta_)
         public
         returns (uint256 id)
@@ -77,6 +83,10 @@ contract MembraneRegistry {
         }
     }
 
+    /// @notice checks if a given address is member in a given DAO.
+    /// @notice answers: Does who_ belong to DAO_?
+    /// @param who_ what address to check
+    /// @param DAO_ in what DAO or subDAO do you want to check if who_ b
     function checkG(address who_, address DAO_) public view returns (bool s) {
         Membrane memory M = getInUseMembraneOfDAO(DAO_);
         uint256 i;
@@ -89,8 +99,11 @@ contract MembraneRegistry {
         }
     }
 
-    //// @notice burns membership token of check entity if ineligible
+    //// @notice checks if a given address (who_) is a member in the given (dao_). Same as checkG()
+    ///  @notice if any of the balances checks described in the membrane fails, the membership token of checked address is burned
+    /// @notice this is a defensive, think auto-imune mechanism.
     /// @param who_ checked address
+    /// @dev @todo retrace once again gCheck. Consider spam vectors.
     function gCheck(address who_, address DAO_) external returns (bool s) {
         if (iMR.balanceOf(who_, uint160(bytes20(DAO_))) == 0) return false;
         s = checkG(who_, DAO_);

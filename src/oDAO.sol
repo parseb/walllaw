@@ -43,6 +43,8 @@ contract ODAO {
                                  public
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice creates a new DAO gien an ERC20
+    /// @param BaseTokenAddress_ ERC20 token contract address
     function createDAO(address BaseTokenAddress_) public returns (address newDAO) {
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR)));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
@@ -56,9 +58,9 @@ contract ODAO {
     //// @security ?: can endpoint-onEndpoint create. remove multiple endpoit.
     ///  --------------- create sub-endpoints for endpoint? @todo
 
-    /// @notice enshrines exclusionary sub-unit
-    /// @param membraneID_: border materiality
-    /// @param parentDAO_: parent
+    /// @notice creates child entity subDAO provided a valid membrane ID is given. To create an enpoint use sender address as integer. uint160(0xyourAddress)
+    /// @param membraneID_: constituent border conditions and chemestry
+    /// @param parentDAO_: parent DAO
     /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
@@ -104,18 +106,24 @@ contract ODAO {
         return (daoOfId[uint160(bytes20(toCheck_))] == toCheck_);
     }
 
+    /// @notice get address of member registru address
     function getMemberRegistryAddr() external view returns (address) {
         return address(MR);
     }
 
+    /// @notice given a valid subDAO address, returns the address of the parent. If root DAO, returns address(0x0)
+    /// @param child_ sub-DAO address. If root or non-existent, returns adddress(0x0)
     function getParentDAO(address child_) public view returns (address) {
         return childParentDAO[child_];
     }
 
+    /// @notice returns the top-down path, or all the parents in a hierarchical, distance-based order, from closest parent to root.
     function getTrickleDownPath(address floor_) external view returns (address[] memory path) {
         path = topLevelPath[floor_].length > 0 ? topLevelPath[floor_] : new address[](1);
     }
 
+    /// @notice an ERC20 token can have an unlimited number of DAOs. This returns all root DAOs in existence for provided ERC20.
+    /// @param parentToken ERC20 contract address
     function getDAOsOfToken(address parentToken) external view returns (address[] memory) {
         return daosOfToken[parentToken];
     }

@@ -35,9 +35,8 @@ contract DAOinstance {
     /// @notice formed as address_of_subunit => [amount_of_entitlement_gained_each_second, time_since_last_withdrawal @dev ?]
     mapping(address => uint256[2]) subunitPerSec;
 
-    
     /// last user distributive signal
-    /// @notice stored array of preffered user redistribution percentages. formatted as `address of agent => [array of preferences] 
+    /// @notice stored array of preffered user redistribution percentages. formatted as `address of agent => [array of preferences]
     /// @notice minimum value 1, maximum vaule 100. Sum of percentages needs to add up to 100.
     mapping(address => uint256[]) redistributiveSignal;
 
@@ -104,7 +103,6 @@ contract DAOinstance {
             ? _majoritarianUpdate(percentagePerYear_)
             : baseInflationRate;
     }
-
 
     /// @notice initiate or support change of membrane in favor of designated by id
     /// @param membraneId_ id of membrane to support change of
@@ -190,7 +188,6 @@ contract DAOinstance {
         }
     }
 
-
     /// @notice checks and distributes eligible amounts of inflation balance on path from root to this
     function feedMe() external returns (uint256 fed) {
         address[] memory feedPath = IoDAO(ODAO).getTrickleDownPath(address(this));
@@ -210,7 +207,7 @@ contract DAOinstance {
         fed = iInstanceDAO(feedPath[0]).redistributeSubDAO(address(this));
     }
 
-   function _postMajorityCleanup(address[] memory agents, uint256 target_) public returns (uint256 outcome) {
+    function _postMajorityCleanup(address[] memory agents, uint256 target_) public returns (uint256 outcome) {
         if (expressed[target_][address(0)] < (internalToken.totalSupply() / 2)) revert DAOinstance__notmajority();
 
         uint256 sum;
@@ -228,7 +225,7 @@ contract DAOinstance {
         outcome = sum;
     }
 
-        function mintInflation() public returns (uint256 amountToMint) {
+    function mintInflation() public returns (uint256 amountToMint) {
         amountToMint = (block.timestamp - subunitPerSec[address(this)][1]);
         if (amountToMint == 0) return amountToMint;
 
@@ -256,7 +253,6 @@ contract DAOinstance {
         return results;
     }
 
-
     /// @notice mints membership token to specified address if it fulfills the acceptance criteria of the membrane
     /// @param to_ address to mint membership token to
     function mintMembershipToken(address to_) external returns (bool s) {
@@ -283,7 +279,7 @@ contract DAOinstance {
     }
 
     /// @notice immune mechanism to check basis of membership and revoke if invalid
-    /// @param who_ address to check 
+    /// @param who_ address to check
     function gCheckPurge(address who_) external returns (bool) {
         if (msg.sender != address(iMR)) revert DAOinstance__onlyMR();
 
@@ -297,6 +293,7 @@ contract DAOinstance {
         return true;
     }
 
+    /// @notice executes the outcome of any given successful majoritarian tipping point
     ///////////////////
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
         if (msg.sig == this.mintInflation.selector) {
@@ -331,6 +328,7 @@ contract DAOinstance {
         // }
     }
 
+    /// @dev instantiates in memory a given expressed preference for change
     function _expressPreference(uint256 preference_) private {
         uint256 pressure = internalToken.balanceOf(_msgSender());
         uint256 previous = expressed[preference_][_msgSender()];
@@ -344,6 +342,7 @@ contract DAOinstance {
         }
     }
 
+    /// @dev once a change materializes, this is called to clean state and reset its latent potential
     function _postMajorityCleanup(uint256 target_) private returns (uint256 outcome) {
         /// is sum validatation superfluous and prone to error? -&/ gas concerns
         address[] memory agents = expressors[target_];
@@ -356,10 +355,6 @@ contract DAOinstance {
         outcome = target_;
     }
 
- 
-
-
-
     /// @notice @dev @todo should be part of normal execution chain
     function cleanIndecisionLog() external {
         uint256 c;
@@ -370,8 +365,6 @@ contract DAOinstance {
             }
         }
     }
-
-
 
     function _msgSender() private view returns (address) {
         if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
