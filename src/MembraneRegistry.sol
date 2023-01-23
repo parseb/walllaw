@@ -40,6 +40,7 @@ contract MembraneRegistry {
     /// @param tokens_ belonging or not. Membership is established by a chain of binary claims whereby
     /// @param tokens_ the balance of address checked needs to satisfy all balances_ of all tokens_ stated as benchmark for belonging
     /// @param balances_ amounts required of each of tokens_. The order of required balances needs to map to token addresses.
+    /// @param meta_ anything you want. Preferably stable CID for reaching aditional metadata such as an IPFS hash of type string.
     function createMembrane(address[] memory tokens_, uint256[] memory balances_, string memory meta_)
         public
         returns (uint256 id)
@@ -100,7 +101,7 @@ contract MembraneRegistry {
     }
 
     //// @notice checks if a given address (who_) is a member in the given (dao_). Same as checkG()
-    ///  @notice if any of the balances checks described in the membrane fails, the membership token of checked address is burned
+    ///  @notice if any of the balances checks specified in the membrane fails, the membership token of checked address is burned
     /// @notice this is a defensive, think auto-imune mechanism.
     /// @param who_ checked address
     /// @dev @todo retrace once again gCheck. Consider spam vectors.
@@ -115,26 +116,40 @@ contract MembraneRegistry {
         emit gCheckKick(who_);
     }
 
+    /// @notice returns the meta field of a membrane given its id
+    /// @param id_ membrane id_
     function entityData(uint256 id_) external view returns (string memory) {
         return getMembraneById[id_].meta;
     }
 
+    /// @notice returns the membrane given its id_
+    /// @param id_ id of membrane you want fetched
+    /// @return Membrane struct 
     function getMembrane(uint256 id_) external view returns (Membrane memory) {
         return getMembraneById[id_];
     }
 
+    /// @notice checks if a given id_ belongs to an instantiated membrane
     function isMembrane(uint256 id_) external view returns (bool) {
         return (getMembraneById[id_].tokens.length > 0);
     }
 
+    /// @notice fetches the id of the active membrane for given provided DAO adress. Returns 0x0 if none.
+    /// @param DAOaddress_ address of DAO (or subDAO) to retrieve mebrane id of
     function inUseMembraneId(address DAOaddress_) public view returns (uint256 ID) {
         return usesMembrane[DAOaddress_];
     }
 
+    /// @notice fetches the in use membrane of DAO
+    /// @param DAOAddress_ address of DAO (or subDAO) to retrieve in use Membrane of given DAO or subDAO address
+    /// @return Membrane struct
     function getInUseMembraneOfDAO(address DAOAddress_) public view returns (Membrane memory) {
         return getMembraneById[usesMembrane[DAOAddress_]];
     }
 
+    /// @notice returns the uri or CID metadata of given DAO address
+    /// @param DAOaddress_ address of DAO to fetch `.meta` of used membrane
+    /// @return string 
     function inUseUriOf(address DAOaddress_) external view returns (string memory) {
         return getInUseMembraneOfDAO(DAOaddress_).meta;
     }
