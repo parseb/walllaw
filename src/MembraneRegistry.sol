@@ -124,7 +124,7 @@ contract MembraneRegistry {
 
     /// @notice returns the membrane given its id_
     /// @param id_ id of membrane you want fetched
-    /// @return Membrane struct 
+    /// @return Membrane struct
     function getMembrane(uint256 id_) external view returns (Membrane memory) {
         return getMembraneById[id_];
     }
@@ -149,7 +149,7 @@ contract MembraneRegistry {
 
     /// @notice returns the uri or CID metadata of given DAO address
     /// @param DAOaddress_ address of DAO to fetch `.meta` of used membrane
-    /// @return string 
+    /// @return string
     function inUseUriOf(address DAOaddress_) external view returns (string memory) {
         return getInUseMembraneOfDAO(DAOaddress_).meta;
     }

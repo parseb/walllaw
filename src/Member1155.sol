@@ -96,7 +96,6 @@ contract MemberRegistry is ERC1155 {
                                  view
     //////////////////////////////////////////////////////////////*/
 
-
     function uri(uint256 id) public view override returns (string memory) {
         return tokenUri[id];
     }
@@ -178,7 +177,7 @@ contract MemberRegistry is ERC1155 {
 
     /// @notice how many tokens does the given id_ has. Useful for checking how many members a DAO has.
     /// @notice id_ is always the uint(address of DAO)
-    /// @param id_ id to check how many minted tokens it has associated 
+    /// @param id_ id to check how many minted tokens it has associated
     function howManyTotal(uint256 id_) public view returns (uint256) {
         return uidTotalSupply[id_];
     }

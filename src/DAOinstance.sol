@@ -311,21 +311,6 @@ contract DAOinstance {
             iMR.setUri(iMB.inUseUriOf(address(this)));
             return _postMajorityCleanup(newVal_);
         }
-
-        // if (msg.sig == this.changeUri.selector) {
-        //     iMR.setUri(bytes32(newVal_));
-        //     return _postMajorityCleanup(newVal_);
-        // }
-
-        // if (msg.sig == this.executeExternalLogic.selector) {
-        //     bool s;
-        //     // ExternallCall memory ExT = iLG.prepLongDistanceCall(newVal_);
-        //     if (ExT.eligibleCaller != msg.sender) revert DAOinstance__NotCallMaker();
-
-        //     // (s,) = address(ExT.callPointAddress).delegatecall(ExT.callData);
-
-        //     newVal = s ? 1 : 0;
-        // }
     }
 
     /// @dev instantiates in memory a given expressed preference for change
