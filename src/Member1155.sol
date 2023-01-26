@@ -28,7 +28,7 @@ contract MemberRegistry is ERC1155 {
     constructor() {
         ODAOaddress = address(new ODAO());
         MembraneRegistryAddress = address(new MembraneRegistry(ODAOaddress));
-        LongCallAddress = address(new LongCall());
+        // LongCallAddress = address(new LongCall());
         oDAO = IoDAO(ODAOaddress);
         IMB = IMembrane(MembraneRegistryAddress);
     }
@@ -96,6 +96,7 @@ contract MemberRegistry is ERC1155 {
                                  view
     //////////////////////////////////////////////////////////////*/
 
+
     function uri(uint256 id) public view override returns (string memory) {
         return tokenUri[id];
     }
@@ -149,10 +150,10 @@ contract MemberRegistry is ERC1155 {
         endpointsOf[endpointOwner_].push(dao_);
     }
 
-    function pushAsRoot(address dao_) external {
-        if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
-        // roots.push(dao_);
-    }
+    // function pushAsRoot(address dao_) external {
+    //     if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
+    //     // roots.push(dao_);
+    // }
 
     /*//////////////////////////////////////////////////////////////
                                  override
@@ -175,6 +176,9 @@ contract MemberRegistry is ERC1155 {
         return balanceOf[who_][id_] == 0;
     }
 
+    /// @notice how many tokens does the given id_ has. Useful for checking how many members a DAO has.
+    /// @notice id_ is always the uint(address of DAO)
+    /// @param id_ id to check how many minted tokens it has associated 
     function howManyTotal(uint256 id_) public view returns (uint256) {
         return uidTotalSupply[id_];
     }

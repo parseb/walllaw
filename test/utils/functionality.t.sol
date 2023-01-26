@@ -16,7 +16,7 @@ contract MyUtils is Test {
     IERC20 BaseE20;
     IMemberRegistry iMR;
     IMembrane iMB;
-    ILongCall iLG;
+    // ILongCall iLG;
 
     address deployer = address(4896);
     address Agent1 = address(16);
@@ -29,7 +29,7 @@ contract MyUtils is Test {
         O = IoDAO(iMR.ODAOaddress());
         iMB = IMembrane(iMR.MembraneRegistryAddress());
         BaseE20 = IERC20(address(new M20()));
-        iLG = ILongCall(iMR.LongCallAddress());
+        // iLG = ILongCall(iMR.LongCallAddress());
     }
 
     function _createAnERC20() public returns (address) {
