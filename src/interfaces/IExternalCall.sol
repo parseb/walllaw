@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 struct ExtCall {
     address[] contractAddressesToCall;
     bytes[] dataToCallWith;
-    uint256 createdAtOrLastCalledAt;
     string shortDescription;
 }
 
@@ -16,4 +15,6 @@ interface IExternalCall {
     function getExternalCallbyID(uint256 id) external view returns (ExtCall memory);
 
     function updateLastExecuted(uint256 whatExtCallId_) external returns (bool);
+
+    function isValidCall(uint256 id_) external view returns (bool);
 }

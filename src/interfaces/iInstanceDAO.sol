@@ -8,6 +8,8 @@ interface iInstanceDAO {
 
     function changeMembrane(uint256 membraneId_) external returns (uint256 membraneID);
 
+    function executeCall(uint256 externalCallId) external returns (uint256);
+
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) external returns (uint256);
 
     function multicall(bytes[] memory) external returns (bytes[] memory results);
@@ -28,7 +30,7 @@ interface iInstanceDAO {
 
     /// only MR
 
-    function cleanIndecisionLog() external;
+    // function cleanIndecisionLog() external;
 
     /// view
 

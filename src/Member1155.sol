@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "./oDAO.sol";
 import "./MembraneRegistry.sol";
-import "./LongCall.sol";
+import "./ExternalCall.sol";
 
 import "solmate/tokens/ERC1155.sol";
 import "./interfaces/IoDAO.sol";
@@ -14,7 +14,7 @@ import "./interfaces/IERC20.sol";
 contract MemberRegistry is ERC1155 {
     address public ODAOaddress;
     address public MembraneRegistryAddress;
-    address public LongCallAddress;
+    address public ExternalCallAddress;
 
     IoDAO oDAO;
     IMembrane IMB;
@@ -28,7 +28,7 @@ contract MemberRegistry is ERC1155 {
     constructor() {
         ODAOaddress = address(new ODAO());
         MembraneRegistryAddress = address(new MembraneRegistry(ODAOaddress));
-        // LongCallAddress = address(new LongCall());
+        ExternalCallAddress = address(new ExternalCall(ODAOaddress));
         oDAO = IoDAO(ODAOaddress);
         IMB = IMembrane(MembraneRegistryAddress);
     }

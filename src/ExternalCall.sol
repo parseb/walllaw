@@ -10,7 +10,7 @@ contract ExternalCall is IExternalCall {
     mapping(uint256 => ExtCall) externalCallById;
 
     /// id of call => address of dao => lastExecuted
-    mapping(uint256 => mapping(address => uint256)) lastExecutedAt;
+    mapping(uint256 => mapping(address => uint256)) lastExecutedorCreatedAt;
 
     constructor(address odao_) {
         ODAO = IoDAO(odao_);
@@ -43,11 +43,15 @@ contract ExternalCall is IExternalCall {
     }
 
     function updateLastExecuted(uint256 whatExtCallId_) external onlyDAO returns (bool) {
-        lastExecutedAt[whatExtCallId_][msg.sender] = block.timestamp;
+        lastExecutedorCreatedAt[whatExtCallId_][msg.sender] = block.timestamp;
         return true;
     }
 
     function getExternalCallbyID(uint256 id_) external view returns (ExtCall memory) {
         return externalCallById[id_];
+    }
+
+    function isValidCall(uint256 id_) external view returns (bool) {
+        return externalCallById[id_].contractAddressesToCall.length > 0;
     }
 }

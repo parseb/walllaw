@@ -15,7 +15,7 @@ interface IMemberRegistry {
 
     function ODAOaddress() external view returns (address);
     function MembraneRegistryAddress() external view returns (address);
-    function LongCallAddress() external view returns (address);
+    function ExternalCallAddress() external view returns (address);
 
     function getRoots(uint256 startAt_) external view returns (address[] memory);
     function getEndpointsOf(address who_) external view returns (address[] memory);

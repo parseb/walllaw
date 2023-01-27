@@ -5,7 +5,7 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
-// import "./interfaces/ILongCall.sol";
+import "./interfaces/IExternalCall.sol";
 import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
@@ -23,7 +23,7 @@ contract DAOinstance {
     DAO20 public internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
-    // ILongCall iLG;
+    IExternalCall iEXT;
 
     /// # EOA => subunit => [percentage, amt]
     /// @notice stores broadcasted signal of user about preffered distribution [example: 5% of inflation to subDAO x]
@@ -58,7 +58,7 @@ contract DAOinstance {
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
-        // iLG = ILongCall(iMR.LongCallAddress());
+        iEXT = IExternalCall(iMR.ExternalCallAddress());
         internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "walllaw",18);
         BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
@@ -74,6 +74,7 @@ contract DAOinstance {
     event StateAdjusted();
     event AdjustedRate();
     event UserPreferedGuidance();
+    event FallbackCalled(address caller, uint256 amount, string message);
     event GlobalInflationUpdated(uint256 RatePerYear, uint256 perSecInflation);
     event inflationaryMint(uint256 amount);
     event NewInstance(address indexed at, address indexed baseToken, address owner);
@@ -115,26 +116,14 @@ contract DAOinstance {
             : iMB.inUseMembraneId(address(this));
     }
 
-    //// @security with great power comes the need of great awareness
-    // function executeExternalLogic(uint256 callId_) external onlyMember returns (bool) {
-    //     if (uint256(callId_) < 101 || iMB.isMembrane(uint256(callId_))) revert DAOinstance__YouCantDoThat();
-    //     _expressPreference(callId_);
+    function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID) {
+        _expressPreference(externalCallId_);
+        if (!iEXT.isValidCall(externalCallId_)) revert DAOinstance__invalidMembrane();
 
-    //     callId_ = ((internalToken.totalSupply() / (expressed[callId_][address(0)] + 1) < 2))
-    //         ? _majoritarianUpdate(callId_)
-    //         : 0;
-
-    //     return callId_ > 0;
-    // }
-
-    // function changeUri(bytes32 uri_) external onlyMember returns (bytes32 currentUri) {
-    //     if (uint256(uri_) < 101 || iMB.isMembrane(uint256(uri_))) revert DAOinstance__YouCantDoThat();
-    //     _expressPreference(uint256(uri_));
-
-    //     currentUri = (internalToken.totalSupply() / (expressed[uint256(uri_)][address(0)] + 1) < 2)
-    //         ? bytes32(_majoritarianUpdate(uint256(uri_)))
-    //         : bytes32(abi.encode(iMR.uri(baseID)));
-    // }
+        callID = ((internalToken.totalSupply() / (expressed[externalCallId_][address(0)] + 1) < 2))
+            ? _majoritarianUpdate(externalCallId_)
+            : 0;
+    }
 
     /// @notice signal prefferred redistribution percentages out of inflation
     /// @notice beneficiaries are ordered chonologically and expects a value for each item retruend by `getDAOsOfToken`
@@ -295,7 +284,7 @@ contract DAOinstance {
 
     /// @notice executes the outcome of any given successful majoritarian tipping point
     ///////////////////
-    function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal) {
+    function _majoritarianUpdate(uint256 newVal_) private returns (uint256) {
         if (msg.sig == this.mintInflation.selector) {
             baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
         }
@@ -309,6 +298,21 @@ contract DAOinstance {
         if (msg.sig == this.changeMembrane.selector) {
             require(iMB.setMembrane(newVal_, address(this)), "f O.setM.");
             iMR.setUri(iMB.inUseUriOf(address(this)));
+            return _postMajorityCleanup(newVal_);
+        }
+
+        if (msg.sig == this.executeCall.selector) {
+            ExtCall memory callStruct = iEXT.getExternalCallbyID(newVal_);
+
+            uint256 i;
+            for (; i < callStruct.contractAddressesToCall.length;) {
+                (bool success, bytes memory data) =
+                    callStruct.contractAddressesToCall[i].call(callStruct.dataToCallWith[i]);
+                if (!success) revert DAOinstance_ExeCallFailed(data);
+                unchecked {
+                    ++i;
+                }
+            }
             return _postMajorityCleanup(newVal_);
         }
     }
@@ -328,28 +332,30 @@ contract DAOinstance {
     }
 
     /// @dev once a change materializes, this is called to clean state and reset its latent potential
-    function _postMajorityCleanup(uint256 target_) private returns (uint256 outcome) {
+    function _postMajorityCleanup(uint256 target_) private returns (uint256) {
         /// is sum validatation superfluous and prone to error? -&/ gas concerns
         address[] memory agents = expressors[target_];
         uint256 sum = _postMajorityCleanup(agents, target_);
 
         if (!(sum >= expressed[target_][address(0)])) revert DAOinstance__CannotUpdate();
 
+        /// #extra
+
         delete expressed[target_][address(0)];
         delete expressors[target_];
-        outcome = target_;
+        return target_;
     }
 
     /// @notice @dev @todo should be part of normal execution chain
-    function cleanIndecisionLog() external {
-        uint256 c;
-        for (c; c < activeIndecisions.length;) {
-            if (expressors[activeIndecisions[c]].length == 0) delete activeIndecisions[c];
-            unchecked {
-                ++c;
-            }
-        }
-    }
+    // function cleanIndecisionLog() external {
+    //     uint256 c;
+    //     for (c; c < activeIndecisions.length;) {
+    //         if (expressors[activeIndecisions[c]].length == 0) delete activeIndecisions[c];
+    //         unchecked {
+    //             ++c;
+    //         }
+    //     }
+    // }
 
     function _msgSender() private view returns (address) {
         if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
@@ -395,6 +401,11 @@ contract DAOinstance {
     function uri() external view returns (string memory) {
         return iMB.inUseUriOf(address(this));
     }
+
+    // fallback() external  {
+    //     emit FallbackCalled(msg.sender, msg.value, "Fallback was called");
+    // }
+    // receive() external payable {}
 
     //     function getActiveIndecisionsOf(address user_) external view returns (uint256[] memory indecisions) {
     // /// expressed: id/percent/uri | msgSender()/address(0) | value/0
