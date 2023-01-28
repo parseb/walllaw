@@ -116,9 +116,12 @@ contract DAOinstance {
             : iMB.inUseMembraneId(address(this));
     }
 
+    /// @notice expresses preference for and executes pre-configured extenrall call with provided id on majoritarian threshold
+    /// @param externalCallId_ id of preconfigured externall call
+    /// @return callID 0 - if threshold not reached, id input if call is executed. 
     function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID) {
-        _expressPreference(externalCallId_);
         if (!iEXT.isValidCall(externalCallId_)) revert DAOinstance__invalidMembrane();
+        _expressPreference(externalCallId_);
 
         callID = ((internalToken.totalSupply() / (expressed[externalCallId_][address(0)] + 1) < 2))
             ? _majoritarianUpdate(externalCallId_)
@@ -177,7 +180,7 @@ contract DAOinstance {
         }
     }
 
-    /// @notice checks and distributes eligible amounts of inflation balance on path from root to this
+    /// @notice checks and trickles down eligible amounts of inflation balance on path from root to this
     function feedMe() external returns (uint256 fed) {
         address[] memory feedPath = IoDAO(ODAO).getTrickleDownPath(address(this));
         if (feedPath[0] == address(0)) {
@@ -419,7 +422,5 @@ contract DAOinstance {
     //         }
     //     }
 
-    // function getILongDistanceAddress() external view returns (address) {
-    //     return address(iLG);
-    // }
+
 }
