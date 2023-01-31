@@ -14,7 +14,12 @@ interface IExternalCall {
 
     function getExternalCallbyID(uint256 id) external view returns (ExtCall memory);
 
+    function incrementSelfNonce() external;
+
     function updateLastExecuted(uint256 whatExtCallId_) external returns (bool);
 
     function isValidCall(uint256 id_) external view returns (bool);
+
+    function getNonceOf(address whom_) external view returns (uint256);
+
 }

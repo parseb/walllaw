@@ -48,7 +48,7 @@ contract DAOinstance {
     /// @notice stores array of agent addresses that are expressing a change
     mapping(uint256 => address[]) expressors;
 
-    uint256[] private activeIndecisions; ///// @todo
+    // uint256[] private activeIndecisions; ///// @todo
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;
@@ -121,6 +121,7 @@ contract DAOinstance {
     /// @return callID 0 - if threshold not reached, id input if call is executed. 
     function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID) {
         if (!iEXT.isValidCall(externalCallId_)) revert DAOinstance__invalidMembrane();
+        iEXT.incrementSelfNonce();
         _expressPreference(externalCallId_);
 
         callID = ((internalToken.totalSupply() / (expressed[externalCallId_][address(0)] + 1) < 2))
@@ -330,7 +331,7 @@ contract DAOinstance {
         expressed[preference_][_msgSender()] = pressure;
         if (previous == 0) {
             expressors[preference_].push(_msgSender());
-            activeIndecisions.push(preference_);
+            // activeIndecisions.push(preference_);
         }
     }
 
@@ -391,9 +392,9 @@ contract DAOinstance {
         return userSignal[who_][subUnit_];
     }
 
-    function getActiveIndecisions() external view returns (uint256[] memory) {
-        return activeIndecisions;
-    }
+    // function getActiveIndecisions() external view returns (uint256[] memory) {
+    //     return activeIndecisions;
+    // }
 
     function stateOfExpressed(address user_, uint256 prefID_) external view returns (uint256[3] memory pref) {
         pref[0] = expressed[prefID_][user_];

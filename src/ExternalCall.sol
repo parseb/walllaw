@@ -12,6 +12,11 @@ contract ExternalCall is IExternalCall {
     /// id of call => address of dao => lastExecuted
     mapping(uint256 => mapping(address => uint256)) lastExecutedorCreatedAt;
 
+    /// dao nonce
+    mapping(address => uint256) nonce;
+
+
+
     constructor(address odao_) {
         ODAO = IoDAO(odao_);
     }
@@ -47,11 +52,19 @@ contract ExternalCall is IExternalCall {
         return true;
     }
 
+    function incrementSelfNonce() external onlyDAO {
+        unchecked { ++ nonce[msg.sender]; }
+    }
+
     function getExternalCallbyID(uint256 id_) external view returns (ExtCall memory) {
         return externalCallById[id_];
     }
 
     function isValidCall(uint256 id_) external view returns (bool) {
         return externalCallById[id_].contractAddressesToCall.length > 0;
+    }
+
+    function getNonceOf(address whom_) external view returns (uint256) {
+        return nonce[whom_];
     }
 }
