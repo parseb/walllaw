@@ -5,6 +5,7 @@
 - [utils](/src/utils)
 - [DAO20](DAO20.sol/contract.DAO20.md)
 - [DAOinstance](DAOinstance.sol/contract.DAOinstance.md)
+- [ExternalCall](ExternalCall.sol/contract.ExternalCall.md)
 - [MemberRegistry](Member1155.sol/contract.MemberRegistry.md)
 - [MembraneRegistry](MembraneRegistry.sol/contract.MembraneRegistry.md)
 - [DAOinstance__NotOwner](errors.sol/error.DAOinstance__NotOwner.md)
@@ -32,4 +33,5 @@
 - [DAOinstance__NotYourEnpoint](errors.sol/error.DAOinstance__NotYourEnpoint.md)
 - [DAOinstance__onlyMR](errors.sol/error.DAOinstance__onlyMR.md)
 - [DAOinstance__invalidMembrane](errors.sol/error.DAOinstance__invalidMembrane.md)
+- [DAOinstance_ExeCallFailed](errors.sol/error.DAOinstance_ExeCallFailed.md)
 - [ODAO](oDAO.sol/contract.ODAO.md)

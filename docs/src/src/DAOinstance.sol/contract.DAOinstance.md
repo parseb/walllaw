@@ -1,5 +1,5 @@
 # DAOinstance
-[Git Source](https://github.com/parseb/odao.lol/blob/6589851af8e0b7d49abf07f2bf59c55824bb2d57/src/DAOinstance.sol)
+[Git Source](https://github.com/parseb/WalllaW/blob/9e3aa1f94078a6f713d193fa93b20149519f722a/src/DAOinstance.sol)
 
 
 ## State Variables
@@ -87,6 +87,13 @@ IMembrane iMB;
 ```
 
 
+### iEXT
+
+```solidity
+IExternalCall iEXT;
+```
+
+
 ### userSignal
 # EOA => subunit => [percentage, amt]
 
@@ -148,13 +155,6 @@ mapping(uint256 => address[]) expressors;
 ```
 
 
-### activeIndecisions
-
-```solidity
-uint256[] private activeIndecisions;
-```
-
-
 ## Functions
 ### constructor
 
@@ -204,6 +204,27 @@ function changeMembrane(uint256 membraneId_) external onlyMember returns (uint25
 |`membraneId_`|`uint256`|id of membrane to support change of|
 
 
+### executeCall
+
+expresses preference for and executes pre-configured extenrall call with provided id on majoritarian threshold
+
+
+```solidity
+function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`externalCallId_`|`uint256`|id of preconfigured externall call|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`callID`|`uint256`|0 - if threshold not reached, id input if call is executed.|
+
+
 ### distributiveSignal
 
 signal prefferred redistribution percentages out of inflation
@@ -223,7 +244,7 @@ function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) exter
 
 ### feedMe
 
-checks and distributes eligible amounts of inflation balance on path from root to this
+checks and trickles down eligible amounts of inflation balance on path from root to this
 
 *senderForce < 1%*
 
@@ -307,7 +328,7 @@ executes the outcome of any given successful majoritarian tipping point
 
 
 ```solidity
-function _majoritarianUpdate(uint256 newVal_) private returns (uint256 newVal);
+function _majoritarianUpdate(uint256 newVal_) private returns (uint256);
 ```
 
 ### _expressPreference
@@ -325,21 +346,15 @@ function _expressPreference(uint256 preference_) private;
 
 
 ```solidity
-function _postMajorityCleanup(uint256 target_) private returns (uint256 outcome);
-```
-
-### cleanIndecisionLog
-
-is sum validatation superfluous and prone to error? -&/ gas concerns
-
-@dev @todo should be part of normal execution chain
-
-
-```solidity
-function cleanIndecisionLog() external;
+function _postMajorityCleanup(uint256 target_) private returns (uint256);
 ```
 
 ### _msgSender
+
+is sum validatation superfluous and prone to error? -&/ gas concerns
+#extra
+
+@dev @todo should be part of normal execution chain
 
 
 ```solidity
@@ -381,13 +396,6 @@ function isMember(address who_) public view returns (bool);
 function getUserSignal(address who_, address subUnit_) external view returns (uint256[2] memory);
 ```
 
-### getActiveIndecisions
-
-
-```solidity
-function getActiveIndecisions() external view returns (uint256[] memory);
-```
-
 ### stateOfExpressed
 
 
@@ -419,6 +427,12 @@ event AdjustedRate();
 
 ```solidity
 event UserPreferedGuidance();
+```
+
+### FallbackCalled
+
+```solidity
+event FallbackCalled(address caller, uint256 amount, string message);
 ```
 
 ### GlobalInflationUpdated

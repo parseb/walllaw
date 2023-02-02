@@ -267,7 +267,7 @@ contract DAOinstance {
 
     /// @notice burns internal token and returnes to msg.sender the eligible underlying amount of parent tokens
     function withdrawBurn(uint256 amt_) external returns (bool s) {
-        if (endpoint != msg.sender) revert DAOinstance__NotYourEnpoint();
+        if (endpoint != _msgSender()) revert DAOinstance__NotYourEnpoint();
         s = BaseToken.transfer(endpoint, amt_);
     }
 

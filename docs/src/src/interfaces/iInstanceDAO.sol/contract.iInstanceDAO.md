@@ -1,5 +1,5 @@
 # iInstanceDAO
-[Git Source](https://github.com/parseb/odao.lol/blob/6589851af8e0b7d49abf07f2bf59c55824bb2d57/src/interfaces/iInstanceDAO.sol)
+[Git Source](https://github.com/parseb/WalllaW/blob/9e3aa1f94078a6f713d193fa93b20149519f722a/src/interfaces/iInstanceDAO.sol)
 
 
 ## Functions
@@ -22,6 +22,13 @@ function mintMembershipToken(address to_) external returns (bool);
 
 ```solidity
 function changeMembrane(uint256 membraneId_) external returns (uint256 membraneID);
+```
+
+### executeCall
+
+
+```solidity
+function executeCall(uint256 externalCallId) external returns (uint256);
 ```
 
 ### distributiveSignal
@@ -87,17 +94,9 @@ function withdrawBurn(uint256 amt_) external returns (uint256 amtWithdrawn);
 function gCheckPurge(address who_) external;
 ```
 
-### cleanIndecisionLog
-
-only MR
-
-
-```solidity
-function cleanIndecisionLog() external;
-```
-
 ### getActiveIndecisions
 
+only MR
 view
 
 

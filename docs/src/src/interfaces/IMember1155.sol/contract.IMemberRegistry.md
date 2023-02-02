@@ -1,5 +1,5 @@
 # IMemberRegistry
-[Git Source](https://github.com/parseb/odao.lol/blob/6589851af8e0b7d49abf07f2bf59c55824bb2d57/src/interfaces/IMember1155.sol)
+[Git Source](https://github.com/parseb/WalllaW/blob/9e3aa1f94078a6f713d193fa93b20149519f722a/src/interfaces/IMember1155.sol)
 
 
 ## Functions
@@ -54,11 +54,11 @@ function ODAOaddress() external view returns (address);
 function MembraneRegistryAddress() external view returns (address);
 ```
 
-### LongCallAddress
+### ExternalCallAddress
 
 
 ```solidity
-function LongCallAddress() external view returns (address);
+function ExternalCallAddress() external view returns (address);
 ```
 
 ### getRoots
