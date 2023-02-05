@@ -13,3 +13,5 @@ ____
 
 ### How does it work
 
+
+<img src="https://user-images.githubusercontent.com/5999852/216822881-9f3ca3e9-5091-46da-af81-2d42e2715d0c.png" width="100%">
