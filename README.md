@@ -14,7 +14,7 @@ If you've been around, it's a structure that can self-replicate and uses "guild.
 
 ____
 
-Decentralized Organizations are <b>membranes that move</b> forward.<br>
+Decentralized Internet Organizations are anarchically constituted <b>membranes that move</b> towards a continously defined forward.<br>
 
 ## How does it work
 
