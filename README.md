@@ -9,10 +9,12 @@
 
 A <b>Decentralized Internet Native Organization</b> framework that instrumentalizes fungibility to facilitate access to fully trustless and explainable collective efforts. It accomplishes this by means of three low-complexity devices: inflation, majority vote and membership.
 
+<br>
+If you've been around, it's a structure that can self-replicate and uses "guild.xyz"-like authorisation and coordinape-like circles to govern its identity and direct its energy. No proposals.
+
 ____
 
 Decentralized Organizations are <b>membranes that move</b> forward.<br>
-
 
 ## How does it work
 
