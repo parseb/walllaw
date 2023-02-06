@@ -29,8 +29,9 @@ Decentralized Organizations are <b>membranes that move</b> forward.<br>
 
 ### Value Flow
 
-<img src="https://user-images.githubusercontent.com/5999852/216985391-a6152126-e932-4753-addf-d71af4109fd5.png" width="100%">
+<img src="https://user-images.githubusercontent.com/5999852/216985884-d163eb6f-f375-405b-ae6f-7d3a99d907fe.png" width="100%">
 <br>
+
 
 
 ### Emergent Versatility
