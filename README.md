@@ -8,7 +8,7 @@
 # WalllaW
 
 
-A <b>Decentralized Internet Organization</b> framework that instrumentalizes fungibility to facilitate access to fully trustless and explainable collective efforts. It primarily acomplishes this by means of three low-complexity devices: inflation, majority vote and membership.
+A <b>Decentralized Internet Organization</b> framework that instrumentalizes fungibility to facilitate access to fully trustless and explainable collective efforts. It primarily accomplishes this by means of three low-complexity devices: inflation, majority vote and membership.
 
 ### DIO?
 
@@ -22,7 +22,7 @@ Self-replicates, uses "guild.xyz"-like authorisation and coordinape-like circles
 
 ### Membrane
 
-The membrane determines if an agent is within or outside the organisation. It is constitued out of a list of tokens and balances and, provided an agent satisfies them as eligibility conditions, associated with a membership token. The membership token gives one access to all internal functionality of that specific entity and it can be revoked though the fault of the posessor or change in elegibility conditions. Each sub-DAO instance is intependent in its determinations of membership. As such exeternal specialized work or other DAOs can be appended. The membrane is expected to link to metadata such as social media communication channels or membership-gated workspaces. 
+The membrane determines if an agent is within or outside the organisation. It is constituted out of a list of tokens and balances and, provided an agent satisfies them as eligibility conditions, associated with a membership token. The membership token gives one access to all internal functionality of that specific entity and it can be revoked through the fault of the possessor or change in eligibility conditions. Each sub-DAO instance is independent in its determinations of membership. As such external specialised work or other DAOs can be appended. The membrane is expected to link to metadata such as social media communication channels or membership-gated workspaces. 
 
 <img src="https://user-images.githubusercontent.com/5999852/216822881-9f3ca3e9-5091-46da-af81-2d42e2715d0c.png" width="100%">
 <br>
