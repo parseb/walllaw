@@ -10,6 +10,7 @@ import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
 
+
 contract DAOinstance {
     uint256 public baseID;
     uint256 public baseInflationRate;
@@ -50,6 +51,7 @@ contract DAOinstance {
 
     // uint256[] private activeIndecisions; ///// @todo
 
+
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;
         instantiatedAt = block.timestamp;
@@ -59,7 +61,7 @@ contract DAOinstance {
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
         iEXT = IExternalCall(iMR.ExternalCallAddress());
-        internalToken = new DAO20(BaseToken_, string(abi.encodePacked(address(this))), "walllaw",18);
+        internalToken = new DAO20(BaseToken_, "WalllaW$_$Internal", "WdoW",18);
         BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
         subunitPerSec[address(this)][1] = block.timestamp;
@@ -118,15 +120,13 @@ contract DAOinstance {
 
     /// @notice expresses preference for and executes pre-configured extenrall call with provided id on majoritarian threshold
     /// @param externalCallId_ id of preconfigured externall call
-    /// @return callID 0 - if threshold not reached, id input if call is executed. 
+    /// @return callID 0 - if threshold not reached, id input if call is executed.
     function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID) {
         if (!iEXT.isValidCall(externalCallId_)) revert DAOinstance__invalidMembrane();
-        iEXT.incrementSelfNonce();
         _expressPreference(externalCallId_);
 
         callID = ((internalToken.totalSupply() / (expressed[externalCallId_][address(0)] + 1) < 2))
-            ? _majoritarianUpdate(externalCallId_)
-            : 0;
+            && (iEXT.exeUpdate(externalCallId_)) ? _majoritarianUpdate(externalCallId_) : 0;
     }
 
     /// @notice signal prefferred redistribution percentages out of inflation
@@ -238,14 +238,6 @@ contract DAOinstance {
         if (!internalToken.transfer(subDAO_, gotAmt)) revert DAOinstance__itTransferFailed();
     }
 
-    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
-        results = new bytes[](data.length);
-        for (uint256 i = 0; i < data.length; i++) {
-            results[i] = Address.functionDelegateCall(address(this), data[i]);
-        }
-        return results;
-    }
-
     /// @notice mints membership token to specified address if it fulfills the acceptance criteria of the membrane
     /// @param to_ address to mint membership token to
     function mintMembershipToken(address to_) external returns (bool s) {
@@ -284,6 +276,14 @@ contract DAOinstance {
         purgeorExternalCall = keepExtCall;
 
         return true;
+    }
+
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            results[i] = Address.functionDelegateCall(address(this), data[i]);
+        }
+        return results;
     }
 
     /// @notice executes the outcome of any given successful majoritarian tipping point
@@ -331,7 +331,6 @@ contract DAOinstance {
         expressed[preference_][_msgSender()] = pressure;
         if (previous == 0) {
             expressors[preference_].push(_msgSender());
-            // activeIndecisions.push(preference_);
         }
     }
 
@@ -349,17 +348,6 @@ contract DAOinstance {
         delete expressors[target_];
         return target_;
     }
-
-    /// @notice @dev @todo should be part of normal execution chain
-    // function cleanIndecisionLog() external {
-    //     uint256 c;
-    //     for (c; c < activeIndecisions.length;) {
-    //         if (expressors[activeIndecisions[c]].length == 0) delete activeIndecisions[c];
-    //         unchecked {
-    //             ++c;
-    //         }
-    //     }
-    // }
 
     function _msgSender() private view returns (address) {
         if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
@@ -392,10 +380,6 @@ contract DAOinstance {
         return userSignal[who_][subUnit_];
     }
 
-    // function getActiveIndecisions() external view returns (uint256[] memory) {
-    //     return activeIndecisions;
-    // }
-
     function stateOfExpressed(address user_, uint256 prefID_) external view returns (uint256[3] memory pref) {
         pref[0] = expressed[prefID_][user_];
         pref[1] = expressed[prefID_][address(0)];
@@ -405,23 +389,4 @@ contract DAOinstance {
     function uri() external view returns (string memory) {
         return iMB.inUseUriOf(address(this));
     }
-
-    // fallback() external  {
-    //     emit FallbackCalled(msg.sender, msg.value, "Fallback was called");
-    // }
-    // receive() external payable {}
-
-    //     function getActiveIndecisionsOf(address user_) external view returns (uint256[] memory indecisions) {
-    // /// expressed: id/percent/uri | msgSender()/address(0) | value/0
-    //     mapping(uint256 => mapping(address => uint256)) expressed;
-
-    //         uint i;
-    //         indecisions = new uint256[](activeIndecisions.length);
-    //         for (i; i < indecisions.length;) {
-    //             if ( expressed[activeIndecisions[i]][address(0)] > 1 && expressed[activeIndecisions[i]][address(user_)] == 0 ) indecisions[i] = activeIndecisions[i];
-    //             unchecked { ++i;}
-    //         }
-    //     }
-
-
 }

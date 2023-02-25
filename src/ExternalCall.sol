@@ -5,6 +5,8 @@ import "./interfaces/IoDAO.sol";
 import "./interfaces/IExternalCall.sol";
 
 contract ExternalCall is IExternalCall {
+    uint256 immutable DELAY = 10 * 1 days;
+
     IoDAO ODAO;
 
     mapping(uint256 => ExtCall) externalCallById;
@@ -15,10 +17,9 @@ contract ExternalCall is IExternalCall {
     /// dao nonce
     mapping(address => uint256) nonce;
 
-
-
     constructor(address odao_) {
         ODAO = IoDAO(odao_);
+
     }
 
     error ExternalCall_UnregisteredDAO();
@@ -30,6 +31,7 @@ contract ExternalCall is IExternalCall {
     }
 
     event NewExternalCall(address indexed CreatedBy, string description, uint256 createdAt);
+    event ExternalCallExec(address indexed CalledBy, uint256 indexed WhatCallId, bool SuccessOrLater);
 
     function createExternalCall(address[] memory contracts_, bytes[] memory callDatas_, string memory description_)
         external
@@ -47,13 +49,28 @@ contract ExternalCall is IExternalCall {
         emit NewExternalCall(msg.sender, description_, block.timestamp);
     }
 
-    function updateLastExecuted(uint256 whatExtCallId_) external onlyDAO returns (bool) {
-        lastExecutedorCreatedAt[whatExtCallId_][msg.sender] = block.timestamp;
-        return true;
+    function exeUpdate(uint256 whatExtCallId_) external onlyDAO returns (bool r) {
+        r = lastExecutedorCreatedAt[whatExtCallId_][msg.sender] + DELAY <= block.timestamp;
+        if (r) {
+            delete lastExecutedorCreatedAt[whatExtCallId_][msg.sender];
+        } else {
+            if (lastExecutedorCreatedAt[whatExtCallId_][msg.sender] == 0) {
+                lastExecutedorCreatedAt[whatExtCallId_][msg.sender] = block.timestamp;
+            }
+        }
+
+        emit ExternalCallExec(msg.sender, whatExtCallId_, r);
     }
 
     function incrementSelfNonce() external onlyDAO {
-        unchecked { ++ nonce[msg.sender]; }
+        unchecked {
+            ++nonce[msg.sender];
+        }
+    }
+
+    /// @notice at what timestamp the caller executed id_
+    function iLastExecuted(uint256 id_) external view returns (uint256) {
+        return lastExecutedorCreatedAt[id_][msg.sender];
     }
 
     function getExternalCallbyID(uint256 id_) external view returns (ExtCall memory) {
