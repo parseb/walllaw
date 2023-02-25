@@ -10,7 +10,6 @@ import "./utils/Address.sol";
 import "./DAO20.sol";
 import "./errors.sol";
 
-
 contract DAOinstance {
     uint256 public baseID;
     uint256 public baseInflationRate;
@@ -50,7 +49,6 @@ contract DAOinstance {
     mapping(uint256 => address[]) expressors;
 
     // uint256[] private activeIndecisions; ///// @todo
-
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
         ODAO = msg.sender;

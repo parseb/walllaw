@@ -19,7 +19,6 @@ contract ExternalCall is IExternalCall {
 
     constructor(address odao_) {
         ODAO = IoDAO(odao_);
-
     }
 
     error ExternalCall_UnregisteredDAO();
