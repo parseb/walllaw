@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "openzeppelin-contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "openzeppelin-contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
 
-/// @notice Minimalist and gas efficient standard ERC1155 implementation.
-/// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC1155.sol)
-contract DAO20 is ERC20 {
+
+/// did not ponder over the impact of adding permit
+/// @notice internal DAO/subDAO token 
+
+contract DAO20 is ERC20Permit {
     address public owner;
     address public base;
     address public burnInProgress;
     IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
-        ERC20(name_, symbol_)
+        ERC20Permit(name_) ERC20("name_", "WWdo")
     {
         owner = msg.sender;
         base = baseToken_;
