@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
