@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 
@@ -7,6 +7,7 @@ import "../../src/interfaces/iInstanceDAO.sol";
 import "../../src/interfaces/IDAO20.sol";
 import "../../src/interfaces/IMembrane.sol";
 import "../../src/interfaces/IExternalCall.sol";
+import "../../src/interfaces/ITokenFactory.sol";
 
 import "../../src/Member1155.sol";
 import "../mocks/mockERC20.sol";
@@ -17,6 +18,7 @@ contract MyUtils is Test {
     IMemberRegistry iMR;
     IMembrane iMB;
     IExternalCall iEXTcall;
+    ITokenFactory DAO20Factory;
 
     address deployer = address(4896);
     address Agent1 = address(16);
@@ -28,6 +30,9 @@ contract MyUtils is Test {
         iMR = IMemberRegistry(address(new MemberRegistry()));
         O = IoDAO(iMR.ODAOaddress());
         iMB = IMembrane(iMR.MembraneRegistryAddress());
+
+        DAO20Factory = ITokenFactory(iMR.DAO20FactoryAddress());
+        
         BaseE20 = IERC20(address(new M20()));
         iEXTcall = IExternalCall(iMR.ExternalCallAddress());
     }
@@ -64,7 +69,7 @@ contract MyUtils is Test {
             }
         }
 
-        subDs = O.getDAOsOfToken(iInstanceDAO(parentDAO_).internalTokenAddress());
+        subDs = DAO20Factory.getDAOsOfToken(iInstanceDAO(parentDAO_).internalTokenAddress());
     }
 
     function _createNestedDAOs(address startDAO_, uint256 membrane, uint256 levels_)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 
@@ -76,7 +76,7 @@ contract redistributiveInflation is Test {
         _membraneContext();
         uint256 startInflation = DAO.baseInflationRate();
         uint256 startPerSec = DAO.baseInflationPerSec();
-        IERC20 internalT = IERC20(DAO.internalToken());
+        IERC20 internalT = IERC20(DAO.internalTokenAddress());
         IERC20 baseT = IERC20(DAO.baseTokenAddress());
 
         assertTrue(startInflation == (DAO.baseID() % 100), "unexpected start % infl");

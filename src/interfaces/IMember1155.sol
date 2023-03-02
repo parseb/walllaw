@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "./structs.sol";
 
@@ -16,12 +16,15 @@ interface IMemberRegistry {
     function ODAOaddress() external view returns (address);
     function MembraneRegistryAddress() external view returns (address);
     function ExternalCallAddress() external view returns (address);
+    function DAO20FactoryAddress() external view returns (address);
 
     function getRoots(uint256 startAt_) external view returns (address[] memory);
     function getEndpointsOf(address who_) external view returns (address[] memory);
 
     function getActiveMembershipsOf(address who_) external view returns (address[] memory entities);
     function getUriOf(address who_) external view returns (string memory);
+
+    
     //// only ODAO
 
     function pushIsEndpoint(address) external;

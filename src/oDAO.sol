@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.13;
+pragma solidity 0.8.17;
 
 import "./DAOinstance.sol";
 import "./interfaces/IMember1155.sol";
@@ -9,15 +9,17 @@ import "./interfaces/IMembrane.sol";
 
 contract ODAO {
     mapping(uint256 => address) daoOfId;
-    mapping(address => address[]) daosOfToken;
+    // mapping(address => address[]) daosOfToken;
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
     IMemberRegistry MR;
     address public MB;
+    address public DAO20FactoryAddress;
     uint256 constant MAX_160 = type(uint160).max;
 
-    constructor() {
+    constructor(address DAO20Factory_) {
         MR = IMemberRegistry(msg.sender);
+        DAO20FactoryAddress = DAO20Factory_;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -46,12 +48,14 @@ contract ODAO {
     /// @notice creates a new DAO gien an ERC20
     /// @param BaseTokenAddress_ ERC20 token contract address
     function createDAO(address BaseTokenAddress_) public returns (address newDAO) {
-        newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR)));
+        newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR),DAO20FactoryAddress ));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
-        daosOfToken[BaseTokenAddress_].push(newDAO);
+        // daosOfToken[BaseTokenAddress_].push(newDAO);
         // if (msg.sig == this.createDAO.selector) MR.pushAsRoot(newDAO);
         if (msg.sig == this.createDAO.selector) iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
         emit newDAOCreated(newDAO, BaseTokenAddress_);
+
+        //// @dev
         if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
     }
 
@@ -65,7 +69,7 @@ contract ODAO {
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
-        if (daosOfToken[internalT].length > 9_999) revert SubDAOLimitReached();
+        // if (daosOfToken[internalT].length > 9_999) revert SubDAOLimitReached();
 
         subDAOaddr = createDAO(internalT);
         bool isEndpoint = (membraneID_ < MAX_160) && (address(uint160(membraneID_)) == msg.sender);
@@ -122,9 +126,5 @@ contract ODAO {
         path = topLevelPath[floor_].length > 0 ? topLevelPath[floor_] : new address[](1);
     }
 
-    /// @notice an ERC20 token can have an unlimited number of DAOs. This returns all root DAOs in existence for provided ERC20.
-    /// @param parentToken ERC20 contract address
-    function getDAOsOfToken(address parentToken) external view returns (address[] memory) {
-        return daosOfToken[parentToken];
-    }
+
 }

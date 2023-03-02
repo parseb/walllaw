@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "../src/Member1155.sol";
 
@@ -23,8 +23,11 @@ contract LocalDeploy is Script {
     IoDAO O;
     iInstanceDAO instance;
     IMembrane MembraneR;
+    ITokenFactory ITF;
 
-    function setUp() public {}
+    function setUp() public {
+        ITF = ITokenFactory(M.DAO20FactoryAddress());
+    }
 
     // Transaction: 0x739e031c195face8ba4a33d61e042ab3756e9d39930a0e2fa659283c38fde2e8
     // Contract created: 0x5b97542891ca4c71112865cacfee6a4361c913a6
@@ -62,7 +65,7 @@ contract LocalDeploy is Script {
             }
         }
 
-        subDs = O.getDAOsOfToken(iInstanceDAO(parentDAO_).internalTokenAddress());
+        subDs = ITF.getDAOsOfToken(iInstanceDAO(parentDAO_).internalTokenAddress());
     }
 
     function _createNestedDAOs(address startDAO_, uint256 membrane, uint256 levels_)
@@ -89,10 +92,14 @@ contract LocalDeploy is Script {
         vm.startBroadcast(vm.envUint("ANVIL_DEPLOY1")); //// start 1
 
         M = new MemberRegistry();
+
         Mock20 = new M20();
         Mock202 = new M202();
+
+
         O = IoDAO(M.ODAOaddress());
         MembraneR = IMembrane(M.MembraneRegistryAddress());
+        
         M721 = new M721222();
 
         O.createDAO(address(Mock202));

@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
 import "./interfaces/IExternalCall.sol";
+import "./interfaces/ITokenFactory.sol";
+
 import "./utils/Address.sol";
-import "./DAO20.sol";
+import "./interfaces/IDAO20.sol";
 import "./errors.sol";
 
 contract DAOinstance {
@@ -19,8 +21,9 @@ contract DAOinstance {
     address public endpoint;
     address ODAO;
     address purgeorExternalCall;
-    IERC20 public BaseToken;
-    DAO20 public internalToken;
+    IERC20  BaseToken;
+    IDAO20  internalToken;
+    // DAO20 public internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
     IExternalCall iEXT;
@@ -50,7 +53,7 @@ contract DAOinstance {
 
     // uint256[] private activeIndecisions; ///// @todo
 
-    constructor(address BaseToken_, address initiator_, address MemberRegistry_) {
+    constructor(address BaseToken_, address initiator_, address MemberRegistry_, address InternalTokenFactory_) {
         ODAO = msg.sender;
         instantiatedAt = block.timestamp;
         BaseToken = IERC20(BaseToken_);
@@ -59,7 +62,12 @@ contract DAOinstance {
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
         iEXT = IExternalCall(iMR.ExternalCallAddress());
-        internalToken = new DAO20(BaseToken_, "WalllaW$_$Internal", "WdoW",18);
+
+
+        // internalToken = 
+        
+        internalToken = IDAO20( ITokenFactory(InternalTokenFactory_).makeForMe(BaseToken_) );
+
         BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
         subunitPerSec[address(this)][1] = block.timestamp;
@@ -142,7 +150,7 @@ contract DAOinstance {
         if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[sender];
         redistributiveSignal[sender] = cronoOrderedDistributionAmts;
 
-        address[] memory subDAOs = IoDAO(ODAO).getDAOsOfToken(address(internalToken));
+        address[] memory subDAOs = ITokenFactory(iMR.DAO20FactoryAddress()).getDAOsOfToken(address(internalToken));
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
         uint256 centum;

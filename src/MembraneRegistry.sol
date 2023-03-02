@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
 import "./interfaces/IMember1155.sol";
+import "./interfaces/IDAO20.sol";
 
-import "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import "./errors.sol";
 
 contract MembraneRegistry {

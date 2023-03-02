@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 interface iInstanceDAO {
     function signalInflation(uint256 percentagePerYear_) external returns (uint256 inflationRate);
