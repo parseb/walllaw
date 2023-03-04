@@ -7,9 +7,8 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
 import "./interfaces/ITokenFactory.sol";
 
-
 /// did not ponder over the impact of adding permit
-/// @notice internal DAO/subDAO token 
+/// @notice internal DAO/subDAO token
 
 contract DAO20 is ERC20Permit {
     address public owner;
@@ -18,7 +17,8 @@ contract DAO20 is ERC20Permit {
     IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
-        ERC20Permit(name_) ERC20("name_", "WWdo")
+        ERC20Permit(name_)
+        ERC20("name_", "WWdo")
     {
         owner = ITokenFactory(msg.sender).getOwner();
         base = baseToken_;
@@ -35,7 +35,7 @@ contract DAO20 is ERC20Permit {
     function wrapMint(uint256 amt) external returns (bool s) {
         s = baseToken.transferFrom(msg.sender, owner, amt);
         if (s) {
-            //iInstanceDAO(owner).mintInflation(); /// @dev 
+            //iInstanceDAO(owner).mintInflation(); /// @dev
             _mint(msg.sender, amt);
         }
         require(s, "ngmi");

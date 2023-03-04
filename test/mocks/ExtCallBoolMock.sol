@@ -11,7 +11,7 @@ contract MExtCallBool {
 
     function flipSwitch() external returns (bool) {
         agentSwitch[msg.sender] = !agentSwitch[msg.sender];
-        return  agentSwitch[msg.sender];
+        return agentSwitch[msg.sender];
     }
 
     function getSwitchStateOf(address ofWhom_) external view returns (bool) {

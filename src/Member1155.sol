@@ -5,6 +5,7 @@ import "./oDAO.sol";
 import "./MembraneRegistry.sol";
 import "./ExternalCall.sol";
 import "./DAO20Factory.sol";
+import "./AbstractAccount.sol";
 
 import "solmate/tokens/ERC1155.sol";
 import "./interfaces/IoDAO.sol";
@@ -17,7 +18,7 @@ contract MemberRegistry is ERC1155 {
     address public MembraneRegistryAddress;
     address public ExternalCallAddress;
     address public DAO20FactoryAddress;
-
+    address public AbstractAddr;
 
     IoDAO oDAO;
     IMembrane IMB;
@@ -29,11 +30,11 @@ contract MemberRegistry is ERC1155 {
     mapping(address => uint256[]) idsOf;
 
     constructor() {
+        AbstractAddr = address(new AbstractAccount());
         DAO20FactoryAddress = address(new DAO20Factory());
         ODAOaddress = address(new ODAO(DAO20FactoryAddress));
-        
-        ITokenFactory(DAO20FactoryAddress).setODAO(ODAOaddress);
 
+        ITokenFactory(DAO20FactoryAddress).setODAO(ODAOaddress);
 
         MembraneRegistryAddress = address(new MembraneRegistry(ODAOaddress));
         ExternalCallAddress = address(new ExternalCall(ODAOaddress));

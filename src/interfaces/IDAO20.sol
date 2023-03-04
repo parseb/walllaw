@@ -12,10 +12,9 @@ interface IDAO20 is IERC20 {
     function unwrapBurn(uint256 amtToBurn_) external returns (bool s);
 
     function inflationaryMint(uint256) external returns (bool);
-    
-     function mintInitOne(address) external returns (bool);
-    
-    function burnInProgress() external view  returns (address);
-    //////////////////
 
+    function mintInitOne(address) external returns (bool);
+
+    function burnInProgress() external view returns (address);
+    //////////////////
 }

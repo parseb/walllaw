@@ -32,7 +32,7 @@ contract MyUtils is Test {
         iMB = IMembrane(iMR.MembraneRegistryAddress());
 
         DAO20Factory = ITokenFactory(iMR.DAO20FactoryAddress());
-        
+
         BaseE20 = IERC20(address(new M20()));
         iEXTcall = IExternalCall(iMR.ExternalCallAddress());
     }

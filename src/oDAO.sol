@@ -6,8 +6,10 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/IMembrane.sol";
+import "./interfaces/IAbstract.sol";
 
 contract ODAO {
+    bool isInit;
     mapping(uint256 => address) daoOfId;
     // mapping(address => address[]) daosOfToken;
     mapping(address => address) childParentDAO;
@@ -15,11 +17,13 @@ contract ODAO {
     IMemberRegistry MR;
     address public MB;
     address public DAO20FactoryAddress;
+    IAbstract AbstractA;
     uint256 constant MAX_160 = type(uint160).max;
 
     constructor(address DAO20Factory_) {
         MR = IMemberRegistry(msg.sender);
         DAO20FactoryAddress = DAO20Factory_;
+        isInit = true;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -48,15 +52,19 @@ contract ODAO {
     /// @notice creates a new DAO gien an ERC20
     /// @param BaseTokenAddress_ ERC20 token contract address
     function createDAO(address BaseTokenAddress_) public returns (address newDAO) {
+        //// @dev
+        if (isInit) {
+            MB = MR.MembraneRegistryAddress();
+            AbstractA = IAbstract(MR.AbstractAddr());
+            isInit = false;
+        }
+
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR),DAO20FactoryAddress ));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
         // daosOfToken[BaseTokenAddress_].push(newDAO);
         // if (msg.sig == this.createDAO.selector) MR.pushAsRoot(newDAO);
         if (msg.sig == this.createDAO.selector) iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
         emit newDAOCreated(newDAO, BaseTokenAddress_);
-
-        //// @dev
-        if (address(MB) == address(0)) MB = MR.MembraneRegistryAddress();
     }
 
     //// @security ?: can endpoint-onEndpoint create. remove multiple endpoit.
@@ -99,6 +107,12 @@ contract ODAO {
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
     }
 
+    function _msgSender() private view returns (address) {
+        if (msg.sender == address(AbstractA)) return AbstractA.currentAccount();
+
+        return msg.sender;
+    }
+
     /*//////////////////////////////////////////////////////////////
                                  VIEW
     //////////////////////////////////////////////////////////////*/
@@ -125,6 +139,4 @@ contract ODAO {
     function getTrickleDownPath(address floor_) external view returns (address[] memory path) {
         path = topLevelPath[floor_].length > 0 ? topLevelPath[floor_] : new address[](1);
     }
-
-
 }

@@ -9,21 +9,15 @@ import "./interfaces/ITokenFactory.sol";
 
 import "./DAO20.sol";
 
-
 contract DAO20Factory is ITokenFactory {
     address currentOwner;
     address MemeberRegistryAddress;
     IoDAO ODAO;
 
+    //// @notice what DAO entitties use specified token as base.
+    mapping(address => address[]) daosOfToken;
 
-    //// @notice what DAO entitties use specified token as base. 
-    mapping (address => address[]) daosOfToken; 
-
-
-    
-
-
-    constructor(){
+    constructor() {
         MemeberRegistryAddress = msg.sender;
     }
 
@@ -31,7 +25,6 @@ contract DAO20Factory is ITokenFactory {
     error AlreadyDone();
 
     event MadeInternal20(address base, address owner, address newToken);
-
 
     function makeForMe(address DeclaredBase_) external returns (address newDAO20) {
         if (currentOwner != address(0)) revert Busy();
@@ -42,8 +35,6 @@ contract DAO20Factory is ITokenFactory {
 
         emit MadeInternal20(DeclaredBase_, msg.sender, newDAO20);
     }
-
-
 
     /// @notice an ERC20 token can have an unlimited number of DAOs. This returns all root DAOs in existence for provided ERC20.
     /// @param parentToken ERC20 contract address
@@ -58,15 +49,13 @@ contract DAO20Factory is ITokenFactory {
     /// notice gets the root base on which the top value of provided address is constructed.
     function getBaseOf(address DAOaddress_) external returns (address valueBase) {
         address[] memory tricklePath = ODAO.getTrickleDownPath(DAOaddress_);
-        valueBase =  tricklePath.length == 0 ? 
-        iInstanceDAO(valueBase).baseTokenAddress() 
-            :
-        iInstanceDAO(tricklePath[0]).baseTokenAddress();
+        valueBase = tricklePath.length == 0
+            ? iInstanceDAO(valueBase).baseTokenAddress()
+            : iInstanceDAO(tricklePath[0]).baseTokenAddress();
     }
 
     function setODAO(address ODAO_) external {
-    if (address( ODAO ) != address(0) ) revert AlreadyDone();
-       ODAO = IoDAO(ODAO_);
-    } 
-
+        if (address(ODAO) != address(0)) revert AlreadyDone();
+        ODAO = IoDAO(ODAO_);
+    }
 }

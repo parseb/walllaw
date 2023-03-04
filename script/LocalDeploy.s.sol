@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "../src/Member1155.sol";
+// import "../src/AbstractAccount.sol";
 
 import "forge-std/Script.sol";
 import "test/mocks/M202.sol";
@@ -25,8 +26,16 @@ contract LocalDeploy is Script {
     IMembrane MembraneR;
     ITokenFactory ITF;
 
+    address agent1;
+    address agent2;
+    address agent3;
+    address agent4;
+
     function setUp() public {
-        ITF = ITokenFactory(M.DAO20FactoryAddress());
+        agent1 = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+        agent2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+        agent3 = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
+        agent4 = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
     }
 
     // Transaction: 0x739e031c195face8ba4a33d61e042ab3756e9d39930a0e2fa659283c38fde2e8
@@ -89,17 +98,17 @@ contract LocalDeploy is Script {
     }
 
     function run() public {
-        vm.startBroadcast(vm.envUint("ANVIL_DEPLOY1")); //// start 1
+        vm.startBroadcast(vm.envUint("ANVIL_2")); //// start 1
 
         M = new MemberRegistry();
+        ITF = ITokenFactory(M.DAO20FactoryAddress());
 
         Mock20 = new M20();
         Mock202 = new M202();
 
-
         O = IoDAO(M.ODAOaddress());
         MembraneR = IMembrane(M.MembraneRegistryAddress());
-        
+
         M721 = new M721222();
 
         O.createDAO(address(Mock202));
@@ -117,11 +126,11 @@ contract LocalDeploy is Script {
 
         vm.startBroadcast(vm.envUint("ANVIL_2")); //// start 2
 
-        iInstanceDAO(baseDAO).mintMembershipToken(0x5457d92f47212E9287c1A1c31e708f574ab66125);
+        // iInstanceDAO(baseDAO).mintMembershipToken(agent2);
         iInstanceDAO(baseDAO).signalInflation(50);
 
-        iInstanceDAO(baseDAO).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
-        iInstanceDAO(baseDAO).mintMembershipToken(0x5df6cF21815ca55057bb5cA159A3130c193bb0a1);
+        iInstanceDAO(baseDAO).mintMembershipToken(agent3);
+        iInstanceDAO(baseDAO).mintMembershipToken(agent4);
 
         IERC20(iInstanceDAO(baseDAO).baseTokenAddress()).approve(
             iInstanceDAO(baseDAO).internalTokenAddress(), type(uint256).max
@@ -157,9 +166,9 @@ contract LocalDeploy is Script {
         _createSubDaos(7, subD35s[2]);
         _createSubDaos(3, subD35s[3]);
 
-        iInstanceDAO(subD35s[1]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
-        iInstanceDAO(subD35s[2]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
-        iInstanceDAO(subD35s[3]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        // iInstanceDAO(subD35s[1]).mintMembershipToken(agent2);
+        iInstanceDAO(subD35s[2]).mintMembershipToken(agent3);
+        iInstanceDAO(subD35s[3]).mintMembershipToken(agent4);
 
         vm.stopBroadcast(); //// stop 2
 
@@ -170,9 +179,9 @@ contract LocalDeploy is Script {
         );
         IDAO20(iInstanceDAO(baseDAO).internalTokenAddress()).wrapMint(10 ether);
 
-        iInstanceDAO(subdaoAddresses[0]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
-        iInstanceDAO(subdaoAddresses[1]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
-        iInstanceDAO(subdaoAddresses[2]).mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        // iInstanceDAO(subdaoAddresses[0]).mintMembershipToken(agent2);
+        iInstanceDAO(subdaoAddresses[1]).mintMembershipToken(agent3);
+        iInstanceDAO(subdaoAddresses[2]).mintMembershipToken(agent4);
 
         IERC20(iInstanceDAO(subdaoAddresses[0]).baseTokenAddress()).approve(
             iInstanceDAO(subdaoAddresses[0]).internalTokenAddress(), type(uint256).max
@@ -189,13 +198,13 @@ contract LocalDeploy is Script {
         );
         IDAO20(iInstanceDAO(subdaoAddresses[2]).internalTokenAddress()).wrapMint(2 * 1 ether);
 
-        iInstanceDAO(subdaoAddresses[2]).signalInflation(66);
-
         vm.stopBroadcast();
 
         console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
         console.log("ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
         console.log("MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
+        console.log("AbstractAddress __________####________ : ", M.AbstractAddr());
+        console.log("____________--- mocks --- _______");
         console.log("M20 ADDRESS OS ______________####_____ : ", address(Mock20));
         console.log("M202 ADDRESS OS ______________####_____ : ", address(Mock202));
         console.log("M721 ADDRESS OS ______________####_____ : ", address(M721));
