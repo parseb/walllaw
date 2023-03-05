@@ -61,4 +61,6 @@ interface iInstanceDAO {
     function getILongDistanceAddress() external view returns (address);
 
     function uri() external view returns (string memory);
+
+    function lastAt() external view returns (uint256);
 }

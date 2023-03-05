@@ -14,6 +14,7 @@ import "./interfaces/IDAO20.sol";
 import "./errors.sol";
 
 contract DAOinstance {
+    uint256 public lastAt;
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
@@ -81,7 +82,7 @@ contract DAOinstance {
                                  events
     //////////////////////////////////////////////////////////////*/
 
-    event StateAdjusted();
+    event AdjustedState();
     event AdjustedRate();
     event UserPreferedGuidance();
     event FallbackCalled(address caller, uint256 amount, string message);
@@ -94,11 +95,15 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyMember() {
+
+
         if (msg.sender == address(internalToken) || msg.sender == address(this)) {
             _;
         } else {
             if (!isMember(_msgSender())) revert DAOinstance__NotMember();
             _;
+            lastAt = block.timestamp;
+            emit AdjustedState();
         }
     }
 
