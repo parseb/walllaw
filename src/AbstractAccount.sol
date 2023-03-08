@@ -9,6 +9,22 @@ contract AbstractAccount is IAbstract {
 
     mapping(address => uint256) userNonce;
 
+    /// @notice stores gas allawance for gassless execution of operations [address of instance][gas allowance]
+    mapping(address => uint256) instanceGasAllocation;
+
+    event AbstractCall(address from, address indexed to);
+
+    error AgencyAlreadyManifesting();
+    error CallFailed();
+    error AddressZero();
+    error OnlyOwner();
+
+    function addGasTo(address walllawInstance_) external payable returns (uint256 newAllawance) {
+        if (walllawInstance_ == address(0)) revert AddressZero();
+        instanceGasAllocation[walllawInstance_] += msg.value;
+        return instanceGasAllocation[walllawInstance_];
+    }
+
     // struct UserOperation {
     //     address sender;
     //     uint256 nonce;
@@ -17,23 +33,33 @@ contract AbstractAccount is IAbstract {
     //     bytes signature;
     // }
 
-    event AbstractCall(address from, address indexed to);
-
-    error AgencyAlreadyManifesting();
+    /// http://guild.xyz/walllaw
+    /// LinkeGaard.eth
+    /// Linkebeek community garden incorporated project. We use a walllaw to steer the evolution of the project by continuous and transparent of allocation of resources. Come talk to us to our market stall every sunday morning on Linkebeek Straße nr 7, from 10pm.
+    /// http://explorer.walllaw.xyz/LinkeGaard.eth
+    /// {"workspace":{description:"this is where we budget things",link:"http://linktoprojectedneedsandreviews.com"},"governance":{description:"this is where we talk about things", link:"http://www.discord.com"}
 
     constructor() {}
 
     function abstractCall(UserOperation memory UO) external returns (bool s) {
         if (currentAgent != address(0)) revert AgencyAlreadyManifesting();
         if (userNonce[UO.sender] != UO.nonce - 1) revert AgencyAlreadyManifesting();
+        if (msg.sender != owner) revert OnlyOwner();
 
+        uint256 gasStart = gasleft();
         currentAgent = UO.sender;
-
-        //// check signature @todo
 
         (s,) = UO.daoInstance.call(UO.callData);
 
+        require(s);
+        unchecked {
+            ++userNonce[UO.sender];
+        }
+        instanceGasAllocation[UO.daoInstance] -= (gasStart - gasleft());
+
         delete currentAgent;
+
+        /// @dev tax?
         emit AbstractCall(UO.sender, UO.daoInstance);
     }
 

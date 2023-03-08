@@ -95,8 +95,6 @@ contract DAOinstance {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyMember() {
-
-
         if (msg.sender == address(internalToken) || msg.sender == address(this)) {
             _;
         } else {

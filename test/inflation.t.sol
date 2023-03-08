@@ -103,7 +103,6 @@ contract redistributiveInflation is Test {
 
         skip(2000);
 
-
         uint256 minted = DAO.mintInflation();
         uint256 basePerSec1 = DAO.baseInflationPerSec();
         assertTrue(minted < (DAO.baseInflationPerSec() * 2000), "math went wrong");
@@ -114,14 +113,14 @@ contract redistributiveInflation is Test {
         uint256 basePerSec2 = DAO.baseInflationPerSec();
         assertTrue(minted < (DAO.baseInflationPerSec() * 5000), "math went wrong");
 
-        assertTrue( internalTime < DAO.lastAt(), "expected updated lastAt");
+        assertTrue(internalTime < DAO.lastAt(), "expected updated lastAt");
         internalTime = DAO.lastAt();
 
         skip(1);
         minted = DAO.mintInflation();
         uint256 basePerSec3 = DAO.baseInflationPerSec();
 
-        assertTrue( internalTime == DAO.lastAt(), "only member posture changes update lastAt");
+        assertTrue(internalTime == DAO.lastAt(), "only member posture changes update lastAt");
 
         assertTrue(basePerSec3 > basePerSec2, "inflation per sec should rise with supply");
         assertTrue(basePerSec2 > basePerSec1, "inflation per sec should rise with supply");
