@@ -92,6 +92,84 @@ contract RedistributiveTest is Test, MyUtils {
         //// @dev assumed all majoritarian functions execute of 0 balance
         vm.stopPrank();
     }
+
+    function testGetsIndecisionsInfl() public {
+        // _mint(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7, 300_000 ether);
+        // _mint(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC, 300_000 ether);
+        // _mint(address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), 200_000 ether);
+        vm.prank(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        IERC20(DAO.baseTokenAddress()).approve(DAO.internalTokenAddress(), type(uint256).max - 1);
+        vm.prank(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        DAO.mintMembershipToken(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        vm.prank(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(100 ether);
+
+        vm.prank(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC);
+        IERC20(DAO.baseTokenAddress()).approve(DAO.internalTokenAddress(), type(uint256).max - 1);
+        vm.prank(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC);
+        DAO.mintMembershipToken(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC);
+        vm.prank(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(100 ether);
+
+        vm.prank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        IERC20(DAO.baseTokenAddress()).approve(DAO.internalTokenAddress(), type(uint256).max - 1);
+        vm.prank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        DAO.mintMembershipToken(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        vm.prank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        IDAO20(DAO.internalTokenAddress()).wrapMint(300 ether);
+
+        vm.prank(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        DAO.signalInflation(99);
+
+        Indecision[] memory Is = DAO.getAllActiveIndecisions();
+
+        assertTrue(Is.length == 1, "Expected lenght 1");
+        assertTrue(Is[0].id == 99, "Expected 99 inflation active indecision");
+
+        vm.prank(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7);
+        DAO.signalInflation(98);
+        Is = DAO.getAllActiveIndecisions();
+        assertTrue(Is[1].id == 98, "Expected 98888");
+        assertTrue(Is.length == 2, "Expected lenght 2");
+
+        vm.prank(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        DAO.signalInflation(98);
+
+        Is = DAO.getAllActiveIndecisions();
+        assertTrue(Is[1].id == 98, "Expected 98888");
+        assertTrue(Is.length == 2, "Expected lenght 2");
+
+        DAO.scrubIndecisions();
+        Is = DAO.getAllActiveIndecisions();
+        assertTrue(Is[1].id == 98, "Expected 98888");
+        assertTrue(Is.length == 2, "Expected lenght 2");
+
+        /// test post exec wipe
+
+        ////
+        // uint256 initInflation = DAO.baseInflationRate();
+        // _setInflation(10, address(DAO));
+        // uint256 initPerSec = DAO.baseInflationPerSec();
+
+        // assertFalse(initInflation == DAO.baseInflationRate(), "failed to update infaltion");
+        // assertTrue(initPerSec != 0, "per sec not updated");
+    }
+
+    // function testRedistributes() public {
+    //     testSetNewInflation();
+    //     uint256 instances = 5;
+    //     uint256 equalSlice = 100 / instances;
+    //     vm.startPrank(Agent1);
+    //     address[] memory sD = _createSubDaos(5, address(DAO));
+    //     vm.stopPrank();
+    //     uint256[] memory distributionAmounts = new uint[](instances);
+
+    //     for (instances; instances > 0; --instances) {
+    //         uint256 i = instances - 1;
+    //         distributionAmounts[i] = equalSlice;
+    //         assertTrue(sD[i] != address(0), "address 0 spotted");
+    //     }
+    // }
 }
 
 // contract RedistributiveTest is Test, inflationtest  {
@@ -269,4 +347,3 @@ contract RedistributiveTest is Test, MyUtils {
 
 //         assertTrue(sub3 == sub4, 'same claim, diff balance');
 //     }
-// }

@@ -54,7 +54,12 @@ contract DAOinstance {
     /// @notice stores array of agent addresses that are expressing a change
     mapping(uint256 => address[]) expressors;
 
-    // uint256[] private activeIndecisions; ///// @todo
+    /// metadata for change retrieval
+    //// @notice indecision tracker [index, initiatedAt, lastTouched]
+    mapping(uint256 => uint256[3]) indecisionMeta;
+
+    //// @notice list of active indecision ids/values
+    uint256[] activeIndecisions;
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_, address InternalTokenFactory_) {
         ODAO = msg.sender;
@@ -74,6 +79,7 @@ contract DAOinstance {
         BaseToken.approve(address(internalToken), type(uint256).max - 1);
 
         subunitPerSec[address(this)][1] = block.timestamp;
+        activeIndecisions.push();
 
         emit NewInstance(address(this), BaseToken_, initiator_);
     }
@@ -343,6 +349,23 @@ contract DAOinstance {
         if (previous == 0) {
             expressors[preference_].push(_msgSender());
         }
+
+        uint256[3] memory meta;
+        meta[2] = block.timestamp;
+
+        if (indecisionMeta[preference_][0] == 0) {
+            if (activeIndecisions[0] == 0) {
+                meta[0] = activeIndecisions.length;
+                activeIndecisions.push(preference_);
+            } else {
+                activeIndecisions[activeIndecisions[0]] = preference_;
+                meta[0] = activeIndecisions[0];
+
+                delete activeIndecisions[0];
+            }
+            meta[1] = block.timestamp;
+        }
+        indecisionMeta[preference_] = meta;
     }
 
     /// @dev once a change materializes, this is called to clean state and reset its latent potential
@@ -353,7 +376,10 @@ contract DAOinstance {
 
         if (!(sum >= expressed[target_][address(0)])) revert DAOinstance__CannotUpdate();
 
-        /// #extra
+        /// @dev ut
+        delete activeIndecisions[ indecisionMeta[target_][0]];
+        activeIndecisions[0] = indecisionMeta[target_][0];
+        delete indecisionMeta[target_];
 
         delete expressed[target_][address(0)];
         delete expressors[target_];
@@ -400,5 +426,35 @@ contract DAOinstance {
 
     function uri() external view returns (string memory) {
         return iMB.inUseUriOf(address(this));
+    }
+
+    function getAllActiveIndecisions() external view returns (Indecision[] memory Indecisions) {
+        uint256 i = 1;
+        Indecisions = new Indecision[](activeIndecisions.length -1);
+        for (i; i < activeIndecisions.length;) {
+            Indecision memory I;
+            I.id = activeIndecisions[i];
+            I.metadata = indecisionMeta[activeIndecisions[i]];
+            I.expressorsList = expressors[I.id];
+
+            Indecisions[i - 1] = I;
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /// @dev ut
+    function scrubIndecisions() external {
+        uint256 i;
+        for (i; i < activeIndecisions.length;) {
+            if (expressed[activeIndecisions[i]][address(0)] == 0) {
+                activeIndecisions[0] = i;
+                unchecked {
+                    ++i;
+                }
+            }
+        }
     }
 }

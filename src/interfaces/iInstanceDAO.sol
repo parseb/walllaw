@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+struct Indecision {
+    uint256 id;
+    uint256[3] metadata;
+    address[] expressorsList;
+}
+
 interface iInstanceDAO {
     function signalInflation(uint256 percentagePerYear_) external returns (uint256 inflationRate);
 
@@ -63,4 +69,8 @@ interface iInstanceDAO {
     function uri() external view returns (string memory);
 
     function lastAt() external view returns (uint256);
+
+    function getAllActiveIndecisions() external view returns (Indecision[] memory Indecisions);
+
+    function scrubIndecisions() external;
 }
