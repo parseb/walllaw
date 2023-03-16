@@ -25,6 +25,13 @@ struct UserOperation {
     bytes signature;
 }
 
+struct BankDeposit {
+    address originator;
+    address DAOinstance;
+    string transferDATA;
+    bytes signature;
+}
+
 interface IAbstract {
     function abstractCall(UserOperation memory) external returns (bool);
 
@@ -33,4 +40,12 @@ interface IAbstract {
     function owner() external view returns (address);
 
     function getNonceOfUser(address agent_) external view returns (uint256);
+
+        function depositFor(
+        address forWho_,
+        address toWhere_,
+        uint256 amount_,
+        string memory transferData_,
+        bytes memory signature_
+    ) external returns (bool);
 }

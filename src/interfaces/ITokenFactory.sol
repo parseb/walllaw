@@ -18,4 +18,7 @@ interface ITokenFactory {
     function getOwner() external returns (address);
 
     function setODAO(address ODAO_) external;
+
+    function ODAOaddress() external returns (address);
+
 }

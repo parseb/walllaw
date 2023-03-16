@@ -16,5 +16,10 @@ interface IDAO20 is IERC20 {
     function mintInitOne(address) external returns (bool);
 
     function burnInProgress() external view returns (address);
+
+    function wrapMintFor(uint256 amount_) external returns (bool);
+
+    function baseTokenAddress() external view returns (address);
+
     //////////////////
 }

@@ -15,16 +15,20 @@ import "../src/interfaces/IMembrane.sol";
 import "../src/interfaces/ILongCall.sol";
 import "../src/interfaces/IAbstract.sol";
 import "openzeppelin-contracts/token/ERC721/IERC721.sol";
-// import {Address} from "openzeppelin-contracts/utils/Address.sol";
 
-// == Logs ==
-//   Member --- 10200 ______________####_____ : 0xf9a23a0577da9557aa158faebcd9807d54cd80de
-//   ODAO --- 10200 ______________####_____ : 0x2277ff919053beb8ab3f9b4d9397895976af31cb
-//   memBRAINE --- 10200 ______________####_____ : 0xdbeda650d780a4f9bdac7c0ad75f957a90296df2
-//   Abstract A --- 10200 ______________####_____ : 0xf56d4b2da876b95367194bdb52c5b2f14ac68116
-
-/// eEUR 0x861B1cD2CCBd27e8Ac0262a99227430791D27c3A 75
-/// garden poap 0x861B1cD2CCBd27e8Ac0262a99227430791D27c3A
+// == Logs == Chiado local
+//   Member --- 10200 __________####_____ : 0x06ea1e3ce4a2cf4f0b4e699fe65110713e889e12
+//   ODAO --- 10200 __________####_____ : 0xbaab6f430a9bf6618724ee64738352a9e19aba60
+//   memBRAINE --- 10200 __________####_____ : 0x26f7943b15be7952d8551e644c8fdaf396925add
+//   Abstract A --- 10200 __________####_____ : 0xbc75be629709c80c79dceab1c5dd4134f5e17836
+//   Meeting POAP --- 10200 __________####_____ : 0x3e356ea26bff02b930d07bab216edfeb3b82cd8b
+//   ----------populate-----------
+//   -----------------------------
+//   changing membrane 507988496082309901  --- expected ---  507988496082309901
+//   Garden DAO --- 10200 __________####_____ : 0x5290b2bf41ced96b0a08b51748dd821b2cf005f9
+//   Membrane ID --- 10200 __________####_____ : 507988496082309901
+//   Garden DAO --- 10200 __________####_____ : 0x5290b2bf41ced96b0a08b51748dd821b2cf005f9
+//   Internal Token  --- 10200 __________####_____ : 0xa374b2232e5ee5f92e32485c1e7dc0c5e068925e
 
 // http://guild.xyz/walllaw
 // LinkeGaard.eth
@@ -61,10 +65,52 @@ contract LocalDeploy is Script {
 
         string memory chainID = Strings.toString(block.chainid);
 
-        console.log(string.concat("Member --- ", chainID, " ______________####_____ : ", addrM));
-        console.log(string.concat("ODAO --- ", chainID, " ______________####_____ : ", addrODAO));
-        console.log(string.concat("memBRAINE --- ", chainID, " ______________####_____ : ", addrMembrane));
-        console.log(string.concat("Abstract A --- ", chainID, " ______________####_____ : ", addrAbstract));
-        console.log(string.concat("Abstract A --- ", chainID, " ______________####_____ : ", MeetingPoap));
+        console.log(string.concat("Member --- ", chainID, " __________####_____ : ", addrM));
+        console.log(string.concat("ODAO --- ", chainID, " __________####_____ : ", addrODAO));
+        console.log(string.concat("memBRAINE --- ", chainID, " __________####_____ : ", addrMembrane));
+        console.log(string.concat("Abstract A --- ", chainID, " __________####_____ : ", addrAbstract));
+        console.log(string.concat("Meeting POAP --- ", chainID, " __________####_____ : ", MeetingPoap));
+
+        ////// Populate
+        console.log("----------populate-----------");
+        console.log("-----------------------------");
+
+        address DAO = O.createDAO(0xb106ed7587365a16b6691a3D4B2A734f4E8268a2);
+
+        address[] memory tokens = new address[](2);
+        tokens[0] = 0xb106ed7587365a16b6691a3D4B2A734f4E8268a2;
+        /// eur
+        tokens[1] = address(CommunityMeetingPoap);
+
+        uint256[] memory balances = new uint256[](2);
+        balances[0] = 75;
+        balances[1] = 1;
+
+        string memory meta = "QmdEwTWpsMcBsgJGCAM1eULstRYwSz3inepytgpHwqXSAk";
+
+        uint256 membraneId = MembraneR.createMembrane(tokens, balances, meta);
+
+        uint256 result = iInstanceDAO(DAO).changeMembrane(membraneId);
+        console.log("changing membrane", Strings.toString(membraneId), " --- expected --- ", Strings.toString(result));
+
+        console.log(
+            string.concat(
+                "Garden DAO --- ", chainID, " __________####_____ : ", Strings.toHexString(uint256(uint160(DAO)), 20)
+            )
+        );
+        console.log(string.concat("Membrane ID --- ", chainID, " __________####_____ : ", Strings.toString(membraneId)));
+        console.log(
+            string.concat(
+                "Garden DAO --- ", chainID, " __________####_____ : ", Strings.toHexString(uint256(uint160(DAO)), 20)
+            )
+        );
+        console.log(
+            string.concat(
+                "Internal Token  --- ",
+                chainID,
+                " __________####_____ : ",
+                Strings.toHexString(uint256(uint160(iInstanceDAO(DAO).internalTokenAddress())), 20)
+            )
+        );
     }
 }

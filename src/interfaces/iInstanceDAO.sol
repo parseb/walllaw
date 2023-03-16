@@ -12,6 +12,8 @@ interface iInstanceDAO {
 
     function mintMembershipToken(address to_) external returns (bool);
 
+    function abstractAddress() external view returns (address);
+
     function changeMembrane(uint256 membraneId_) external returns (uint256 membraneID);
 
     function executeCall(uint256 externalCallId) external returns (uint256);

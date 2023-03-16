@@ -11,15 +11,12 @@ import "./DAO20.sol";
 
 contract DAO20Factory is ITokenFactory {
     address currentOwner;
-    address MemeberRegistryAddress;
     IoDAO ODAO;
 
     //// @notice what DAO entitties use specified token as base.
     mapping(address => address[]) daosOfToken;
 
-    constructor() {
-        MemeberRegistryAddress = msg.sender;
-    }
+    constructor() {}
 
     error Busy();
     error AlreadyDone();
@@ -57,5 +54,9 @@ contract DAO20Factory is ITokenFactory {
     function setODAO(address ODAO_) external {
         if (address(ODAO) != address(0)) revert AlreadyDone();
         ODAO = IoDAO(ODAO_);
+    }
+
+    function ODAOaddress() external view returns (address) {
+        return address(ODAO);
     }
 }

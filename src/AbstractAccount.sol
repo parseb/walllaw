@@ -2,25 +2,45 @@
 pragma solidity ^0.8.17;
 
 import "./interfaces/IAbstract.sol";
+import "./interfaces/iInstanceDAO.sol";
+import "./interfaces/IoDAO.sol";
+import "./interfaces/IMember1155.sol";
+import "./interfaces/IDAO20.sol";
+import "./interfaces/ITokenFactory.sol";
+
 
 contract AbstractAccount is IAbstract {
     address currentAgent;
     address public owner;
+    address MemberRegistryAddr;
+    // IoDAO ODAO;
 
     mapping(address => uint256) userNonce;
 
     /// @notice stores gas allawance for gassless execution of operations [address of instance][gas allowance]
     mapping(address => uint256) instanceGasAllocation;
 
-    event AbstractCall(address from, address indexed to);
+    mapping(address => bool) authorized;
 
-    error AgencyAlreadyManifesting();
-    error CallFailed();
-    error AddressZero();
-    error OnlyOwner();
+    mapping(address => BankDeposit[]) UserBankDeposits;
+
+    event AbstractCall(address from, address indexed to);
+    event NewDeposit(address from, address to);
+
+    error AbstractA_AgencyAlreadyManifesting();
+    error AbstractA_CallFailed();
+    error AbstractA_AddressZero();
+    error AbstractA_OnlyOwner();
+    error AbstractA_Unauthorized();
+    error AbstractA_NotADAO();
+
+    modifier onlyAutorized() {
+        if (!authorized[msg.sender]) revert AbstractA_Unauthorized();
+        _;
+    }
 
     function addGasTo(address walllawInstance_) external payable returns (uint256 newAllawance) {
-        if (walllawInstance_ == address(0)) revert AddressZero();
+        if (walllawInstance_ == address(0)) revert AbstractA_AddressZero();
         instanceGasAllocation[walllawInstance_] += msg.value;
         return instanceGasAllocation[walllawInstance_];
     }
@@ -33,18 +53,69 @@ contract AbstractAccount is IAbstract {
     //     bytes signature;
     // }
 
+    //     struct BankDeposit {
+    //     address originator;
+    //     address DAOinstance;
+    //     string transferDATA;
+    //     bytes signature;
+    // }
+
     /// http://guild.xyz/walllaw
     /// LinkeGaard.eth
     /// Linkebeek community garden incorporated project. We use a walllaw to steer the evolution of the project by continuous and transparent of allocation of resources. Come talk to us to our market stall every sunday morning on Linkebeek Straße nr 7, from 10pm.
     /// http://explorer.walllaw.xyz/LinkeGaard.eth
     /// {"workspace":{description:"this is where we budget things",link:"http://linktoprojectedneedsandreviews.com"},"governance":{description:"this is where we talk about things", link:"http://www.discord.com"}
 
-    constructor() {}
+    constructor() {
+        authorized[tx.origin] = true;
+        owner = tx.origin;
+        MemberRegistryAddr = msg.sender;
+        
+    }
+
+    function depositFor(
+        address forWho_,
+        address toWhere_,
+        uint256 amount_,
+        string memory transferData_,
+        bytes memory signature_
+    ) external onlyAutorized  returns (bool s) {
+
+        if (! ( IoDAO(IMemberRegistry(MemberRegistryAddr).ODAOaddress() ).isDAO(toWhere_) ) ) revert AbstractA_NotADAO();
+        currentAgent = forWho_;
+        iInstanceDAO DAO = iInstanceDAO(toWhere_);
+
+        BankDeposit memory BD;
+        BD.DAOinstance = toWhere_;
+        BD.originator = forWho_;
+        BD.transferDATA = transferData_;
+        BD.signature = signature_;
+
+        UserBankDeposits[forWho_].push(BD);
+
+        /// @todo verify signature
+        address internalT = DAO.internalTokenAddress();
+        IERC20 baseT = IERC20( DAO.baseTokenAddress() );
+
+        baseT.transferFrom( msg.sender, address(this), amount_);
+        baseT.approve(internalT,  type(uint256).max);
+
+
+        s = IDAO20(internalT).wrapMintFor(amount_);
+        s = true;
+        require(s);
+        delete currentAgent;
+        emit NewDeposit(forWho_, toWhere_);
+    }
+
+    function authorizeAgent(address who_) external onlyAutorized returns (bool) {
+        authorized[who_] = !authorized[who_];
+    }
 
     function abstractCall(UserOperation memory UO) external returns (bool s) {
-        if (currentAgent != address(0)) revert AgencyAlreadyManifesting();
-        if (userNonce[UO.sender] != UO.nonce - 1) revert AgencyAlreadyManifesting();
-        if (msg.sender != owner) revert OnlyOwner();
+        if (currentAgent != address(0)) revert AbstractA_AgencyAlreadyManifesting();
+        if (userNonce[UO.sender] != UO.nonce - 1) revert AbstractA_AgencyAlreadyManifesting();
+        if (msg.sender != owner) revert AbstractA_OnlyOwner();
 
         uint256 gasStart = gasleft();
         currentAgent = UO.sender;

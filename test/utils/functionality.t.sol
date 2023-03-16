@@ -8,6 +8,7 @@ import "../../src/interfaces/IDAO20.sol";
 import "../../src/interfaces/IMembrane.sol";
 import "../../src/interfaces/IExternalCall.sol";
 import "../../src/interfaces/ITokenFactory.sol";
+import "../../src/interfaces/IAbstract.sol";
 
 import "../../src/Member1155.sol";
 import "../mocks/mockERC20.sol";

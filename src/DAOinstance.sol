@@ -398,6 +398,10 @@ contract DAOinstance {
                                  VIEW
     //////////////////////////////////////////////////////////////*/
 
+    function abstractAddress() external view returns (address) {
+        return address(AbstractAccount);
+    }
+
     function internalTokenAddress() external view returns (address) {
         return address(internalToken);
     }
