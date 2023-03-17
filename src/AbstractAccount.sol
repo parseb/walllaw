@@ -8,7 +8,6 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
 import "./interfaces/ITokenFactory.sol";
 
-
 contract AbstractAccount is IAbstract {
     address currentAgent;
     address public owner;
@@ -70,7 +69,6 @@ contract AbstractAccount is IAbstract {
         authorized[tx.origin] = true;
         owner = tx.origin;
         MemberRegistryAddr = msg.sender;
-        
     }
 
     function depositFor(
@@ -79,9 +77,8 @@ contract AbstractAccount is IAbstract {
         uint256 amount_,
         string memory transferData_,
         bytes memory signature_
-    ) external onlyAutorized  returns (bool s) {
-
-        if (! ( IoDAO(IMemberRegistry(MemberRegistryAddr).ODAOaddress() ).isDAO(toWhere_) ) ) revert AbstractA_NotADAO();
+    ) external onlyAutorized returns (bool s) {
+        if (!(IoDAO(IMemberRegistry(MemberRegistryAddr).ODAOaddress()).isDAO(toWhere_))) revert AbstractA_NotADAO();
         currentAgent = forWho_;
         iInstanceDAO DAO = iInstanceDAO(toWhere_);
 
@@ -95,11 +92,10 @@ contract AbstractAccount is IAbstract {
 
         /// @todo verify signature
         address internalT = DAO.internalTokenAddress();
-        IERC20 baseT = IERC20( DAO.baseTokenAddress() );
+        IERC20 baseT = IERC20(DAO.baseTokenAddress());
 
-        baseT.transferFrom( msg.sender, address(this), amount_);
-        baseT.approve(internalT,  type(uint256).max);
-
+        baseT.transferFrom(msg.sender, address(this), amount_);
+        baseT.approve(internalT, type(uint256).max);
 
         s = IDAO20(internalT).wrapMintFor(amount_);
         s = true;

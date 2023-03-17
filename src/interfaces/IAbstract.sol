@@ -41,7 +41,7 @@ interface IAbstract {
 
     function getNonceOfUser(address agent_) external view returns (uint256);
 
-        function depositFor(
+    function depositFor(
         address forWho_,
         address toWhere_,
         uint256 amount_,

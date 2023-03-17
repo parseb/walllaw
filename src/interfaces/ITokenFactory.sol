@@ -20,5 +20,4 @@ interface ITokenFactory {
     function setODAO(address ODAO_) external;
 
     function ODAOaddress() external returns (address);
-
 }

@@ -126,7 +126,9 @@ contract DAO20 is ERC20Permit {
 
     function _Sender() private view returns (address sender) {
         sender = msg.sender;
-        if (msg.sender == address(iInstanceDAO(owner).abstractAddress())) sender = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
+        if (msg.sender == address(iInstanceDAO(owner).abstractAddress())) {
+            sender = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
+        }
     }
 
     // function _balanceOf(address who_) external returns (uint) {
@@ -136,7 +138,6 @@ contract DAO20 is ERC20Permit {
     // function _totalSupply() external returns (uint) {
     //     return this.totalSupply;
     // }
-
 
     function baseTokenAddress() external view returns (address) {
         return base;

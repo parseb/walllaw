@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import "./utils/functionality.t.sol";
 
 contract BankTest is Test, MyUtils {
-    
     IAbstract AbstractA;
 
     //// copied for endpointWithdraw
@@ -84,11 +83,10 @@ contract BankTest is Test, MyUtils {
         D2Parent = IDAO20(D2d.baseTokenAddress());
         D3Parent = IDAO20(D3d.baseTokenAddress());
 
-        /// end of copy 
+        /// end of copy
 
         AbstractA = IAbstract(iMR.AbstractAddr());
     }
-
 
     // function depositFor(
     //     address forWho_,
@@ -99,35 +97,36 @@ contract BankTest is Test, MyUtils {
     // )
 
     function testBankMint() public {
-
         address MojoJoJo = address(123456788099991243666789);
-        
+
         address authorizedAgent = AbstractA.owner();
         IERC20 baseT = IERC20(DAO.baseTokenAddress());
         IERC20 internalT = IERC20(DAO.internalTokenAddress());
 
         vm.expectRevert();
         vm.prank(MojoJoJo);
-        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd") );
+        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd"));
 
         vm.expectRevert();
         vm.prank(authorizedAgent);
-        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd") );
+        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd"));
 
-        
-        
         vm.prank(authorizedAgent);
         baseT.approve(address(AbstractA), type(uint256).max);
-        
+
         uint256 preB = internalT.balanceOf(authorizedAgent);
+        uint256 dBase = baseT.balanceOf(address(DAO));
 
         vm.prank(authorizedAgent);
-        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd") );
-        
+        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd"));
+
         uint256 postB = internalT.balanceOf(Agent2);
+        uint256 postdBase = baseT.balanceOf(address(DAO));
 
         //// Result Agent2 has internalT balance as a result of 'Authorized Agent' depositFor action
-        assertTrue(preB < postB, 'expected internal token balance');
-    }
+        assertTrue(preB < postB, "expected internal token balance");
+        assertTrue(dBase < postdBase, "expected more  2");
 
+        assertTrue(postB == 1000, "expected amount as wrap");
+    }
 }
