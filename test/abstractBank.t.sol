@@ -105,11 +105,11 @@ contract BankTest is Test, MyUtils {
 
         vm.expectRevert();
         vm.prank(MojoJoJo);
-        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd"));
+        AbstractA.depositFor(Agent2, address(DAO), 1000, 1, "someTransferData", bytes("fsfd"));
 
         vm.expectRevert();
         vm.prank(authorizedAgent);
-        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd"));
+        AbstractA.depositFor(Agent2, address(DAO), 1000, 1, "someTransferData", bytes("fsfd"));
 
         vm.prank(authorizedAgent);
         baseT.approve(address(AbstractA), type(uint256).max);
@@ -118,7 +118,15 @@ contract BankTest is Test, MyUtils {
         uint256 dBase = baseT.balanceOf(address(DAO));
 
         vm.prank(authorizedAgent);
-        AbstractA.depositFor(Agent2, address(DAO), 1000, "someTransferData", bytes("fsfd"));
+        vm.expectRevert(); //nonce
+        AbstractA.depositFor(Agent2, address(DAO), 1000, 99, "someTransferData", bytes("fsfd"));
+
+        uint iniNonce = AbstractA.getNonceOfUser(Agent2);
+
+        vm.prank(authorizedAgent);
+        AbstractA.depositFor(Agent2, address(DAO), 1000, iniNonce, "someTransferData", bytes("fsfd"));
+
+        assertTrue((iniNonce+1) == (AbstractA.getNonceOfUser(Agent2)), "nonce increment not");
 
         uint256 postB = internalT.balanceOf(Agent2);
         uint256 postdBase = baseT.balanceOf(address(DAO));

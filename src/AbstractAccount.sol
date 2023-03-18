@@ -32,6 +32,7 @@ contract AbstractAccount is IAbstract {
     error AbstractA_OnlyOwner();
     error AbstractA_Unauthorized();
     error AbstractA_NotADAO();
+    error AbstractA_InvalidNonce();
 
     modifier onlyAutorized() {
         if (!authorized[msg.sender]) revert AbstractA_Unauthorized();
@@ -44,27 +45,6 @@ contract AbstractAccount is IAbstract {
         return instanceGasAllocation[walllawInstance_];
     }
 
-    // struct UserOperation {
-    //     address sender;
-    //     uint256 nonce;
-    //     address daoInstance;
-    //     bytes callData;
-    //     bytes signature;
-    // }
-
-    //     struct BankDeposit {
-    //     address originator;
-    //     address DAOinstance;
-    //     string transferDATA;
-    //     bytes signature;
-    // }
-
-    /// http://guild.xyz/walllaw
-    /// LinkeGaard.eth
-    /// Linkebeek community garden incorporated project. We use a walllaw to steer the evolution of the project by continuous and transparent of allocation of resources. Come talk to us to our market stall every sunday morning on Linkebeek Straße nr 7, from 10pm.
-    /// http://explorer.walllaw.xyz/LinkeGaard.eth
-    /// {"workspace":{description:"this is where we budget things",link:"http://linktoprojectedneedsandreviews.com"},"governance":{description:"this is where we talk about things", link:"http://www.discord.com"}
-
     constructor() {
         authorized[tx.origin] = true;
         owner = tx.origin;
@@ -75,11 +55,15 @@ contract AbstractAccount is IAbstract {
         address forWho_,
         address toWhere_,
         uint256 amount_,
+        uint256 nonce_,
         string memory transferData_,
         bytes memory signature_
     ) external onlyAutorized returns (bool s) {
         if (!(IoDAO(IMemberRegistry(MemberRegistryAddr).ODAOaddress()).isDAO(toWhere_))) revert AbstractA_NotADAO();
         currentAgent = forWho_;
+        if (nonce_ != userNonce[forWho_] ) revert AbstractA_InvalidNonce();
+        unchecked { ++ userNonce [forWho_]; }
+
         iInstanceDAO DAO = iInstanceDAO(toWhere_);
 
         BankDeposit memory BD;
@@ -87,6 +71,7 @@ contract AbstractAccount is IAbstract {
         BD.originator = forWho_;
         BD.transferDATA = transferData_;
         BD.signature = signature_;
+        BD.nonce = userNonce[currentAgent];
 
         UserBankDeposits[forWho_].push(BD);
 
@@ -100,6 +85,7 @@ contract AbstractAccount is IAbstract {
         s = IDAO20(internalT).wrapMintFor(amount_);
         s = true;
         require(s);
+
         delete currentAgent;
         emit NewDeposit(forWho_, toWhere_);
     }

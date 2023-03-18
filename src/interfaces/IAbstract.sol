@@ -28,8 +28,10 @@ struct UserOperation {
 struct BankDeposit {
     address originator;
     address DAOinstance;
+    uint256 nonce;
     string transferDATA;
     bytes signature;
+    
 }
 
 interface IAbstract {
@@ -45,6 +47,7 @@ interface IAbstract {
         address forWho_,
         address toWhere_,
         uint256 amount_,
+        uint256 nonce_,
         string memory transferData_,
         bytes memory signature_
     ) external returns (bool);
