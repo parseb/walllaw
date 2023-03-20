@@ -83,7 +83,6 @@ contract AbstractAccount is IAbstract {
         baseT.approve(internalT, type(uint256).max);
 
         s = IDAO20(internalT).wrapMintFor(amount_);
-        s = true;
         require(s);
 
         delete currentAgent;

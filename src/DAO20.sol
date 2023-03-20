@@ -118,18 +118,18 @@ contract DAO20 is ERC20Permit {
         bool s = baseToken.transferFrom(msg.sender, owner, amount_);
         if (s) {
             //iInstanceDAO(owner).mintInflation(); /// @dev
-            _mint(_Sender(), amount_);
+            _mint(forWho, amount_);
         }
         require(s, "ngmi");
         return true;
     }
 
-    function _Sender() private view returns (address sender) {
-        sender = msg.sender;
-        if (msg.sender == address(iInstanceDAO(owner).abstractAddress())) {
-            sender = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
-        }
-    }
+    // function _Sender() private view returns (address sender) {
+    //     sender = msg.sender;
+    //     if (msg.sender == address(iInstanceDAO(owner).abstractAddress())) {
+    //         sender = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
+    //     }
+    // }
 
     // function _balanceOf(address who_) external returns (uint) {
     //     return balanceOf[who_];

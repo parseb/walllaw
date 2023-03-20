@@ -16,31 +16,32 @@ import "../src/interfaces/ILongCall.sol";
 import "../src/interfaces/IAbstract.sol";
 import "openzeppelin-contracts/token/ERC721/IERC721.sol";
 
+// == Logs == GNOSIS local
+
 // == Logs ==
-//   Member --- 100 __________####_____ : 0xdb7074fd9a44db7f5342cb2311a64d84fdb78223
-//   ODAO --- 100 __________####_____ : 0x448a5c7e801f9d482730faf4f7dd4d51dc5bec70
-//   memBRAINE --- 100 __________####_____ : 0x462a61ed225947d0329f3d93996482dc6c388299
-//   Abstract A --- 100 __________####_____ : 0x76f41d03b5c2fb0fd712f14bb6ce638ee560a3f5
-//   Meeting POAP --- 100 __________####_____ : 0x4099cb63098976afb78686cf40a7ac0138d5863f
+//   Member --- 100 __________####_____ : 0xa5a0ef557bd8fe585bb3a7843641e5b0ed367399
+//   ODAO --- 100 __________####_____ : 0x1737f9e4e620def64fbd8a16e6b286b697dedf56
+//   memBRAINE --- 100 __________####_____ : 0x8ccfeb027fd6e343d1f670591f1479f2939409ef
+//   Abstract A --- 100 __________####_____ : 0xb67749bd1a5261ecad6fc9528c74de27dff8ea8f
+//   Meeting POAP --- 100 __________####_____ : 0x0996bb36c3d0295ca26e66ae891fea1b653d13a8
 //   ----------populate-----------
 //   -----------------------------
-//   changing membrane 650394143299153546  --- expected ---  650394143299153546
-//   Garden DAO --- 100 __________####_____ : 0x4b4fea5dc28bf59dc875882ce1803c3394c0dd99
-//   Membrane ID --- 100 __________####_____ : 650394143299153546
-//   Garden DAO --- 100 __________####_____ : 0x4b4fea5dc28bf59dc875882ce1803c3394c0dd99
-//   Internal Token  --- 100 __________####_____ : 0x8204a52f509b0cd8710c13c11f2a02215ba03ac8
-
+//   changing membrane 858924499513184087  --- expected ---  858924499513184087
+//   Garden DAO --- 100 __________####_____ : 0xba6d1d4c18c03c1df58a1e323c93dd4e5bc400b4
+//   Membrane ID --- 100 __________####_____ : 858924499513184087
+//   Garden DAO --- 100 __________####_____ : 0xba6d1d4c18c03c1df58a1e323c93dd4e5bc400b4
+//   Internal Token  --- 100 __________####_____ : 0x6dfd8b24fd1016e4fcf8aa7a222322ee9c27a1e1
 
 // http://guild.xyz/walllaw
 // LinkeGaard.eth
 // Linkebeek community garden incorporated project. Come talk to us every Sunday morning from 9:00 to 13:00 at our on-site stall on Groen Straße nr 306. Simple membership gives access to our garden premises as well as our planning and execution resources.// http://explorer.walllaw.xyz/LinkeGaard.eth
 /// {"workspace":{"description":"this is where we budget things","link":"http://linktoprojectedneedsandreviews.com"}, "governance":{"description":"this is where we talk about things", "link":"http://www.discord.com"}}
 
-/// 0xea998a093493c1f0a9f0f0e19c2e54d0f422578c --- instance
+/// 0x6DF41c68Ed20857013B818A27aB589C669cb787E --- instance
 
-/// membrane 455943847601312652  QmdEwTWpsMcBsgJGCAM1eULstRYwSz3inepytgpHwqXSAk
+/// membrane 53542622975347230  QmdEwTWpsMcBsgJGCAM1eULstRYwSz3inepytgpHwqXSAk
 
-contract ChiadoDeploy is Script {
+contract GnosisDeploy is Script {
     MemberRegistry M;
     IoDAO O;
     iInstanceDAO instance;
@@ -49,7 +50,7 @@ contract ChiadoDeploy is Script {
     IERC721 CommunityMeetingPoap;
 
     function run() public {
-        vm.startBroadcast(vm.envUint("chiado_PVK")); //// start 1
+        vm.startBroadcast(vm.envUint("gnosis_pvk")); //// start 1
 
         M = new MemberRegistry();
         // Mock20 = new M20();
@@ -76,7 +77,7 @@ contract ChiadoDeploy is Script {
         console.log("----------populate-----------");
         console.log("-----------------------------");
 
-        address DAO = O.createDAO(0xb106ed7587365a16b6691a3D4B2A734f4E8268a2);
+        address DAO = O.createDAO(0xcB444e90D8198415266c6a2724b7900fb12FC56E);
 
         address[] memory tokens = new address[](2);
         tokens[0] = iInstanceDAO(DAO).internalTokenAddress();
@@ -84,8 +85,8 @@ contract ChiadoDeploy is Script {
         tokens[1] = address(CommunityMeetingPoap);
 
         uint256[] memory balances = new uint256[](2);
-        balances[0] = 75 ether;
-        balances[1] = 1;
+        balances[0] = 1 ether;
+    
 
         string memory meta = "QmdEwTWpsMcBsgJGCAM1eULstRYwSz3inepytgpHwqXSAk";
 
