@@ -61,8 +61,10 @@ contract AbstractAccount is IAbstract {
     ) external onlyAutorized returns (bool s) {
         if (!(IoDAO(IMemberRegistry(MemberRegistryAddr).ODAOaddress()).isDAO(toWhere_))) revert AbstractA_NotADAO();
         currentAgent = forWho_;
-        if (nonce_ != userNonce[forWho_] ) revert AbstractA_InvalidNonce();
-        unchecked { ++ userNonce [forWho_]; }
+        if (nonce_ != userNonce[forWho_]) revert AbstractA_InvalidNonce();
+        unchecked {
+            ++userNonce[forWho_];
+        }
 
         iInstanceDAO DAO = iInstanceDAO(toWhere_);
 

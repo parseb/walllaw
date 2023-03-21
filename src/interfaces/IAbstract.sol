@@ -31,7 +31,6 @@ struct BankDeposit {
     uint256 nonce;
     string transferDATA;
     bytes signature;
-    
 }
 
 interface IAbstract {

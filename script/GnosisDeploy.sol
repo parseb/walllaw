@@ -86,7 +86,6 @@ contract GnosisDeploy is Script {
 
         uint256[] memory balances = new uint256[](2);
         balances[0] = 1 ether;
-    
 
         string memory meta = "QmdEwTWpsMcBsgJGCAM1eULstRYwSz3inepytgpHwqXSAk";
 

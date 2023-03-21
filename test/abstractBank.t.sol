@@ -121,12 +121,12 @@ contract BankTest is Test, MyUtils {
         vm.expectRevert(); //nonce
         AbstractA.depositFor(Agent2, address(DAO), 1000, 99, "someTransferData", bytes("fsfd"));
 
-        uint iniNonce = AbstractA.getNonceOfUser(Agent2);
+        uint256 iniNonce = AbstractA.getNonceOfUser(Agent2);
 
         vm.prank(authorizedAgent);
         AbstractA.depositFor(Agent2, address(DAO), 1000, iniNonce, "someTransferData", bytes("fsfd"));
 
-        assertTrue((iniNonce+1) == (AbstractA.getNonceOfUser(Agent2)), "nonce increment not");
+        assertTrue((iniNonce + 1) == (AbstractA.getNonceOfUser(Agent2)), "nonce increment not");
 
         uint256 postB = internalT.balanceOf(Agent2);
         uint256 postdBase = baseT.balanceOf(address(DAO));

@@ -17,19 +17,18 @@ import "../src/interfaces/IAbstract.sol";
 import "openzeppelin-contracts/token/ERC721/IERC721.sol";
 
 // == Logs ==
-//   Member --- 100 __________####_____ : 0xdb7074fd9a44db7f5342cb2311a64d84fdb78223
-//   ODAO --- 100 __________####_____ : 0x448a5c7e801f9d482730faf4f7dd4d51dc5bec70
-//   memBRAINE --- 100 __________####_____ : 0x462a61ed225947d0329f3d93996482dc6c388299
-//   Abstract A --- 100 __________####_____ : 0x76f41d03b5c2fb0fd712f14bb6ce638ee560a3f5
-//   Meeting POAP --- 100 __________####_____ : 0x4099cb63098976afb78686cf40a7ac0138d5863f
+//   Member --- 10200 __________####_____ : 0xc13a47f85854341abb7a08827fb82f6361621d1f
+//   ODAO --- 10200 __________####_____ : 0x0893f67758bcff6e0e3871e9c89477fc59d1c2c2
+//   memBRAINE --- 10200 __________####_____ : 0xfbdadca21e6281bf79eab915f7513091b3dc3bf3
+//   Abstract A --- 10200 __________####_____ : 0x9934c8c8f20c2f3064021bb03e3528599541ea88
+//   Meeting POAP --- 10200 __________####_____ : 0xddd82edc6a5532137513ca875aab7527f120b21b
 //   ----------populate-----------
 //   -----------------------------
-//   changing membrane 650394143299153546  --- expected ---  650394143299153546
-//   Garden DAO --- 100 __________####_____ : 0x4b4fea5dc28bf59dc875882ce1803c3394c0dd99
-//   Membrane ID --- 100 __________####_____ : 650394143299153546
-//   Garden DAO --- 100 __________####_____ : 0x4b4fea5dc28bf59dc875882ce1803c3394c0dd99
-//   Internal Token  --- 100 __________####_____ : 0x8204a52f509b0cd8710c13c11f2a02215ba03ac8
-
+//   changing membrane 150460078887702268  --- expected ---  150460078887702268
+//   Garden DAO --- 10200 __________####_____ : 0x6fe1c875b0574cc4aa54fa06c538948dd1efce21
+//   Membrane ID --- 10200 __________####_____ : 150460078887702268
+//   Garden DAO --- 10200 __________####_____ : 0x6fe1c875b0574cc4aa54fa06c538948dd1efce21
+//   Internal Token  --- 10200 __________####_____ : 0x44df0a204e0f2882ce647fe4561eb4503bd12493
 
 // http://guild.xyz/walllaw
 // LinkeGaard.eth
