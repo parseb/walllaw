@@ -58,7 +58,7 @@ contract ODAO {
             AbstractA = IAbstract(MR.AbstractAddr());
             isInit = false;
         }
-
+        // if (BaseTokenAddress_ is internalT and msg.sig != createSubDAO ) revert @todo passing internal intently
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR),DAO20FactoryAddress ));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
         // daosOfToken[BaseTokenAddress_].push(newDAO);

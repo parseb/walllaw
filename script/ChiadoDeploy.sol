@@ -17,6 +17,8 @@ import "../src/interfaces/IAbstract.sol";
 import "openzeppelin-contracts/token/ERC721/IERC721.sol";
 
 // == Logs ==
+
+// == Logs ==
 //   Member --- 10200 __________####_____ : 0xc13a47f85854341abb7a08827fb82f6361621d1f
 //   ODAO --- 10200 __________####_____ : 0x0893f67758bcff6e0e3871e9c89477fc59d1c2c2
 //   memBRAINE --- 10200 __________####_____ : 0xfbdadca21e6281bf79eab915f7513091b3dc3bf3

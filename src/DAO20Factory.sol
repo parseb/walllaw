@@ -44,7 +44,7 @@ contract DAO20Factory is ITokenFactory {
     }
 
     /// notice gets the root base on which the top value of provided address is constructed.
-    function getBaseOf(address DAOaddress_) external returns (address valueBase) {
+    function getBaseOf(address DAOaddress_) external view returns (address valueBase) {
         address[] memory tricklePath = ODAO.getTrickleDownPath(DAOaddress_);
         valueBase = tricklePath.length == 0
             ? iInstanceDAO(valueBase).baseTokenAddress()

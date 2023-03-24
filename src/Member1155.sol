@@ -27,7 +27,9 @@ contract MemberRegistry is ERC1155 {
     mapping(address => address[]) endpointsOf;
     mapping(uint256 => string) tokenUri;
     mapping(uint256 => uint256) uidTotalSupply;
+
     mapping(address => uint256[]) idsOf;
+    mapping(uint256 => address[]) allMemberCards;
 
     constructor() {
         AbstractAddr = address(new AbstractAccount());
@@ -93,6 +95,7 @@ contract MemberRegistry is ERC1155 {
         /// mint membership token
         _mint(who_, id_, 1, abi.encode(tokenUri[id_]));
         idsOf[who_].push(id_);
+        allMemberCards[id_].push(who_);
 
         emit isNowMember(who_, id_, msg.sender);
         return balanceOf[who_][id_] == 1;
@@ -147,6 +150,20 @@ contract MemberRegistry is ERC1155 {
         entities = new address[](ids.length);
         for (i; i < ids.length;) {
             if (balanceOf[who_][ids[i]] > 0) entities[i] = address(uint160(ids[i]));
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function getctiveMembersOf(uint256 id_) external view returns (address[] memory memb) {
+        address[] memory owners = allMemberCards[id_];
+        uint256 i;
+
+        memb = new address[](owners.length);
+
+        for (i; i < owners.length;) {
+            if (balanceOf[owners[i]][id_] > 0) memb[i] = owners[i];
             unchecked {
                 i++;
             }
