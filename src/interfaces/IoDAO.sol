@@ -17,4 +17,6 @@ interface IoDAO {
     function getDAOfromID(uint256 id_) external view returns (address);
 
     function getTrickleDownPath(address floor_) external view returns (address[] memory);
+
+    function DAO20FactoryAddr() external view returns (address);
 }

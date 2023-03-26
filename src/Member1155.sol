@@ -156,7 +156,8 @@ contract MemberRegistry is ERC1155 {
         }
     }
 
-    function getctiveMembersOf(uint256 id_) external view returns (address[] memory memb) {
+    function getctiveMembersOf(address instance_) external view returns (address[] memory memb) {
+        uint256 id_ = uint160(bytes20(instance_));
         address[] memory owners = allMemberCards[id_];
         uint256 i;
 

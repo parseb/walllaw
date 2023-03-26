@@ -144,6 +144,11 @@ contract RedistributiveTest is Test, MyUtils {
         assertTrue(Is[1].id == 98, "Expected 98888");
         assertTrue(Is.length == 2, "Expected lenght 2");
 
+        ///
+
+        address[] memory Ms = iMR.getctiveMembersOf(address(DAO));
+        assertTrue(Ms.length > 0, "no members retrieved");
+
         /// test post exec wipe
 
         ////

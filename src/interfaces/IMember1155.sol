@@ -22,7 +22,7 @@ interface IMemberRegistry {
     function getEndpointsOf(address who_) external view returns (address[] memory);
 
     function getActiveMembershipsOf(address who_) external view returns (address[] memory entities);
-    function getctiveMembersOf(uint256 id_) external view returns (address[] memory memb);
+    function getctiveMembersOf(address instance_) external view returns (address[] memory memb);
 
     function getUriOf(address who_) external view returns (string memory);
 

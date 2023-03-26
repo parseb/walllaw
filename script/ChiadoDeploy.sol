@@ -19,18 +19,21 @@ import "openzeppelin-contracts/token/ERC721/IERC721.sol";
 // == Logs ==
 
 // == Logs ==
-//   Member --- 10200 __________####_____ : 0xc13a47f85854341abb7a08827fb82f6361621d1f
-//   ODAO --- 10200 __________####_____ : 0x0893f67758bcff6e0e3871e9c89477fc59d1c2c2
-//   memBRAINE --- 10200 __________####_____ : 0xfbdadca21e6281bf79eab915f7513091b3dc3bf3
-//   Abstract A --- 10200 __________####_____ : 0x9934c8c8f20c2f3064021bb03e3528599541ea88
-//   Meeting POAP --- 10200 __________####_____ : 0xddd82edc6a5532137513ca875aab7527f120b21b
+//   Member --- 10200 __________####_____ : 0xc470a5c25478cc22307989507db2c72840d27d30
+//   ODAO --- 10200 __________####_____ : 0x0290582268285385594602db7920b41791ad4ac5
+//   memBRAINE --- 10200 __________####_____ : 0x92ba025f07f9a718c02e96de86038c77684b8963
+//   Abstract A --- 10200 __________####_____ : 0x7c69256d4065cd1192f54179122c0ff34dc297a5
+//   Meeting POAP --- 10200 __________####_____ : 0x3166d537ab6f9b9ec4212c7016613a9ba195d3ec
 //   ----------populate-----------
 //   -----------------------------
-//   changing membrane 150460078887702268  --- expected ---  150460078887702268
-//   Garden DAO --- 10200 __________####_____ : 0x6fe1c875b0574cc4aa54fa06c538948dd1efce21
-//   Membrane ID --- 10200 __________####_____ : 150460078887702268
-//   Garden DAO --- 10200 __________####_____ : 0x6fe1c875b0574cc4aa54fa06c538948dd1efce21
-//   Internal Token  --- 10200 __________####_____ : 0x44df0a204e0f2882ce647fe4561eb4503bd12493
+//   changing membrane 792264664476404556  --- expected ---  792264664476404556
+//   Base Internal Token --- 10200 __________####_____ : 0xb8bd69d8b1853a16f2a59167a0f977d63effd7ee
+//   Garden DAO --- 10200 __________####_____ : 0x98cf5227f4bd82ceee89d4528695dce5e726ad48
+//   Membrane ID --- 10200 __________####_____ : 792264664476404556
+//   Garden DAO --- 10200 __________####_____ : 0x98cf5227f4bd82ceee89d4528695dce5e726ad48
+//   Internal Token  --- 10200 __________####_____ : 0xb8bd69d8b1853a16f2a59167a0f977d63effd7ee
+//   new office project Membraneid 792264664476404556 361672278035523907
+//   new SUBD office project 0x169daeb538b6a3b696e8e4b353bb18d40e97355a
 
 // http://guild.xyz/walllaw
 // LinkeGaard.eth
@@ -97,6 +100,15 @@ contract ChiadoDeploy is Script {
 
         console.log(
             string.concat(
+                "Base Internal Token --- ",
+                chainID,
+                " __________####_____ : ",
+                Strings.toHexString(uint256(uint160(iInstanceDAO(DAO).internalTokenAddress())))
+            )
+        );
+
+        console.log(
+            string.concat(
                 "Garden DAO --- ", chainID, " __________####_____ : ", Strings.toHexString(uint256(uint160(DAO)), 20)
             )
         );
@@ -114,5 +126,20 @@ contract ChiadoDeploy is Script {
                 Strings.toHexString(uint256(uint160(iInstanceDAO(DAO).internalTokenAddress())), 20)
             )
         );
+
+        ///// new membrane and subdao
+
+        address[] memory tokens2 = new address[](1);
+        tokens[0] = iInstanceDAO(DAO).internalTokenAddress();
+
+        uint256[] memory balances2 = new uint256[](1);
+        balances[0] = 500 ether;
+
+        uint256 Membraneid = MembraneR.createMembrane(tokens2, balances2, meta);
+        console.log("new office project Membraneid", Strings.toString(membraneId), Strings.toString(Membraneid));
+
+        address subD = O.createSubDAO(Membraneid, address(DAO));
+
+        console.log("new SUBD office project", Strings.toHexString(uint256(uint160((subD)))));
     }
 }

@@ -139,4 +139,8 @@ contract ODAO {
     function getTrickleDownPath(address floor_) external view returns (address[] memory path) {
         path = topLevelPath[floor_].length > 0 ? topLevelPath[floor_] : new address[](1);
     }
+
+    function DAO20FactoryAddr() external view returns (address) {
+        return DAO20FactoryAddress;
+    }
 }
