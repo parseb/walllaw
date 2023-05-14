@@ -28,3 +28,4 @@ error DAOinstance__NotYourEnpoint();
 error DAOinstance__onlyMR();
 error DAOinstance__invalidMembrane();
 error DAOinstance_ExeCallFailed(bytes returnedDataByFailedCall);
+error DAOinstance__ExteranlOnBase();

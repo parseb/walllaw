@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import "./utils/functionality.t.sol";
 
 contract mintBurn is Test, MyUtils {
-    /// like ragequit, withrdawals bubble up but not sideways
     iInstanceDAO DAO;
     IDAO20 internalT;
     IERC20 baseT;
@@ -39,32 +38,35 @@ contract mintBurn is Test, MyUtils {
         vm.prank(Agent3, Agent3);
         internalT.wrapMint(howM - 1);
         uint256 b1 = internalT.balanceOf(Agent3);
-        // assertTrue(b1 >= howM, "should now have balance");
+
+        skip(block.timestamp + 1000);
+        assertTrue(b1 >= howM / 2, "should now have balance");
 
         return howM;
     }
 
     function testSimpleBurn() public returns (uint256) {
-        // assertTrue(internalT.balanceOf(Agent3) == 0, "has balance");
-        // uint256 howM = testSimpleMint();
-        // assertTrue(internalT.balanceOf(Agent3) > 0, "no balance");
+        assertTrue(internalT.balanceOf(Agent3) == 0, "has balance");
+        uint256 howM = testSimpleMint();
+        assertTrue(internalT.balanceOf(Agent3) > 0, "no balance");
 
-        // uint256 s = vm.snapshot();
+        uint256 s = vm.snapshot();
 
-        // uint256 b = internalT.balanceOf(Agent3);
-        // vm.prank(Agent3);
-        // bool x = internalT.unwrapBurn(b / 2 - 1);
-        // assertTrue(x, "not x");
-        // // assertTrue(internalT.balanceOf(Agent3) >= howM / 2);
-        // vm.expectRevert();
-        // /// insufficient balance (this)
-        // x = internalT.unwrapBurn(b / 2 - 1);
+        uint256 b = internalT.balanceOf(Agent3);
+        vm.prank(Agent3);
+        bool x = internalT.unwrapBurn(b / 2);
+        assertTrue(x, "not x");
+        assertTrue(internalT.balanceOf(Agent3) >= howM / 2);
 
-        // vm.prank(Agent3);
-        // x = internalT.unwrapBurn(b / 2 - 1);
-        // assertTrue(x, "NOT X 2");
-        // assertTrue(internalT.balanceOf(Agent3) == 0);
-        // assertTrue(baseT.balanceOf(Agent3) == howM - 1);
+        vm.expectRevert();
+        x = internalT.unwrapBurn(b / 2 - 1);
+
+        vm.prank(Agent3);
+        x = internalT.unwrapBurn(b / 2);
+        assertTrue(x, "NOT X 2");
+        assertTrue(internalT.balanceOf(Agent3) <= 3);
+
+        assertTrue(baseT.balanceOf(Agent3) == b - 1);
 
         // return baseT.balanceOf(Agent3);
     }

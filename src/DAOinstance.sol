@@ -13,6 +13,8 @@ import "./utils/Address.sol";
 import "./interfaces/IDAO20.sol";
 import "./errors.sol";
 
+/// @author BPA, parseb
+/// @custom:experimental This is an experimental contract.
 contract DAOinstance {
     uint256 public lastAt;
     uint256 public baseID;
@@ -25,7 +27,6 @@ contract DAOinstance {
     address purgeorExternalCall;
     IERC20 BaseToken;
     IDAO20 internalToken;
-    // DAO20 public internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
     IExternalCall iEXT;
@@ -54,11 +55,11 @@ contract DAOinstance {
     /// @notice stores array of agent addresses that are expressing a change
     mapping(uint256 => address[]) expressors;
 
-    /// metadata for change retrieval
-    //// @notice indecision tracker [index, initiatedAt, lastTouched]
+    //// metadata for change retrieval
+    /// @notice indecision tracker [index, initiatedAt, lastTouched]
     mapping(uint256 => uint256[3]) indecisionMeta;
 
-    //// @notice list of active indecision ids/values
+    /// @notice list of active indecision ids/values
     uint256[] activeIndecisions;
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_, address InternalTokenFactory_) {
@@ -71,8 +72,6 @@ contract DAOinstance {
         iMB = IMembrane(iMR.MembraneRegistryAddress());
         iEXT = IExternalCall(iMR.ExternalCallAddress());
         AbstractAccount = IAbstract(iMR.AbstractAddr());
-
-        // internalToken =
 
         internalToken = IDAO20(ITokenFactory(InternalTokenFactory_).makeForMe(BaseToken_));
 
@@ -135,10 +134,12 @@ contract DAOinstance {
             : iMB.inUseMembraneId(address(this));
     }
 
-    /// @notice expresses preference for and executes pre-configured extenrall call with provided id on majoritarian threshold
+    /// @notice expresses preference for and executes pre-configured externall call with provided id on majoritarian threshold
+    /// @notice external calls not available on base instance
     /// @param externalCallId_ id of preconfigured externall call
     /// @return callID 0 - if threshold not reached, id input if call is executed.
     function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID) {
+        if (parentDAO == address(0)) revert DAOinstance__ExteranlOnBase();
         if (!iEXT.isValidCall(externalCallId_)) revert DAOinstance__invalidMembrane();
         _expressPreference(externalCallId_);
 
@@ -289,7 +290,7 @@ contract DAOinstance {
         address keepExtCall = purgeorExternalCall;
         purgeorExternalCall = who_;
         this.distributiveSignal(redistributiveSignal[who_]);
-        delete purgeorExternalCall;
+
         purgeorExternalCall = keepExtCall;
 
         return true;

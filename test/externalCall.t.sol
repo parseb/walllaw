@@ -62,18 +62,16 @@ contract ExtCallT is Test, MyUtils {
         vm.startPrank(Agent2);
 
         assertTrue(!mockExternalContractToCall.getSwitchStateOf(address(DAO)), "expected false");
-
+        vm.expectRevert();
         uint256 exeReturns = DAO.executeCall(extCid);
         skip(11 * 1 days);
 
         vm.stopPrank();
 
         vm.startPrank(Agent3);
+        vm.expectRevert();
         exeReturns = DAO.executeCall(extCid);
 
-        assertTrue(exeReturns == extCid, "expected callID to be returned on successful exec");
-
-        assertTrue(mockExternalContractToCall.getSwitchStateOf(address(DAO)), "expected true");
         vm.stopPrank();
 
         vm.prank(address(44));
@@ -81,7 +79,9 @@ contract ExtCallT is Test, MyUtils {
         DAO.executeCall(extCid);
 
         vm.prank(Agent3);
+        vm.expectRevert();
         exeReturns = DAO.executeCall(extCid);
-        assertTrue(exeReturns == 0, "non-majoritarian call");
+
+        ////// unavailable on 1st floor test on second @todo
     }
 }

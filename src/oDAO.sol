@@ -37,6 +37,7 @@ contract ODAO {
     error SubDAOLimitReached();
     error NonR();
     error FailedToSetMembrane();
+    error OnlySubDao();
 
     /*//////////////////////////////////////////////////////////////
                                  events
@@ -58,17 +59,12 @@ contract ODAO {
             AbstractA = IAbstract(MR.AbstractAddr());
             isInit = false;
         }
-        // if (BaseTokenAddress_ is internalT and msg.sig != createSubDAO ) revert @todo passing internal intently
+
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR),DAO20FactoryAddress ));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
-        // daosOfToken[BaseTokenAddress_].push(newDAO);
-        // if (msg.sig == this.createDAO.selector) MR.pushAsRoot(newDAO);
         if (msg.sig == this.createDAO.selector) iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
-
-    //// @security ?: can endpoint-onEndpoint create. remove multiple endpoit.
-    ///  --------------- create sub-endpoints for endpoint? @todo
 
     /// @notice creates child entity subDAO provided a valid membrane ID is given. To create an enpoint use sender address as integer. uint160(0xyourAddress)
     /// @param membraneID_: constituent border conditions and chemestry

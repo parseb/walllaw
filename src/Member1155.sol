@@ -22,8 +22,7 @@ contract MemberRegistry is ERC1155 {
 
     IoDAO oDAO;
     IMembrane IMB;
-    // address[] private roots;
-    // address[] private endpoints;
+
     mapping(address => address[]) endpointsOf;
     mapping(uint256 => string) tokenUri;
     mapping(uint256 => uint256) uidTotalSupply;
@@ -176,11 +175,6 @@ contract MemberRegistry is ERC1155 {
         // endpoints.push(dao_);
         endpointsOf[endpointOwner_].push(dao_);
     }
-
-    // function pushAsRoot(address dao_) external {
-    //     if (msg.sender != ODAOaddress) revert MR1155_OnlyODAO();
-    //     // roots.push(dao_);
-    // }
 
     /*//////////////////////////////////////////////////////////////
                                  override
