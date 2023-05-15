@@ -3,19 +3,16 @@ pragma solidity ^0.8.17;
 
 import "./oDAO.sol";
 import "./MembraneRegistry.sol";
-import "./ExternalCall.sol";
 import "./DAO20Factory.sol";
 
 import "solmate/tokens/ERC1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
-// import "./interfaces/IERC20.sol";
 
 contract MemberRegistry is ERC1155 {
     address public ODAOaddress;
     address public MembraneRegistryAddress;
-    address public ExternalCallAddress;
     address public DAO20FactoryAddress;
 
     IoDAO oDAO;
@@ -24,7 +21,6 @@ contract MemberRegistry is ERC1155 {
     mapping(address => address[]) endpointsOf;
     mapping(uint256 => string) tokenUri;
     mapping(uint256 => uint256) uidTotalSupply;
-
     mapping(address => uint256[]) idsOf;
     mapping(uint256 => address[]) allMemberCards;
 
@@ -35,7 +31,6 @@ contract MemberRegistry is ERC1155 {
         ITokenFactory(DAO20FactoryAddress).setODAO(ODAOaddress);
 
         MembraneRegistryAddress = address(new MembraneRegistry(ODAOaddress));
-        ExternalCallAddress = address(new ExternalCall(ODAOaddress));
 
         oDAO = IoDAO(ODAOaddress);
         IMB = IMembrane(MembraneRegistryAddress);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "openzeppelin-contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
@@ -10,15 +10,14 @@ import "./interfaces/ITokenFactory.sol";
 /// did not ponder over the impact of adding permit
 /// @notice internal DAO/subDAO token
 
-contract DAO20 is ERC20Permit {
+contract DAO20 is ERC20 {
     address public owner;
     address public base;
     address public burnInProgress;
     IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
-        ERC20Permit(name_)
-        ERC20("name_", "WWdo")
+        ERC20(name_, symbol_)
     {
         owner = ITokenFactory(msg.sender).getOwner();
         base = baseToken_;
@@ -108,9 +107,6 @@ contract DAO20 is ERC20Permit {
         require(super.transferFrom(from, to, amount));
         return true;
     }
-
-
-
 
     function baseTokenAddress() external view returns (address) {
         return base;

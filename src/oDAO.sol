@@ -10,7 +10,6 @@ import "./interfaces/IMembrane.sol";
 contract ODAO {
     bool isInit;
     mapping(uint256 => address) daoOfId;
-    // mapping(address => address[]) daosOfToken;
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
     IMemberRegistry MR;
@@ -70,7 +69,6 @@ contract ODAO {
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
-        // if (daosOfToken[internalT].length > 9_999) revert SubDAOLimitReached();
 
         subDAOaddr = createDAO(internalT);
         bool isEndpoint = (membraneID_ < MAX_160) && (address(uint160(membraneID_)) == msg.sender);
@@ -101,7 +99,6 @@ contract ODAO {
     }
 
     function _msgSender() private view returns (address) {
-
         return msg.sender;
     }
 

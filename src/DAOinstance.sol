@@ -5,7 +5,6 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
-import "./interfaces/IExternalCall.sol";
 import "./interfaces/ITokenFactory.sol";
 
 import "./utils/Address.sol";
@@ -28,7 +27,6 @@ contract DAOinstance {
     IDAO20 internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
-    IExternalCall iEXT;
 
     /// # EOA => subunit => [percentage, amt]
     /// @notice stores broadcasted signal of user about preffered distribution [example: 5% of inflation to subDAO x]
@@ -68,7 +66,6 @@ contract DAOinstance {
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
-        iEXT = IExternalCall(iMR.ExternalCallAddress());
 
         internalToken = IDAO20(ITokenFactory(InternalTokenFactory_).makeForMe(BaseToken_));
 
@@ -120,7 +117,7 @@ contract DAOinstance {
             : baseInflationRate;
     }
 
-    /// @notice initiate or support change of membrane in favor of designated by id
+    /// @notice initiate or support change of membrane in favor of designated by id. Majoritarian execution.
     /// @param membraneId_ id of membrane to support change of
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
         _expressPreference(membraneId_);
@@ -129,19 +126,6 @@ contract DAOinstance {
         membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) < 2))
             ? _majoritarianUpdate(membraneId_)
             : iMB.inUseMembraneId(address(this));
-    }
-
-    /// @notice expresses preference for and executes pre-configured externall call with provided id on majoritarian threshold
-    /// @notice external calls not available on base instance
-    /// @param externalCallId_ id of preconfigured externall call
-    /// @return callID 0 - if threshold not reached, id input if call is executed.
-    function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID) {
-        if (parentDAO == address(0)) revert DAOinstance__ExteranlOnBase();
-        if (!iEXT.isValidCall(externalCallId_)) revert DAOinstance__invalidMembrane();
-        _expressPreference(externalCallId_);
-
-        callID = ((internalToken.totalSupply() / (expressed[externalCallId_][address(0)] + 1) < 2))
-            && (iEXT.exeUpdate(externalCallId_)) ? _majoritarianUpdate(externalCallId_) : 0;
     }
 
     /// @notice signal prefferred redistribution percentages out of inflation
@@ -305,7 +289,7 @@ contract DAOinstance {
     ///////////////////
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256) {
         if (msg.sig == this.mintInflation.selector) {
-            baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
+            return baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
         }
 
         if (msg.sig == this.signalInflation.selector) {
@@ -315,23 +299,8 @@ contract DAOinstance {
         }
 
         if (msg.sig == this.changeMembrane.selector) {
-            require(iMB.setMembrane(newVal_, address(this)), "f O.setM.");
-            iMR.setUri(iMB.inUseUriOf(address(this)));
-            return _postMajorityCleanup(newVal_);
-        }
-
-        if (msg.sig == this.executeCall.selector) {
-            ExtCall memory callStruct = iEXT.getExternalCallbyID(newVal_);
-
-            uint256 i;
-            for (; i < callStruct.contractAddressesToCall.length;) {
-                (bool success, bytes memory data) =
-                    callStruct.contractAddressesToCall[i].call(callStruct.dataToCallWith[i]);
-                if (!success) revert DAOinstance_ExeCallFailed(data);
-                unchecked {
-                    ++i;
-                }
-            }
+            if (!iMB.setMembrane(newVal_, address(this))) revert DAOinstance__FailedToSetMembrane();
+            iMR.setUri(iMB.inUseUriOf(address(this))); //// @dev dont remember why, probably POC laziness
             return _postMajorityCleanup(newVal_);
         }
     }
@@ -394,7 +363,6 @@ contract DAOinstance {
     /*//////////////////////////////////////////////////////////////
                                  VIEW
     //////////////////////////////////////////////////////////////*/
-
 
     function internalTokenAddress() external view returns (address) {
         return address(internalToken);
