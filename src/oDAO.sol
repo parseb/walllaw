@@ -6,7 +6,6 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/IMembrane.sol";
-import "./interfaces/IAbstract.sol";
 
 contract ODAO {
     bool isInit;
@@ -17,7 +16,6 @@ contract ODAO {
     IMemberRegistry MR;
     address public MB;
     address public DAO20FactoryAddress;
-    IAbstract AbstractA;
     uint256 constant MAX_160 = type(uint160).max;
 
     constructor(address DAO20Factory_) {
@@ -56,7 +54,6 @@ contract ODAO {
         //// @dev
         if (isInit) {
             MB = MR.MembraneRegistryAddress();
-            AbstractA = IAbstract(MR.AbstractAddr());
             isInit = false;
         }
 
@@ -104,7 +101,6 @@ contract ODAO {
     }
 
     function _msgSender() private view returns (address) {
-        if (msg.sender == address(AbstractA)) return AbstractA.currentAccount();
 
         return msg.sender;
     }

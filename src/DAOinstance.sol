@@ -7,7 +7,6 @@ import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
 import "./interfaces/IExternalCall.sol";
 import "./interfaces/ITokenFactory.sol";
-import "./interfaces/IAbstract.sol";
 
 import "./utils/Address.sol";
 import "./interfaces/IDAO20.sol";
@@ -30,7 +29,6 @@ contract DAOinstance {
     IMemberRegistry iMR;
     IMembrane iMB;
     IExternalCall iEXT;
-    IAbstract AbstractAccount;
 
     /// # EOA => subunit => [percentage, amt]
     /// @notice stores broadcasted signal of user about preffered distribution [example: 5% of inflation to subDAO x]
@@ -71,7 +69,6 @@ contract DAOinstance {
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
         iEXT = IExternalCall(iMR.ExternalCallAddress());
-        AbstractAccount = IAbstract(iMR.AbstractAddr());
 
         internalToken = IDAO20(ITokenFactory(InternalTokenFactory_).makeForMe(BaseToken_));
 
@@ -388,7 +385,6 @@ contract DAOinstance {
     }
 
     function _msgSender() private view returns (address) {
-        if (msg.sender == address(AbstractAccount)) return AbstractAccount.currentAccount();
         if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
         if (msg.sender == address(this) && msg.sig == this.distributiveSignal.selector) return purgeorExternalCall;
 
@@ -399,9 +395,6 @@ contract DAOinstance {
                                  VIEW
     //////////////////////////////////////////////////////////////*/
 
-    function abstractAddress() external view returns (address) {
-        return address(AbstractAccount);
-    }
 
     function internalTokenAddress() external view returns (address) {
         return address(internalToken);

@@ -6,7 +6,6 @@ import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
 import "./interfaces/ITokenFactory.sol";
-import "./interfaces/IAbstract.sol";
 
 /// did not ponder over the impact of adding permit
 /// @notice internal DAO/subDAO token
@@ -110,34 +109,8 @@ contract DAO20 is ERC20Permit {
         return true;
     }
 
-    function wrapMintFor(uint256 amount_) external returns (bool) {
-        if (msg.sender != address(iInstanceDAO(owner).abstractAddress())) revert D20_NotAbstractOwner();
-        address forWho = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
-        if (forWho == address(0)) revert D20_ForAddr0();
 
-        bool s = baseToken.transferFrom(msg.sender, owner, amount_);
-        if (s) {
-            //iInstanceDAO(owner).mintInflation(); /// @dev
-            _mint(forWho, amount_);
-        }
-        require(s, "ngmi");
-        return true;
-    }
 
-    // function _Sender() private view returns (address sender) {
-    //     sender = msg.sender;
-    //     if (msg.sender == address(iInstanceDAO(owner).abstractAddress())) {
-    //         sender = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
-    //     }
-    // }
-
-    // function _balanceOf(address who_) external returns (uint) {
-    //     return balanceOf[who_];
-    // }
-
-    // function _totalSupply() external returns (uint) {
-    //     return this.totalSupply;
-    // }
 
     function baseTokenAddress() external view returns (address) {
         return base;

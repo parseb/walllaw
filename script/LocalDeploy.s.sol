@@ -203,7 +203,6 @@ contract LocalDeploy is Script {
         console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
         console.log("ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
         console.log("MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
-        console.log("AbstractAddress __________####________ : ", M.AbstractAddr());
         console.log("____________--- mocks --- _______");
         console.log("M20 ADDRESS OS ______________####_____ : ", address(Mock20));
         console.log("M202 ADDRESS OS ______________####_____ : ", address(Mock202));

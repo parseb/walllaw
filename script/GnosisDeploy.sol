@@ -13,7 +13,6 @@ import "../src/interfaces/iInstanceDAO.sol";
 import "../src/interfaces/IDAO20.sol";
 import "../src/interfaces/IMembrane.sol";
 import "../src/interfaces/ILongCall.sol";
-import "../src/interfaces/IAbstract.sol";
 import "openzeppelin-contracts/token/ERC721/IERC721.sol";
 
 // == Logs == GNOSIS local
@@ -22,7 +21,6 @@ import "openzeppelin-contracts/token/ERC721/IERC721.sol";
 //   Member --- 100 __________####_____ : 0xa5a0ef557bd8fe585bb3a7843641e5b0ed367399
 //   ODAO --- 100 __________####_____ : 0x1737f9e4e620def64fbd8a16e6b286b697dedf56
 //   memBRAINE --- 100 __________####_____ : 0x8ccfeb027fd6e343d1f670591f1479f2939409ef
-//   Abstract A --- 100 __________####_____ : 0xb67749bd1a5261ecad6fc9528c74de27dff8ea8f
 //   Meeting POAP --- 100 __________####_____ : 0x0996bb36c3d0295ca26e66ae891fea1b653d13a8
 //   ----------populate-----------
 //   -----------------------------
@@ -62,7 +60,6 @@ contract GnosisDeploy is Script {
         string memory addrM = Strings.toHexString(uint256(uint160(address(M))), 20);
         string memory addrODAO = Strings.toHexString(uint256(uint160(address(M.ODAOaddress()))), 20);
         string memory addrMembrane = Strings.toHexString(uint256(uint160(address(M.MembraneRegistryAddress()))), 20);
-        string memory addrAbstract = Strings.toHexString(uint256(uint160(address(M.AbstractAddr()))), 20);
         string memory MeetingPoap = Strings.toHexString(uint256(uint160(address(CommunityMeetingPoap))), 20);
 
         string memory chainID = Strings.toString(block.chainid);
@@ -70,7 +67,6 @@ contract GnosisDeploy is Script {
         console.log(string.concat("Member --- ", chainID, " __________####_____ : ", addrM));
         console.log(string.concat("ODAO --- ", chainID, " __________####_____ : ", addrODAO));
         console.log(string.concat("memBRAINE --- ", chainID, " __________####_____ : ", addrMembrane));
-        console.log(string.concat("Abstract A --- ", chainID, " __________####_____ : ", addrAbstract));
         console.log(string.concat("Meeting POAP --- ", chainID, " __________####_____ : ", MeetingPoap));
 
         ////// Populate
