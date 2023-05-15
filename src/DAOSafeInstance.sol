@@ -11,11 +11,11 @@ import "./utils/Address.sol";
 import "./interfaces/IDAO20.sol";
 import "./errors.sol";
 
-import "safe-core-sdk/
+import "safe-contracts/SafeL2.sol";
 
 /// @author BPA, parseb
 /// @custom:experimental This is an experimental contract.
-contract DAOinstance {
+contract DAOinstance is SafeL2 {
     uint256 public lastAt;
     uint256 public baseID;
     uint256 public baseInflationRate;
