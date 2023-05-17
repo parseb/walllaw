@@ -12,6 +12,8 @@ contract ODAO {
     mapping(uint256 => address) daoOfId;
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
+    mapping(address => address[]) links;
+
     IMemberRegistry MR;
     address public MB;
     address public DAO20FactoryAddress;
@@ -58,7 +60,10 @@ contract ODAO {
 
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR),DAO20FactoryAddress ));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
-        if (msg.sig == this.createDAO.selector) iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
+        if (msg.sig == this.createDAO.selector) {
+            iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
+            links[BaseTokenAddress_].push(newDAO);
+        }
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
 
@@ -93,6 +98,7 @@ contract ODAO {
         }
 
         topLevelPath[subDAOaddr][0] = parentDAO_;
+        links[parentDAO_].push(subDAOaddr);
 
         iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
@@ -131,5 +137,9 @@ contract ODAO {
 
     function DAO20FactoryAddr() external view returns (address) {
         return DAO20FactoryAddress;
+    }
+
+    function getLinksOf(address instanceOrToken_) external view returns (address[] memory) {
+        return links[instanceOrToken_];
     }
 }

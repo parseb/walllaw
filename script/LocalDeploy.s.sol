@@ -113,6 +113,7 @@ contract LocalDeploy is Script {
 
         O.createDAO(address(Mock202));
         address baseDAO = O.createDAO(address(Mock20));
+
         O.createDAO(address(Mock20));
 
         address[] memory tokens_ = new address[](1);
@@ -200,6 +201,7 @@ contract LocalDeploy is Script {
 
         vm.stopBroadcast();
 
+        console.log("BASE DAO instance ______________####_____ : ", address(baseDAO));
         console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
         console.log("ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
         console.log("MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());

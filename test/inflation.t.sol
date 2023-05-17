@@ -17,7 +17,7 @@ contract redistributiveInflation is Test {
     IERC20 BaseE20;
     IMemberRegistry iMR;
     IMembrane iMB;
-    DAOinstance DAO;
+    iInstanceDAO DAO;
 
     address deployer = address(4896);
     address Agent1 = address(16);
@@ -49,7 +49,7 @@ contract redistributiveInflation is Test {
     function _membraneContext() public {
         vm.prank(deployer, deployer);
         address dInstance = address(O.createDAO(address(BaseE20)));
-        DAO = DAOinstance(dInstance);
+        DAO = iInstanceDAO(dInstance);
 
         /// active membrane of dInstance
         uint256 currentMembrane;

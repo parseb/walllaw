@@ -3,3 +3,4 @@ anvil-mnemonic
 devAnvilAccounts
 broadcast
 out
+.fuzz_token.yml

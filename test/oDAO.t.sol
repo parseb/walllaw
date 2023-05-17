@@ -18,7 +18,7 @@ contract oDao is Test {
     IERC20 BaseE20;
     IMemberRegistry iMR;
     IMembrane iMB;
-    DAOinstance DAO;
+    iInstanceDAO DAO;
 
     address deployer = address(4896);
     address Agent1 = address(16);
@@ -51,7 +51,7 @@ contract oDao is Test {
     function testCreateNewDao() public returns (address Dinstnace) {
         vm.prank(Agent3, Agent3);
         Dinstnace = address(O.createDAO(address(BaseE20)));
-        DAO = DAOinstance(Dinstnace);
+        DAO = iInstanceDAO(Dinstnace);
 
         assertTrue(address(DAO) != address(0));
         // assertTrue(DAO.baseID() == uint160(bytes20(address(DAO))));
@@ -117,7 +117,7 @@ contract oDao is Test {
     function testChangesMembrane() public {
         vm.prank(deployer, deployer);
         address dInstance = address(O.createDAO(address(BaseE20)));
-        DAO = DAOinstance(dInstance);
+        DAO = iInstanceDAO(dInstance);
 
         /// active membrane of dInstance
         uint256 currentMembrane;
