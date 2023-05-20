@@ -7,7 +7,7 @@ import "../../src/interfaces/iInstanceDAO.sol";
 import "../../src/interfaces/IDAO20.sol";
 import "../../src/interfaces/IMembrane.sol";
 import "../../src/interfaces/ITokenFactory.sol";
-
+import "../../src/interfaces/IGSFactory.sol";
 import "../../src/Member1155.sol";
 import "../mocks/mockERC20.sol";
 
@@ -17,6 +17,7 @@ contract MyUtils is Test {
     IMemberRegistry iMR;
     IMembrane iMB;
     ITokenFactory DAO20Factory;
+    IGSFactory SafeFactory;
 
     address deployer = address(4896);
     address Agent1 = address(16);
@@ -28,6 +29,7 @@ contract MyUtils is Test {
         iMR = IMemberRegistry(address(new MemberRegistry()));
         O = IoDAO(iMR.ODAOaddress());
         iMB = IMembrane(iMR.MembraneRegistryAddress());
+        SafeFactory = IGSFactory(iMR.DAOSafeFactoryAddress());
 
         DAO20Factory = ITokenFactory(iMR.DAO20FactoryAddress());
 

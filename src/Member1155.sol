@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "./oDAO.sol";
 import "./MembraneRegistry.sol";
 import "./DAO20Factory.sol";
+import {DAOSafeFactory} from "./DAOSafeFactory.sol";
 
 import "solmate/tokens/ERC1155.sol";
 import "./interfaces/IoDAO.sol";
@@ -14,6 +15,7 @@ contract MemberRegistry is ERC1155 {
     address public ODAOaddress;
     address public MembraneRegistryAddress;
     address public DAO20FactoryAddress;
+    address public DAOSafeFactoryAddress;
 
     IoDAO oDAO;
     IMembrane IMB;
@@ -26,7 +28,8 @@ contract MemberRegistry is ERC1155 {
 
     constructor() {
         DAO20FactoryAddress = address(new DAO20Factory());
-        ODAOaddress = address(new ODAO(DAO20FactoryAddress));
+        DAOSafeFactoryAddress = address(new DAOSafeFactory());
+        ODAOaddress = address(new ODAO(DAO20FactoryAddress,DAOSafeFactoryAddress));
 
         ITokenFactory(DAO20FactoryAddress).setODAO(ODAOaddress);
 

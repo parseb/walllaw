@@ -17,6 +17,7 @@ interface IMemberRegistry {
     function MembraneRegistryAddress() external view returns (address);
     function ExternalCallAddress() external view returns (address);
     function DAO20FactoryAddress() external view returns (address);
+    function DAOSafeFactoryAddress() external view returns (address);
 
     function getRoots(uint256 startAt_) external view returns (address[] memory);
     function getEndpointsOf(address who_) external view returns (address[] memory);

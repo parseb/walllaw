@@ -6,6 +6,7 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/IMembrane.sol";
+import "./interfaces/IGSFactory.sol";
 
 contract ODAO {
     bool isInit;
@@ -15,12 +16,14 @@ contract ODAO {
     mapping(address => address[]) links;
 
     IMemberRegistry MR;
+    IGSFactory SF;
     address public MB;
     address public DAO20FactoryAddress;
     uint256 constant MAX_160 = type(uint160).max;
 
-    constructor(address DAO20Factory_) {
+    constructor(address DAO20Factory_, address SafeFactory_) {
         MR = IMemberRegistry(msg.sender);
+        SF = IGSFactory(SafeFactory_);
         DAO20FactoryAddress = DAO20Factory_;
         isInit = true;
     }
@@ -31,7 +34,7 @@ contract ODAO {
 
     error nullTopLayer();
     error NotCoreMember(address who_);
-    error aDAOnot();
+    error notDAO();
     error membraneNotFound();
     error SubDAOLimitReached();
     error NonR();
@@ -55,6 +58,7 @@ contract ODAO {
         //// @dev
         if (isInit) {
             MB = MR.MembraneRegistryAddress();
+            SF._setInitODAOAddr();
             isInit = false;
         }
 
@@ -67,20 +71,28 @@ contract ODAO {
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
 
-    /// @notice creates child entity subDAO provided a valid membrane ID is given. To create an enpoint use sender address as integer. uint160(0xyourAddress)
-    /// @param membraneID_: constituent border conditions and chemestry
-    /// @param parentDAO_: parent DAO
+    /// @notice To create a subDAO provide a valid membrane ID and parent address.
+    /// @notice To create an enpoint use sender address as membrane id. `uint160(0xyourAddress)`.
+    /// @notice To create a Safe endpoint use address of parent as membrane id. `uint160(parentDAO_)`.
+    /// @param membraneID_: membrane ID to delimit and identify resulting instance.
+    /// @param parentDAO_: parent under which the new instance is spawned.
     /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
+        if (!isDAO(parentDAO_)) revert notDAO();
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
-
-        subDAOaddr = createDAO(internalT);
         bool isEndpoint = (membraneID_ < MAX_160) && (address(uint160(membraneID_)) == msg.sender);
-        isEndpoint
-            ? IMembrane(MB).setMembraneEndpoint(membraneID_, subDAOaddr, msg.sender)
-            : IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
-        if (isEndpoint) MR.pushIsEndpointOf(subDAOaddr, msg.sender);
+        bool isSafe;
+        if (!isEndpoint && (uint160(membraneID_) == uint160(parentDAO_))) {
+            subDAOaddr = SF.createSafeL2(parentDAO_);
+            isSafe = true;
+        } else {
+            subDAOaddr = createDAO(internalT);
+            isEndpoint
+                ? IMembrane(MB).setMembraneEndpoint(membraneID_, subDAOaddr, msg.sender)
+                : IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
+            if (isEndpoint) MR.pushIsEndpointOf(subDAOaddr, msg.sender);
+        }
 
         childParentDAO[subDAOaddr] = parentDAO_;
 
@@ -100,7 +112,7 @@ contract ODAO {
         topLevelPath[subDAOaddr][0] = parentDAO_;
         links[parentDAO_].push(subDAOaddr);
 
-        iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
+        if (!isSafe) iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
     }
 

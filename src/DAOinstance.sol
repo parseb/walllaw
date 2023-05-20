@@ -6,6 +6,8 @@ import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
 import "./interfaces/ITokenFactory.sol";
+import {IGSFactory} from "./interfaces/IGSFactory.sol";
+import {IGSafe} from "./interfaces/IGSafe.sol";
 
 import "./utils/Address.sol";
 import "./interfaces/IDAO20.sol";
@@ -27,6 +29,8 @@ contract DAOinstance {
     IDAO20 internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
+    IGSFactory SafeFactory;
+    IGSafe MySafe;
 
     /// # EOA => subunit => [percentage, amt]
     /// @notice stores broadcasted signal of user about preffered distribution [example: 5% of inflation to subDAO x]
@@ -129,7 +133,6 @@ contract DAOinstance {
     }
 
     /// @notice signal prefferred redistribution percentages out of inflation
-    /// @notice beneficiaries are ordered chonologically and expects a value for each item retruend by `getDAOsOfToken`
     /// @param cronoOrderedDistributionAmts complete array of preffered sub-entity distributions with sum 100
 
     function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts)
