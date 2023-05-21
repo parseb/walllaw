@@ -76,4 +76,10 @@ interface IGSafe {
     function removeOwner(address who_) external returns (bool);
 
     function parentAddress() external view returns (address);
+
+    function getThreshold() external view returns (uint256);
+    function getOwners() external view returns (address[] memory);
+
+    function getOwnerCount() external view returns (uint256);
+    function isOwner(address who_) external view returns (bool);
 }

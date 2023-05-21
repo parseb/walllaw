@@ -34,14 +34,14 @@ contract SafeEndpoint is SafeL2 {
     function addOwner(address who_) external returns (bool) {
         require(!isOwner(who_), "GS204");
         _updateThreshold();
-        if (parentDAO.isMember(who_)) addOwnerWithThreshold(who_, threshold);
+        if (parentDAO.isMember(who_)) this.addOwnerWithThreshold(who_, threshold);
         return isOwner(who_);
     }
 
     /// @notice Parent call to remove owner from list if no longer member.
     function removeOwner(address who_) external returns (bool) {
         require(isOwner(who_), "GS205");
-        if (!parentDAO.isMember(who_)) removeOwner(_getPrevOwner(who_), who_, threshold);
+        if (!parentDAO.isMember(who_)) this.removeOwner(_getPrevOwner(who_), who_, threshold);
         _updateThreshold();
         return !isOwner(who_);
     }
@@ -56,5 +56,12 @@ contract SafeEndpoint is SafeL2 {
 
     function _updateThreshold() private {
         threshold = MR.howManyTotal(uint160(parentAddress)) / 2 + 1;
+    }
+
+    /////////// view #############
+    /////////////////////////////////
+
+    function getOwnerCount() external view returns (uint256) {
+        return ownerCount;
     }
 }

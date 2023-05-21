@@ -28,6 +28,8 @@ contract EndpointSafeTest is Test, MyUtils {
     IDAO20 D2Parent;
     IDAO20 D3Parent;
 
+    IGSFactory GSF;
+
     constructor() {
         baseT = IERC20(new M20());
     }
@@ -82,14 +84,47 @@ contract EndpointSafeTest is Test, MyUtils {
         D1Parent = IDAO20(D1d.baseTokenAddress());
         D2Parent = IDAO20(D2d.baseTokenAddress());
         D3Parent = IDAO20(D3d.baseTokenAddress());
+
+        GSF = IGSFactory(iMR.DAOSafeFactoryAddress());
     }
 
     function testCreatesSafe() public {
-        // address returnesAddress = SafeFactory.createSafeL2(address(D1d));
-
         vm.prank(Agent1);
         address safe = O.createSubDAO(uint160(address(DAO)), address(DAO));
         assertTrue(safe != address(0));
         assertTrue(IGSafe(safe).parentAddress() == address(DAO));
+    }
+
+    function testOnlyMember(uint160 caller) public {
+        vm.assume(caller > 100000);
+        vm.expectRevert();
+        vm.prank(address(133246));
+        address safe = O.createSubDAO(uint160(address(DAO)), address(DAO));
+
+        vm.prank(Agent2);
+        safe = O.createSubDAO(uint160(address(DAO)), address(DAO));
+    }
+
+    function testOnlyOdao(uint160 addrUint) public {
+        vm.assume(addrUint > 2000);
+        vm.prank(address(addrUint));
+        vm.expectRevert();
+        address safe = GSF.createSafeL2(address(DAO));
+
+        vm.prank(address(O));
+        safe = GSF.createSafeL2(address(DAO));
+    }
+
+    function testAddMember(uint160 addrUint) public {
+        vm.assume(addrUint > 2000);
+        vm.startPrank(Agent1);
+        address safeAddr = O.createSubDAO(uint160(address(DAO)), address(DAO));
+        IGSafe S = IGSafe(safeAddr);
+        uint256 u1 = S.getOwnerCount();
+        assertTrue(u1 == 1, "has owners");
+
+        IGSafe(safeAddr).addOwner(Agent2);
+        uint256 u2 = S.getOwnerCount();
+        assertTrue(u2 == 2, "1 owner");
     }
 }

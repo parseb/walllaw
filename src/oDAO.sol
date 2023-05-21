@@ -85,6 +85,7 @@ contract ODAO {
         bool isSafe;
         if (!isEndpoint && (uint160(membraneID_) == uint160(parentDAO_))) {
             subDAOaddr = SF.createSafeL2(parentDAO_);
+            IGSafe(subDAOaddr).addOwner(msg.sender);
             isSafe = true;
         } else {
             subDAOaddr = createDAO(internalT);
