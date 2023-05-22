@@ -112,7 +112,7 @@ contract LocalDeploy is Script {
             MembraneR.createMembrane(tokens_, balances_, "bafybeidl3kccemfn5qmk57xbw5rl7j5szuvzvfasigkvz2d7wapduuyh2y");
         vm.stopBroadcast();
 
-        vm.startBroadcast(vm.envUint("GOERLI_PVK")); 
+        vm.startBroadcast(vm.envUint("GOERLI_PVK"));
         iInstanceDAO(baseDAO).mintMembershipToken(agent2);
         iInstanceDAO(baseDAO).signalInflation(50);
         iInstanceDAO(baseDAO).mintMembershipToken(agent3);
@@ -163,8 +163,6 @@ contract LocalDeploy is Script {
 
         vm.stopBroadcast();
 
-
-
         console.log("safes: base - sub1 ______________####_____ : ", safe1, "||", safe2);
         console.log("BASE DAO instance ______________####_____ : ", address(baseDAO));
         console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
@@ -175,6 +173,4 @@ contract LocalDeploy is Script {
         console.log("M202 ADDRESS OS ______________####_____ : ", address(Mock202));
         console.log("M721 ADDRESS OS ______________####_____ : ", address(M721));
     }
-
-
 }

@@ -6,13 +6,18 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/IMembrane.sol";
+import "./interfaces/ISafeFactory.sol";
+
+import "./utils/libSafeFactoryAddresses.sol";
 
 contract ODAO {
     bool isInit;
     mapping(uint256 => address) daoOfId;
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
+    mapping(address => address[]) links;
     IMemberRegistry MR;
+    ISafeFactory SF;
     address public MB;
     address public DAO20FactoryAddress;
     uint256 constant MAX_160 = type(uint160).max;
@@ -20,6 +25,8 @@ contract ODAO {
     constructor(address DAO20Factory_) {
         MR = IMemberRegistry(msg.sender);
         DAO20FactoryAddress = DAO20Factory_;
+
+        SF = ISafeFactory(SafeFactoryAddresses.factoryAddressForChainId(block.chainid));
         isInit = true;
     }
 
@@ -29,7 +36,7 @@ contract ODAO {
 
     error nullTopLayer();
     error NotCoreMember(address who_);
-    error aDAOnot();
+    error notDAO();
     error membraneNotFound();
     error SubDAOLimitReached();
     error NonR();
@@ -58,24 +65,36 @@ contract ODAO {
 
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR),DAO20FactoryAddress ));
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
-        if (msg.sig == this.createDAO.selector) iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
+        if (msg.sig == this.createDAO.selector) {
+            iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
+            links[BaseTokenAddress_].push(newDAO);
+        }
         emit newDAOCreated(newDAO, BaseTokenAddress_);
     }
 
-    /// @notice creates child entity subDAO provided a valid membrane ID is given. To create an enpoint use sender address as integer. uint160(0xyourAddress)
-    /// @param membraneID_: constituent border conditions and chemestry
-    /// @param parentDAO_: parent DAO
+    /// @notice To create a subDAO provide a valid membrane ID and parent address.
+    /// @notice To create an enpoint use sender address as membrane id. `uint160(0xyourAddress)`.
+    /// @notice To create a Safe endpoint use address of parent as membrane id. `uint160(parentDAO_)`.
+    /// @param membraneID_: membrane ID to delimit and identify resulting instance.
+    /// @param parentDAO_: parent under which the new instance is spawned.
     /// @notice @security the creator of the subdao custodies assets
     function createSubDAO(uint256 membraneID_, address parentDAO_) external returns (address subDAOaddr) {
+        if (!isDAO(parentDAO_)) revert notDAO();
         if (MR.balanceOf(msg.sender, iInstanceDAO(parentDAO_).baseID()) == 0) revert NotCoreMember(msg.sender);
         address internalT = iInstanceDAO(parentDAO_).internalTokenAddress();
-
-        subDAOaddr = createDAO(internalT);
         bool isEndpoint = (membraneID_ < MAX_160) && (address(uint160(membraneID_)) == msg.sender);
-        isEndpoint
-            ? IMembrane(MB).setMembraneEndpoint(membraneID_, subDAOaddr, msg.sender)
-            : IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
-        if (isEndpoint) MR.pushIsEndpointOf(subDAOaddr, msg.sender);
+        bool isSafe;
+        if (!isEndpoint && (uint160(membraneID_) == uint160(parentDAO_))) {
+            bytes memory x;
+            address subDAOaddr = SF.createProxy(SafeFactoryAddresses.getSingletonAddressForChainID(block.chainid), x);
+            isSafe = true;
+        } else {
+            subDAOaddr = createDAO(internalT);
+            isEndpoint
+                ? IMembrane(MB).setMembraneEndpoint(membraneID_, subDAOaddr, msg.sender)
+                : IMembrane(MB).setMembrane(membraneID_, subDAOaddr);
+            if (isEndpoint) MR.pushIsEndpointOf(subDAOaddr, msg.sender);
+        }
 
         childParentDAO[subDAOaddr] = parentDAO_;
 
@@ -93,8 +112,9 @@ contract ODAO {
         }
 
         topLevelPath[subDAOaddr][0] = parentDAO_;
+        links[parentDAO_].push(subDAOaddr);
 
-        iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
+        if (!isSafe) iInstanceDAO(subDAOaddr).mintMembershipToken(msg.sender);
         emit subDAOCreated(parentDAO_, subDAOaddr, msg.sender);
     }
 
@@ -131,5 +151,9 @@ contract ODAO {
 
     function DAO20FactoryAddr() external view returns (address) {
         return DAO20FactoryAddress;
+    }
+
+    function getLinksOf(address instanceOrToken_) external view returns (address[] memory) {
+        return links[instanceOrToken_];
     }
 }
