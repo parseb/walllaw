@@ -158,7 +158,6 @@ contract LocalDeploy is Script {
         iInstanceDAO(subD35s[3]).mintMembershipToken(agent4);
 
         address safe1 = O.createSubDAO(uint160(baseDAO), baseDAO);
-
         address safe2 = O.createSubDAO(uint160(subdaoAddresses[1]), subdaoAddresses[1]);
 
         vm.stopBroadcast();
