@@ -7,6 +7,7 @@ import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/IMembrane.sol";
 import "./interfaces/ISafeFactory.sol";
+import "./interfaces/ISafe.sol";
 
 import "./utils/libSafeFactoryAddresses.sol";
 
@@ -42,6 +43,7 @@ contract ODAO {
     error NonR();
     error FailedToSetMembrane();
     error OnlySubDao();
+    error FailedToInitSafe();
 
     /*//////////////////////////////////////////////////////////////
                                  events
@@ -85,8 +87,12 @@ contract ODAO {
         bool isEndpoint = (membraneID_ < MAX_160) && (address(uint160(membraneID_)) == msg.sender);
         bool isSafe;
         if (!isEndpoint && (uint160(membraneID_) == uint160(parentDAO_))) {
-            bytes memory x;
+            bytes memory x = abi.encode(links[parentDAO_].length);
             address subDAOaddr = SF.createProxy(SafeFactoryAddresses.getSingletonAddressForChainID(block.chainid), x);
+            address[] memory OWs = MR.getctiveMembersOf(parentDAO_);
+            uint256 t = OWs.length / 2 + 1;
+            ISafe(subDAOaddr).setup(OWs, t, address(0), x, address(0), address(0), 0, subDAOaddr);
+            if (ISafe(subDAOaddr).getThreshold() != t) revert FailedToInitSafe();
             isSafe = true;
         } else {
             subDAOaddr = createDAO(internalT);
