@@ -18,10 +18,9 @@ contract DAOinstance {
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
-    uint256 public instantiatedAt;
     address public parentDAO;
     address public endpoint;
-    address ODAO;
+    address public ODAO;
     address purgeorExternalCall;
     IERC20 BaseToken;
     IDAO20 internalToken;
@@ -60,7 +59,6 @@ contract DAOinstance {
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_, address InternalTokenFactory_) {
         ODAO = msg.sender;
-        instantiatedAt = block.timestamp;
         BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
@@ -139,11 +137,13 @@ contract DAOinstance {
     {
         address sender = _msgSender();
         uint256 senderForce = internalToken.balanceOf(sender);
+
         if ((senderForce == 0 && (!(cronoOrderedDistributionAmts.length == 0)))) revert DAOinstance__HasNoSay();
         if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[sender];
+
         redistributiveSignal[sender] = cronoOrderedDistributionAmts;
 
-        address[] memory subDAOs = ITokenFactory(iMR.DAO20FactoryAddress()).getDAOsOfToken(address(internalToken));
+        address[] memory subDAOs = IoDAO(ODAO).getLinksOf(address(this));
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
         uint256 centum;
@@ -153,9 +153,13 @@ contract DAOinstance {
 
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
             if (subunitPerSec[subDAOs[i]][1] == 0) {
-                subunitPerSec[subDAOs[i]][1] = iInstanceDAO(subDAOs[i]).instantiatedAt();
+                subunitPerSec[subDAOs[i]][1] = IoDAO(ODAO).getInitAt(subDAOs[i]);
             }
-            if (submittedValue == subunitPerSec[subDAOs[i]][0]) continue;
+
+            if (submittedValue == subunitPerSec[subDAOs[i]][0]) {
+                ++i;
+                continue;
+            }
 
             address entity = subDAOs[i];
 
@@ -219,6 +223,7 @@ contract DAOinstance {
 
     function mintInflation() public returns (uint256 amountToMint) {
         amountToMint = (block.timestamp - subunitPerSec[address(this)][1]);
+
         if (amountToMint == 0) return amountToMint;
 
         amountToMint = (amountToMint * baseInflationPerSec);
@@ -232,13 +237,14 @@ contract DAOinstance {
 
     function redistributeSubDAO(address subDAO_) public returns (uint256 gotAmt) {
         mintInflation();
+
         gotAmt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
         subunitPerSec[subDAO_][1] = block.timestamp;
         if (!internalToken.transfer(subDAO_, gotAmt)) revert DAOinstance__itTransferFailed();
     }
 
     /// @notice mints membership token to specified address if it fulfills the acceptance criteria of the membrane
-    /// @param to_ address to mint membership token to
+    /// @param to_ address to mint membership token tou1
     function mintMembershipToken(address to_) external returns (bool s) {
         if (endpoint != address(0)) revert DAOinstance__isEndpoint();
 

@@ -75,4 +75,6 @@ interface iInstanceDAO {
     function getAllActiveIndecisions() external view returns (Indecision[] memory Indecisions);
 
     function scrubIndecisions() external;
+
+    function ODAO() external returns (address);
 }

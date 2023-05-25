@@ -34,5 +34,10 @@ contract M202 is ERC20("Mockv2", "M22") {
         _mint(anvil_4, 200_000 ether);
         _mint(anvil_5, 300_000 ether);
         _mint(address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), 200_000 ether);
+        _mint(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7, 300_000 ether);
+        _mint(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC, 300_000 ether);
+        _mint(0x99B8F1c493B3FD5712Be90b699C1813b51E7B33A, 300_000 ether);
+        _mint(0x4a3e9E61C2090047E60D2C18BaE7c596D9119F10, 300_000 ether);
+        _mint(0x123984fcA327e93968E0650E07658C618c2EDa74, 300_000 ether);
     }
 }

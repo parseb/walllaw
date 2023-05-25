@@ -3,13 +3,15 @@ pragma solidity >=0.8.0;
 
 import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import "./interfaces/iInstanceDAO.sol";
+import "./interfaces/IoDAO.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
 import "./interfaces/ITokenFactory.sol";
 
 /// did not ponder over the impact of adding permit
-/// @notice internal DAO/subDAO token
-
+/// @notice Internal token template.
+/// @author BPA, parseb
+/// @custom:experimental This is an experimental contract.
 contract DAO20 is ERC20 {
     address public owner;
     address public base;
@@ -50,10 +52,8 @@ contract DAO20 is ERC20 {
         _burn(msg.sender, amtToBurn_);
         s = baseToken.transferFrom(owner, msg.sender, amtToRefund);
 
-        if (s) {
-            iInstanceDAO(owner).distributiveSignal(new uint256[](0));
-            burnInProgress = address(0);
-        }
+        if (!_isEndpoint(msg.sender) && s) iInstanceDAO(owner).distributiveSignal(new uint256[](0));
+        burnInProgress = address(0);
         require(s, "ngmi");
     }
 
@@ -73,18 +73,22 @@ contract DAO20 is ERC20 {
         return balanceOf(to_) == 1;
     }
 
+    function _isEndpoint(address who_) private returns (bool) {
+        return (IoDAO(iInstanceDAO(owner).ODAO()).getParentDAO(who_) == owner);
+    }
+
     /// ////////////////////
 
     /// Override //////////////
 
     //// @dev @security DAO token should be transferable only to DAO instances or owner (resource basket multisig)
-    /// there's some potential attack vectors on inflation and redistributive signals (re-enterange like)
+    /// there's some potential attack on inflation and redistributive signals (re-enterange like)
     /// two options: embrace the messiness |OR| allow transfers only to owner and sub-entities
 
     function transfer(address to, uint256 amount) public override returns (bool) {
         /// limit transfers
         bool o = msg.sender == owner;
-        address parent = iInstanceDAO(owner).parentDAO();
+        address parent = IoDAO(iInstanceDAO(owner).ODAO()).getParentDAO(msg.sender);
         o = !o ? parent == msg.sender : o;
         o = !o ? to == iInstanceDAO(msg.sender).endpoint() : o;
 

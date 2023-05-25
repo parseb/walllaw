@@ -9,6 +9,9 @@ import "./interfaces/IDAO20.sol";
 
 import "./errors.sol";
 
+/// @author BPA, parseb
+/// @custom:experimental This is an experimental contract.
+/// @notice Membrane registry contract. Registers and Creates new membranes.
 contract MembraneRegistry {
     address MRaddress;
     IoDAO ODAO;

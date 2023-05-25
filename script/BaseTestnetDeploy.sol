@@ -98,10 +98,12 @@ contract LocalDeploy is Script {
 
         M721 = new M721222();
 
-        O.createDAO(address(Mock202));
+        address baseDAOClear = O.createDAO(address(Mock202));
         address baseDAO = O.createDAO(address(Mock20));
 
-        O.createDAO(address(Mock20));
+        address baseDAOClear3 = O.createDAO(address(Mock20));
+
+        console2.log("base DAOS - MAIN - empty1 - empty2", baseDAO, baseDAOClear, baseDAOClear3);
 
         address[] memory tokens_ = new address[](1);
         uint256[] memory balances_ = new uint[](1);
@@ -173,3 +175,17 @@ contract LocalDeploy is Script {
         console.log("M721 ADDRESS OS ______________####_____ : ", address(M721));
     }
 }
+
+// == Logs ==
+//   base DAOS - MAIN - empty1 - empty2 0x186b6987AB301A73212FEdb9b9Fd8A8f09dd4aA0 0xc63f0597ECce58051f8128182bb6053C831c909D 0xc0952AACc5b0b6777E5EE4b5a18CCb73556223C8
+//   safe  --   0x194269F836C3Ae4C4AcADB37c0C0EF0f11b465fe
+//   safe  --   0x1f4232E4da16bCc382E1B0F6c9D062b0013D4970
+//   safes: base - sub1 ______________####_____ :  0x194269F836C3Ae4C4AcADB37c0C0EF0f11b465fe || 0x1f4232E4da16bCc382E1B0F6c9D062b0013D4970
+//   BASE DAO instance ______________####_____ :  0x186b6987AB301A73212FEdb9b9Fd8A8f09dd4aA0
+//   MemberR ADDRESS OS ______________####_____ :  0x25F0fa746e55A7A2fa38689CfF8394c5bC574cF9
+//   ODAO ADDRESS OS ______________####_____ :  0x6c9700e201A5a184f2C7cDbB87A1be1Ec3b0366c
+//   MembraneR ADDRESS OS ______________####_____ :  0xC3D7BD78c37597b413A41b7A481C048472F4c447
+//   ____________--- mocks --- _______
+//   M20 ADDRESS OS ______________####_____ :  0x282d104bC2A7169B124E7E7F7ECE4aaD40cbD2EC
+//   M202 ADDRESS OS ______________####_____ :  0x4151D8Fc3163Ed68F2D7c490E84444Cf71622D46
+//   M721 ADDRESS OS ______________####_____ :  0x575c905788D3E7F66aAc71794018f669a399360b

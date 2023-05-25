@@ -12,9 +12,12 @@ import "./interfaces/ISafe.sol";
 import "./utils/libSafeFactoryAddresses.sol";
 import "forge-std/console.sol";
 
+/// @author BPA, parseb
+/// @custom:experimental This is an experimental contract.
 contract ODAO {
     bool isInit;
     mapping(uint256 => address) daoOfId;
+    mapping(address => uint256) instantiatedAt;
     mapping(address => address) childParentDAO;
     mapping(address => address[]) topLevelPath;
     mapping(address => address[]) links;
@@ -69,6 +72,7 @@ contract ODAO {
         newDAO = address(new DAOinstance(BaseTokenAddress_, msg.sender, address(MR),DAO20FactoryAddress ));
 
         daoOfId[uint160(bytes20(newDAO))] = newDAO;
+        instantiatedAt[newDAO] = block.timestamp;
         if (msg.sig == this.createDAO.selector) {
             iInstanceDAO(newDAO).mintMembershipToken(msg.sender);
             links[BaseTokenAddress_].push(newDAO);
@@ -96,6 +100,7 @@ contract ODAO {
             uint256 t = OWs.length / 2 + 1;
             ISafe(subDAOaddr).setup(OWs, t, address(0), x, address(0), address(0), 0, subDAOaddr);
             if (ISafe(subDAOaddr).getThreshold() != t) revert FailedToInitSafe();
+            instantiatedAt[subDAOaddr] = block.timestamp;
             isSafe = true;
         } else {
             subDAOaddr = createDAO(internalT);
@@ -164,5 +169,9 @@ contract ODAO {
 
     function getLinksOf(address instanceOrToken_) external view returns (address[] memory) {
         return links[instanceOrToken_];
+    }
+
+    function getInitAt(address forAddress) external view returns (uint256) {
+        return instantiatedAt[forAddress];
     }
 }

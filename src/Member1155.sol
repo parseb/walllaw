@@ -10,6 +10,9 @@ import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
 
+/// @author BPA, parseb
+/// @custom:experimental This is an experimental contract.
+/// @notice Membership Registry contract.
 contract MemberRegistry is ERC1155 {
     address public ODAOaddress;
     address public MembraneRegistryAddress;
@@ -68,8 +71,9 @@ contract MemberRegistry is ERC1155 {
                                  external
     //////////////////////////////////////////////////////////////*/
 
-    /// mints membership token to provided address
-
+    /// @notice mints membership token provided candidate agent satisfies conditions
+    /// @param who_ address that will become member
+    /// @param id_ id of organisational entity
     function makeMember(address who_, uint256 id_) external onlyDAO returns (bool) {
         /// the id_ of any subunit  is a multiple of DAO address
         if (!(id_ % uint160(bytes20(msg.sender)) == 0)) {
@@ -107,33 +111,6 @@ contract MemberRegistry is ERC1155 {
     function getUriOf(address who_) external view returns (string memory) {
         return tokenUri[uint160(bytes20(who_))];
     }
-
-    /// retrieves base DAOs
-    // function getRoots(uint256 howMany_) external view returns (address[] memory r) {
-    //     if (roots.length < howMany_) howMany_ = endpoints.length;
-
-    //     uint256 i;
-    //     r = new address[](howMany_);
-    //     for (i; i < howMany_;) {
-    //         r[i] = roots[i];
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
-
-    // function getEndpoints(uint256 howMany_) external view returns (address[] memory r) {
-    //     if (endpoints.length < howMany_) howMany_ = endpoints.length;
-
-    //     uint256 i;
-    //     r = new address[](howMany_);
-    //     for (i; i < howMany_;) {
-    //         r[i] = endpoints[i];
-    //         unchecked {
-    //             i++;
-    //         }
-    //     }
-    // }
 
     function getActiveMembershipsOf(address who_) external view returns (address[] memory entities) {
         uint256[] memory ids = idsOf[who_];
@@ -194,6 +171,13 @@ contract MemberRegistry is ERC1155 {
     /// @param id_ id to check how many minted tokens it has associated
     function howManyTotal(uint256 id_) public view returns (uint256) {
         return uidTotalSupply[id_];
+    }
+    ///@dev deprecate for howManyMembers()
+
+    /// @notice returns how many members the provided instance has
+    /// @param instance querried instance
+    function howManyMembers(address instance) external view returns (uint256) {
+        return uidTotalSupply[uint160(bytes20(instance))];
     }
 
     function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal override {
