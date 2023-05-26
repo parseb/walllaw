@@ -32,23 +32,11 @@ contract LocalDeploy is Script {
     address agent4;
 
     function setUp() public {
-        agent1 = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-        agent2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-        agent3 = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
-        agent4 = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
+        agent1 = 0xb3F204a5F3dabef6bE51015fD57E307080Db6498;
+        agent2 = 0x99B8F1c493B3FD5712Be90b699C1813b51E7B33A;
+        agent3 = 0x123984fcA327e93968E0650E07658C618c2EDa74;
+        agent4 = 0x4a3e9E61C2090047E60D2C18BaE7c596D9119F10;
     }
-
-    // Transaction: 0x739e031c195face8ba4a33d61e042ab3756e9d39930a0e2fa659283c38fde2e8
-    // Contract created: 0x5b97542891ca4c71112865cacfee6a4361c913a6
-    // Gas used: 8089117
-
-    // Transaction: 0x072890a03a08a3f6d9e92a0ae05e9030d0e751f77cd8ee822042870dab41495b
-    // Contract created: 0x5b3e74dc6a9f8b571aac029b9db4b11aecb9af08
-    // Gas used: 1170349
-
-    // Transaction: 0x882c184978a4553184d8441210c8f4a25f1c9cf5a9cbb5d9b48ef601a5398d05
-    // Contract created: 0x863200822a97038394c7d1803b4562dc014dd862
-    // Gas used: 1170349
 
     // Block Number: 1
     // Block Hash: 0x19de45fcd7fc1ea9400f02f091b5e5bc213e5c60d6ef0db223d7c3032590c406
@@ -98,8 +86,7 @@ contract LocalDeploy is Script {
     }
 
     function run() public {
-        vm.startBroadcast(vm.envUint("ANVIL_2")); //// start 1
-
+        vm.startBroadcast(vm.envUint("GOERLI_PVK"));
         M = new MemberRegistry();
         ITF = ITokenFactory(M.DAO20FactoryAddress());
 
@@ -111,9 +98,12 @@ contract LocalDeploy is Script {
 
         M721 = new M721222();
 
-        O.createDAO(address(Mock202));
+        address baseDAOClear = O.createDAO(address(Mock202));
         address baseDAO = O.createDAO(address(Mock20));
-        O.createDAO(address(Mock20));
+
+        address baseDAOClear3 = O.createDAO(address(Mock20));
+
+        console2.log("base DAOS - MAIN - empty1 - empty2", baseDAO, baseDAOClear, baseDAOClear3);
 
         address[] memory tokens_ = new address[](1);
         uint256[] memory balances_ = new uint[](1);
@@ -122,13 +112,11 @@ contract LocalDeploy is Script {
         balances_[0] = uint256(1000);
         uint256 basicMembraneID =
             MembraneR.createMembrane(tokens_, balances_, "bafybeidl3kccemfn5qmk57xbw5rl7j5szuvzvfasigkvz2d7wapduuyh2y");
-        vm.stopBroadcast(); //// stop 1
+        vm.stopBroadcast();
 
-        vm.startBroadcast(vm.envUint("ANVIL_2")); //// start 2
-
-        // iInstanceDAO(baseDAO).mintMembershipToken(agent2);
+        vm.startBroadcast(vm.envUint("GOERLI_PVK"));
+        iInstanceDAO(baseDAO).mintMembershipToken(agent2);
         iInstanceDAO(baseDAO).signalInflation(50);
-
         iInstanceDAO(baseDAO).mintMembershipToken(agent3);
         iInstanceDAO(baseDAO).mintMembershipToken(agent4);
 
@@ -166,40 +154,18 @@ contract LocalDeploy is Script {
         _createSubDaos(7, subD35s[2]);
         _createSubDaos(3, subD35s[3]);
 
-        // iInstanceDAO(subD35s[1]).mintMembershipToken(agent2);
+        iInstanceDAO(subD35s[1]).mintMembershipToken(agent2);
+        // iInstanceDAO(subD35s[1]).mintMembershipToken(agent1);
         iInstanceDAO(subD35s[2]).mintMembershipToken(agent3);
         iInstanceDAO(subD35s[3]).mintMembershipToken(agent4);
 
-        vm.stopBroadcast(); //// stop 2
-
-        vm.startBroadcast(vm.envUint("ANVIL_3"));
-
-        IERC20(iInstanceDAO(baseDAO).baseTokenAddress()).approve(
-            iInstanceDAO(baseDAO).internalTokenAddress(), type(uint256).max
-        );
-        IDAO20(iInstanceDAO(baseDAO).internalTokenAddress()).wrapMint(10 ether);
-
-        // iInstanceDAO(subdaoAddresses[0]).mintMembershipToken(agent2);
-        iInstanceDAO(subdaoAddresses[1]).mintMembershipToken(agent3);
-        iInstanceDAO(subdaoAddresses[2]).mintMembershipToken(agent4);
-
-        IERC20(iInstanceDAO(subdaoAddresses[0]).baseTokenAddress()).approve(
-            iInstanceDAO(subdaoAddresses[0]).internalTokenAddress(), type(uint256).max
-        );
-        IDAO20(iInstanceDAO(subdaoAddresses[0]).internalTokenAddress()).wrapMint(3 * 1 ether);
-
-        IERC20(iInstanceDAO(subdaoAddresses[1]).baseTokenAddress()).approve(
-            iInstanceDAO(subdaoAddresses[1]).internalTokenAddress(), type(uint256).max
-        );
-        IDAO20(iInstanceDAO(subdaoAddresses[1]).internalTokenAddress()).wrapMint(3 * 1 ether);
-
-        IERC20(iInstanceDAO(subdaoAddresses[2]).baseTokenAddress()).approve(
-            iInstanceDAO(subdaoAddresses[2]).internalTokenAddress(), type(uint256).max
-        );
-        IDAO20(iInstanceDAO(subdaoAddresses[2]).internalTokenAddress()).wrapMint(2 * 1 ether);
+        address safe1 = O.createSubDAO(uint160(baseDAO), baseDAO);
+        address safe2 = O.createSubDAO(uint160(subdaoAddresses[1]), subdaoAddresses[1]);
 
         vm.stopBroadcast();
 
+        console.log("safes: base - sub1 ______________####_____ : ", safe1, "||", safe2);
+        console.log("BASE DAO instance ______________####_____ : ", address(baseDAO));
         console.log("MemberR ADDRESS OS ______________####_____ : ", address(M));
         console.log("ODAO ADDRESS OS ______________####_____ : ", M.ODAOaddress());
         console.log("MembraneR ADDRESS OS ______________####_____ : ", M.MembraneRegistryAddress());
@@ -209,3 +175,17 @@ contract LocalDeploy is Script {
         console.log("M721 ADDRESS OS ______________####_____ : ", address(M721));
     }
 }
+
+// == Logs ==
+//   base DAOS - MAIN - empty1 - empty2 0x186b6987AB301A73212FEdb9b9Fd8A8f09dd4aA0 0xc63f0597ECce58051f8128182bb6053C831c909D 0xc0952AACc5b0b6777E5EE4b5a18CCb73556223C8
+//   safe  --   0x194269F836C3Ae4C4AcADB37c0C0EF0f11b465fe
+//   safe  --   0x1f4232E4da16bCc382E1B0F6c9D062b0013D4970
+//   safes: base - sub1 ______________####_____ :  0x194269F836C3Ae4C4AcADB37c0C0EF0f11b465fe || 0x1f4232E4da16bCc382E1B0F6c9D062b0013D4970
+//   BASE DAO instance ______________####_____ :  0x186b6987AB301A73212FEdb9b9Fd8A8f09dd4aA0
+//   MemberR ADDRESS OS ______________####_____ :  0x25F0fa746e55A7A2fa38689CfF8394c5bC574cF9
+//   ODAO ADDRESS OS ______________####_____ :  0x6c9700e201A5a184f2C7cDbB87A1be1Ec3b0366c
+//   MembraneR ADDRESS OS ______________####_____ :  0xC3D7BD78c37597b413A41b7A481C048472F4c447
+//   ____________--- mocks --- _______
+//   M20 ADDRESS OS ______________####_____ :  0x282d104bC2A7169B124E7E7F7ECE4aaD40cbD2EC
+//   M202 ADDRESS OS ______________####_____ :  0x4151D8Fc3163Ed68F2D7c490E84444Cf71622D46
+//   M721 ADDRESS OS ______________####_____ :  0x575c905788D3E7F66aAc71794018f669a399360b

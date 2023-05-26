@@ -6,9 +6,7 @@ import "../../src/interfaces/IMember1155.sol";
 import "../../src/interfaces/iInstanceDAO.sol";
 import "../../src/interfaces/IDAO20.sol";
 import "../../src/interfaces/IMembrane.sol";
-import "../../src/interfaces/IExternalCall.sol";
 import "../../src/interfaces/ITokenFactory.sol";
-import "../../src/interfaces/IAbstract.sol";
 
 import "../../src/Member1155.sol";
 import "../mocks/mockERC20.sol";
@@ -18,7 +16,6 @@ contract MyUtils is Test {
     IERC20 BaseE20;
     IMemberRegistry iMR;
     IMembrane iMB;
-    IExternalCall iEXTcall;
     ITokenFactory DAO20Factory;
 
     address deployer = address(4896);
@@ -35,7 +32,6 @@ contract MyUtils is Test {
         DAO20Factory = ITokenFactory(iMR.DAO20FactoryAddress());
 
         BaseE20 = IERC20(address(new M20()));
-        iEXTcall = IExternalCall(iMR.ExternalCallAddress());
     }
 
     function _createAnERC20() public returns (address) {
@@ -122,26 +118,6 @@ contract MyUtils is Test {
         if (initInflation == inflation_) _setInflation(inflation_, DAO_);
         assertFalse(initInflation == DAO.baseInflationRate(), "failed to update infaltion");
         assertTrue(initPerSec != 0, "per sec not updated");
-    }
-
-    function _createExternalCall(address[] memory contracts_, bytes[] memory callDatas_, string memory description_)
-        public
-        returns (uint256 createdId)
-    {
-        createdId = iEXTcall.createExternalCall(contracts_, callDatas_, description_);
-    }
-
-    function _createMockExternalCall() public returns (uint256 createdId) {
-        address[] memory contracts = new address[](2);
-        bytes[] memory calldatas = new bytes[](2);
-
-        contracts[0] = address(123);
-        contracts[1] = address(456);
-        calldatas[0] = bytes("calldata1");
-        calldatas[1] = bytes("calldata2");
-        string memory description = "default description text";
-
-        createdId = iEXTcall.createExternalCall(contracts, calldatas, description);
     }
 
     function testImportCheck() public {

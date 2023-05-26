@@ -39,6 +39,11 @@ contract M721222 is ERC721("LinkeGaard Community Meeting POAP", "POAP") {
         _mint(address(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266), 306);
         _mint(address(0x90b29ee9ee4619b8250d2A1EF75d891Aea02cB4F), 9999);
         _mint(address(0xFbE328d863F0C7378dD58dFFaE5A9fEBab836df8), 99999);
+        _mint(0x323525cB37428d72e33B8a3d9a72F848d08Bf2B7, 300_000 ether);
+        _mint(0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC, 300_001);
+        _mint(0x99B8F1c493B3FD5712Be90b699C1813b51E7B33A, 300_002);
+        _mint(0x4a3e9E61C2090047E60D2C18BaE7c596D9119F10, 300_003);
+        _mint(0x123984fcA327e93968E0650E07658C618c2EDa74, 300_004);
 
         _mint(LINKE1, 23);
 

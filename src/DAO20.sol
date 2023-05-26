@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "openzeppelin-contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import "./interfaces/iInstanceDAO.sol";
+import "./interfaces/IoDAO.sol";
 import "./interfaces/IMember1155.sol";
 import "./interfaces/IDAO20.sol";
 import "./interfaces/ITokenFactory.sol";
-import "./interfaces/IAbstract.sol";
 
 /// did not ponder over the impact of adding permit
-/// @notice internal DAO/subDAO token
-
-contract DAO20 is ERC20Permit {
+/// @notice Internal token template.
+/// @author BPA, parseb
+/// @custom:experimental This is an experimental contract.
+contract DAO20 is ERC20 {
     address public owner;
     address public base;
     address public burnInProgress;
     IERC20 baseToken;
 
     constructor(address baseToken_, string memory name_, string memory symbol_, uint8 decimals_)
-        ERC20Permit(name_)
-        ERC20("name_", "WWdo")
+        ERC20(name_, symbol_)
     {
         owner = ITokenFactory(msg.sender).getOwner();
         base = baseToken_;
@@ -52,10 +52,8 @@ contract DAO20 is ERC20Permit {
         _burn(msg.sender, amtToBurn_);
         s = baseToken.transferFrom(owner, msg.sender, amtToRefund);
 
-        if (s) {
-            iInstanceDAO(owner).distributiveSignal(new uint256[](0));
-            burnInProgress = address(0);
-        }
+        if (!_isEndpoint(msg.sender) && s) iInstanceDAO(owner).distributiveSignal(new uint256[](0));
+        burnInProgress = address(0);
         require(s, "ngmi");
     }
 
@@ -75,18 +73,22 @@ contract DAO20 is ERC20Permit {
         return balanceOf(to_) == 1;
     }
 
+    function _isEndpoint(address who_) private returns (bool) {
+        return (IoDAO(iInstanceDAO(owner).ODAO()).getParentDAO(who_) == owner);
+    }
+
     /// ////////////////////
 
     /// Override //////////////
 
     //// @dev @security DAO token should be transferable only to DAO instances or owner (resource basket multisig)
-    /// there's some potential attack vectors on inflation and redistributive signals (re-enterange like)
+    /// there's some potential attack on inflation and redistributive signals (re-enterange like)
     /// two options: embrace the messiness |OR| allow transfers only to owner and sub-entities
 
     function transfer(address to, uint256 amount) public override returns (bool) {
         /// limit transfers
         bool o = msg.sender == owner;
-        address parent = iInstanceDAO(owner).parentDAO();
+        address parent = IoDAO(iInstanceDAO(owner).ODAO()).getParentDAO(msg.sender);
         o = !o ? parent == msg.sender : o;
         o = !o ? to == iInstanceDAO(msg.sender).endpoint() : o;
 
@@ -109,35 +111,6 @@ contract DAO20 is ERC20Permit {
         require(super.transferFrom(from, to, amount));
         return true;
     }
-
-    function wrapMintFor(uint256 amount_) external returns (bool) {
-        if (msg.sender != address(iInstanceDAO(owner).abstractAddress())) revert D20_NotAbstractOwner();
-        address forWho = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
-        if (forWho == address(0)) revert D20_ForAddr0();
-
-        bool s = baseToken.transferFrom(msg.sender, owner, amount_);
-        if (s) {
-            //iInstanceDAO(owner).mintInflation(); /// @dev
-            _mint(forWho, amount_);
-        }
-        require(s, "ngmi");
-        return true;
-    }
-
-    // function _Sender() private view returns (address sender) {
-    //     sender = msg.sender;
-    //     if (msg.sender == address(iInstanceDAO(owner).abstractAddress())) {
-    //         sender = IAbstract(iInstanceDAO(owner).abstractAddress()).currentAccount();
-    //     }
-    // }
-
-    // function _balanceOf(address who_) external returns (uint) {
-    //     return balanceOf[who_];
-    // }
-
-    // function _totalSupply() external returns (uint) {
-    //     return this.totalSupply;
-    // }
 
     function baseTokenAddress() external view returns (address) {
         return base;

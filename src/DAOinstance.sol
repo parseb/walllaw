@@ -5,9 +5,7 @@ import "./interfaces/IMember1155.sol";
 import "./interfaces/IoDAO.sol";
 import "./interfaces/iInstanceDAO.sol";
 import "./interfaces/IMembrane.sol";
-import "./interfaces/IExternalCall.sol";
 import "./interfaces/ITokenFactory.sol";
-import "./interfaces/IAbstract.sol";
 
 import "./utils/Address.sol";
 import "./interfaces/IDAO20.sol";
@@ -20,17 +18,14 @@ contract DAOinstance {
     uint256 public baseID;
     uint256 public baseInflationRate;
     uint256 public baseInflationPerSec;
-    uint256 public instantiatedAt;
     address public parentDAO;
     address public endpoint;
-    address ODAO;
+    address public ODAO;
     address purgeorExternalCall;
     IERC20 BaseToken;
     IDAO20 internalToken;
     IMemberRegistry iMR;
     IMembrane iMB;
-    IExternalCall iEXT;
-    IAbstract AbstractAccount;
 
     /// # EOA => subunit => [percentage, amt]
     /// @notice stores broadcasted signal of user about preffered distribution [example: 5% of inflation to subDAO x]
@@ -64,14 +59,11 @@ contract DAOinstance {
 
     constructor(address BaseToken_, address initiator_, address MemberRegistry_, address InternalTokenFactory_) {
         ODAO = msg.sender;
-        instantiatedAt = block.timestamp;
         BaseToken = IERC20(BaseToken_);
         baseID = uint160(bytes20(address(this)));
         baseInflationRate = baseID % 100 > 0 ? baseID % 100 : 1;
         iMR = IMemberRegistry(MemberRegistry_);
         iMB = IMembrane(iMR.MembraneRegistryAddress());
-        iEXT = IExternalCall(iMR.ExternalCallAddress());
-        AbstractAccount = IAbstract(iMR.AbstractAddr());
 
         internalToken = IDAO20(ITokenFactory(InternalTokenFactory_).makeForMe(BaseToken_));
 
@@ -123,7 +115,7 @@ contract DAOinstance {
             : baseInflationRate;
     }
 
-    /// @notice initiate or support change of membrane in favor of designated by id
+    /// @notice initiate or support change of membrane in favor of designated by id. Majoritarian execution.
     /// @param membraneId_ id of membrane to support change of
     function changeMembrane(uint256 membraneId_) external onlyMember returns (uint256 membraneID) {
         _expressPreference(membraneId_);
@@ -132,19 +124,6 @@ contract DAOinstance {
         membraneID = ((internalToken.totalSupply() / (expressed[membraneId_][address(0)] + 1) < 2))
             ? _majoritarianUpdate(membraneId_)
             : iMB.inUseMembraneId(address(this));
-    }
-
-    /// @notice expresses preference for and executes pre-configured externall call with provided id on majoritarian threshold
-    /// @notice external calls not available on base instance
-    /// @param externalCallId_ id of preconfigured externall call
-    /// @return callID 0 - if threshold not reached, id input if call is executed.
-    function executeCall(uint256 externalCallId_) external onlyMember returns (uint256 callID) {
-        if (parentDAO == address(0)) revert DAOinstance__ExteranlOnBase();
-        if (!iEXT.isValidCall(externalCallId_)) revert DAOinstance__invalidMembrane();
-        _expressPreference(externalCallId_);
-
-        callID = ((internalToken.totalSupply() / (expressed[externalCallId_][address(0)] + 1) < 2))
-            && (iEXT.exeUpdate(externalCallId_)) ? _majoritarianUpdate(externalCallId_) : 0;
     }
 
     /// @notice signal prefferred redistribution percentages out of inflation
@@ -158,11 +137,13 @@ contract DAOinstance {
     {
         address sender = _msgSender();
         uint256 senderForce = internalToken.balanceOf(sender);
+
         if ((senderForce == 0 && (!(cronoOrderedDistributionAmts.length == 0)))) revert DAOinstance__HasNoSay();
         if (cronoOrderedDistributionAmts.length == 0) cronoOrderedDistributionAmts = redistributiveSignal[sender];
+
         redistributiveSignal[sender] = cronoOrderedDistributionAmts;
 
-        address[] memory subDAOs = ITokenFactory(iMR.DAO20FactoryAddress()).getDAOsOfToken(address(internalToken));
+        address[] memory subDAOs = IoDAO(ODAO).getLinksOf(address(this));
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
         uint256 centum;
@@ -172,9 +153,13 @@ contract DAOinstance {
 
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
             if (subunitPerSec[subDAOs[i]][1] == 0) {
-                subunitPerSec[subDAOs[i]][1] = iInstanceDAO(subDAOs[i]).instantiatedAt();
+                subunitPerSec[subDAOs[i]][1] = IoDAO(ODAO).getInitAt(subDAOs[i]);
             }
-            if (submittedValue == subunitPerSec[subDAOs[i]][0]) continue;
+
+            if (submittedValue == subunitPerSec[subDAOs[i]][0]) {
+                ++i;
+                continue;
+            }
 
             address entity = subDAOs[i];
 
@@ -238,6 +223,7 @@ contract DAOinstance {
 
     function mintInflation() public returns (uint256 amountToMint) {
         amountToMint = (block.timestamp - subunitPerSec[address(this)][1]);
+
         if (amountToMint == 0) return amountToMint;
 
         amountToMint = (amountToMint * baseInflationPerSec);
@@ -251,13 +237,14 @@ contract DAOinstance {
 
     function redistributeSubDAO(address subDAO_) public returns (uint256 gotAmt) {
         mintInflation();
+
         gotAmt = subunitPerSec[subDAO_][0] * (block.timestamp - subunitPerSec[subDAO_][1]);
         subunitPerSec[subDAO_][1] = block.timestamp;
         if (!internalToken.transfer(subDAO_, gotAmt)) revert DAOinstance__itTransferFailed();
     }
 
     /// @notice mints membership token to specified address if it fulfills the acceptance criteria of the membrane
-    /// @param to_ address to mint membership token to
+    /// @param to_ address to mint membership token tou1
     function mintMembershipToken(address to_) external returns (bool s) {
         if (endpoint != address(0)) revert DAOinstance__isEndpoint();
 
@@ -308,7 +295,7 @@ contract DAOinstance {
     ///////////////////
     function _majoritarianUpdate(uint256 newVal_) private returns (uint256) {
         if (msg.sig == this.mintInflation.selector) {
-            baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
+            return baseInflationPerSec = internalToken.totalSupply() * baseInflationRate / 365 days / 100;
         }
 
         if (msg.sig == this.signalInflation.selector) {
@@ -318,23 +305,8 @@ contract DAOinstance {
         }
 
         if (msg.sig == this.changeMembrane.selector) {
-            require(iMB.setMembrane(newVal_, address(this)), "f O.setM.");
-            iMR.setUri(iMB.inUseUriOf(address(this)));
-            return _postMajorityCleanup(newVal_);
-        }
-
-        if (msg.sig == this.executeCall.selector) {
-            ExtCall memory callStruct = iEXT.getExternalCallbyID(newVal_);
-
-            uint256 i;
-            for (; i < callStruct.contractAddressesToCall.length;) {
-                (bool success, bytes memory data) =
-                    callStruct.contractAddressesToCall[i].call(callStruct.dataToCallWith[i]);
-                if (!success) revert DAOinstance_ExeCallFailed(data);
-                unchecked {
-                    ++i;
-                }
-            }
+            if (!iMB.setMembrane(newVal_, address(this))) revert DAOinstance__FailedToSetMembrane();
+            iMR.setUri(iMB.inUseUriOf(address(this))); //// @dev dont remember why, probably POC laziness
             return _postMajorityCleanup(newVal_);
         }
     }
@@ -388,7 +360,6 @@ contract DAOinstance {
     }
 
     function _msgSender() private view returns (address) {
-        if (msg.sender == address(AbstractAccount)) return AbstractAccount.currentAccount();
         if (msg.sender == address(internalToken)) return internalToken.burnInProgress();
         if (msg.sender == address(this) && msg.sig == this.distributiveSignal.selector) return purgeorExternalCall;
 
@@ -398,10 +369,6 @@ contract DAOinstance {
     /*//////////////////////////////////////////////////////////////
                                  VIEW
     //////////////////////////////////////////////////////////////*/
-
-    function abstractAddress() external view returns (address) {
-        return address(AbstractAccount);
-    }
 
     function internalTokenAddress() external view returns (address) {
         return address(internalToken);
