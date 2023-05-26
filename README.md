@@ -71,5 +71,8 @@ Membranes are what primarily defines the identity of a (sub)DAO. A membrane can 
 <br>
 <br>
 
+(a diagram I did but does not really belong elsewhere)
+![Screenshot 2023-05-26 115344](https://github.com/parseb/fungido/assets/5999852/1f5ebb93-9b1f-4573-baf0-b8d34d699edc)
+
 ##### Disclaimer
 <i>These smart contracts are being provided as is. No guarantee, representation or warranty is being made, express or implied, as to the safety or correctness of the user interface or the smart contracts. They have not been audited and as such there can be no assurance they will work as intended, and users may experience delays, failures, errors, omissions, loss of transmitted information or loss of funds. The creators are not liable for any of the foregoing. Users should proceed with caution and use at their own risk.</i>
