@@ -130,11 +130,13 @@ contract DAOinstance {
     /// @notice beneficiaries are ordered chonologically and expects a value for each item retruend by `getDAOsOfToken`
     /// @param cronoOrderedDistributionAmts complete array of preffered sub-entity distributions with sum 100
 
-    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts)
+    function distributiveSignal(uint256[] memory cronoOrderedDistributionAmts) 
         external
         onlyMember
         returns (uint256 i)
     {
+
+        /// @todo refactor to center on user and remove gas absed dos imposition
         address sender = _msgSender();
         uint256 senderForce = internalToken.balanceOf(sender);
 

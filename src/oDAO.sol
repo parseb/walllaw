@@ -171,6 +171,10 @@ contract ODAO {
         return links[instanceOrToken_];
     }
 
+    function getLinkCountOf(address instance_) external view returns (uint256) {
+        return links[instance_].length;
+    }
+
     function getInitAt(address forAddress) external view returns (uint256) {
         return instantiatedAt[forAddress];
     }

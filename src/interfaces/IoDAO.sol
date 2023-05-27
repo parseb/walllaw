@@ -23,4 +23,6 @@ interface IoDAO {
     function getLinksOf(address instanceOrToken_) external view returns (address[] memory);
 
     function getInitAt(address forAddress) external view returns (uint256);
+
+    function getLinkCountOf(address instance_) external view returns (uint256);
 }

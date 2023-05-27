@@ -92,10 +92,6 @@ contract DAO20 is ERC20 {
         o = !o ? parent == msg.sender : o;
         o = !o ? to == iInstanceDAO(msg.sender).endpoint() : o;
 
-        // o = !o ? iInstanceDAO(iInstanceDAO(owner).parentDAO()).isMember(msg.sender) : o;
-        // o = !o ? (parent == address(0)) && (msg.sig == this.wrapMint.selector) : o;
-        // o = !o ? (iInstanceDAO(owner).baseTokenAddress() == msg.sender ) : o;
-
         require(o, "unauthorized - transfer");
         return super.transfer(to, amount);
     }
