@@ -136,7 +136,7 @@ contract DAOinstance {
         returns (uint256 i)
     {
 
-        /// @todo refactor to center on user and remove gas absed dos imposition
+        /// @todo refactor to center on user and remove gas based dos imposition
         address sender = _msgSender();
         uint256 senderForce = internalToken.balanceOf(sender);
 
