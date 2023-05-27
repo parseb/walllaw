@@ -143,7 +143,7 @@ contract DAOinstance {
 
         redistributiveSignal[sender] = cronoOrderedDistributionAmts;
 
-        address[] memory subDAOs = IoDAO(ODAO).getLinksOf(address(this));
+        address[] memory subDAOs = IoDAO(ODAO).getLinksOf(address(this)); /// @dev @todo consider and remove DOS vectors
         if (subDAOs.length != cronoOrderedDistributionAmts.length) revert DAOinstance__LenMismatch();
 
         uint256 centum;
@@ -153,7 +153,7 @@ contract DAOinstance {
 
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
             if (subunitPerSec[subDAOs[i]][1] == 0) {
-                subunitPerSec[subDAOs[i]][1] = IoDAO(ODAO).getInitAt(subDAOs[i]);
+                subunitPerSec[subDAOs[i]][1] = IoDAO(ODAO).getInitAt(subDAOs[i]); 
             }
 
             if (submittedValue == subunitPerSec[subDAOs[i]][0]) {
