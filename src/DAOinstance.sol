@@ -149,24 +149,21 @@ contract DAOinstance {
         uint256 centum;
         uint256 perSec;
         for (i; i < subDAOs.length;) {
-            redistributeSubDAO(subDAOs[i]);
-
             uint256 submittedValue = cronoOrderedDistributionAmts[i];
-            if (subunitPerSec[subDAOs[i]][1] == 0) {
-                subunitPerSec[subDAOs[i]][1] = IoDAO(ODAO).getInitAt(subDAOs[i]);
-            }
+            address entity = subDAOs[i];
 
-            if (submittedValue == subunitPerSec[subDAOs[i]][0]) {
+            if (submittedValue == userSignal[sender][entity][0]) {
                 ++i;
                 continue;
             }
+            if (subunitPerSec[entity][1] == 0) subunitPerSec[entity][1] = IoDAO(ODAO).getInitAt(subDAOs[i]);
 
-            address entity = subDAOs[i];
+            redistributeSubDAO(entity);
 
             unchecked {
                 centum += cronoOrderedDistributionAmts[i];
             }
-            if (centum > 100_00) revert DAOinstance__Over100();
+            if (centum > 100_00) revert DAOinstance__Over100(); /// @dev @todo remove limit
 
             perSec = submittedValue * baseInflationPerSec / 100_00;
             perSec = (senderForce * 1 ether / internalToken.totalSupply()) * perSec / 1 ether;

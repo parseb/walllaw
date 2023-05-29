@@ -5,7 +5,7 @@
 
 
 
-# Fungido
+# WalllaW
 
 
 A <b>Decentralized Internet Organization</b> framework that instrumentalizes fungibility to facilitate access to fully trustless and explainable collective efforts. It primarily accomplishes this by means of three low-complexity devices: inflation, majority vote and membership.
@@ -44,12 +44,12 @@ Movement occurs through agent-driven initiative and retroactive, contiguous allo
 
 ### Pluralism and Versatility
 
-Majority vote driven governance is not known for granting much room to emergent, novel, potentially destabilising diversities of expression. While the base decision mechanisms for the definition of an existing space (membrane and identity changes) within fungido relies on circumstantial majorities, the right to create new autonomous spaces within contexts is bound by simple membership. It is as such likely for a type of 'majoritarian pluralism' to be the norm given that the parameters one can use to define what constitutes a majority are boundless.
+Majority vote driven governance is not known for granting much room to emergent, novel, potentially destabilising diversities of expression. While the base decision mechanisms for the definition of an existing space (membrane and identity changes) within walllaw relies on circumstantial majorities, the right to create new autonomous spaces within contexts is bound by simple membership. It is as such likely for a type of 'majoritarian pluralism' to be the norm given that the parameters one can use to define what constitutes a majority are boundless.
 <br><br>
 The layout formed by the ways in which value quite literally trickles down might be of concern. I will not be able to stress this enough, but, any such space has the capacity to perform almost any arbitrary action an ethereum account can. That means, among other things, that a sub-DAO can at any point migrate outside the field of gravity of its incubating parent. [...] While this opens the door to a very wide range of security concerns, it is nonetheless a capability worth fighting for. Time delays, or more creative protection mechanisms can work to this end.
 <br><br>
 
-A hypothetical example of versatility: 5% MKR$ owners create a fungido for the purpose of running experiments that do not find their place within the core organisation. They do their thing, but also retain their ability to vote as a block within the original, dominating governance process. One aspect worth entertaining here is what happens when such a block vote becomes decisive. What fungido means for dissent and coalition building given that preferred resource allocations highlight the operating ideology of agents should also be considered.
+A hypothetical example of versatility: 5% MKR$ owners create an instance for the purpose of running experiments that do not find their place within the core organisation. They do their thing, but also retain their ability to vote as a block within the original, dominating governance process. One aspect worth entertaining here is what happens when such a block vote becomes decisive. What walllaw means for dissent and coalition building given that preferred resource allocations highlight the operating ideology of agents should also be considered.
 
 
 
@@ -58,7 +58,7 @@ A hypothetical example of versatility: 5% MKR$ owners create a fungido for the p
 
 #### Economic Resilience
 
-There's a set of beliefs and assumptions that grounds the security model of fungido. Among those is that "DAOs are for uncommon shared interests". As such, DAO governance, participating in it, is not for profit but for the advancement of said shared interest. It follows that it not only can but also logically should operate at a loss. In fungido there is no direct economic benefit for purely formal participation. Quite the contrary. 
+There's a set of beliefs and assumptions that grounds the security model of walllaw. Among those is that "DAOs are for uncommon shared interests". As such, DAO governance, participating in it, is not for profit but for the advancement of said shared interest. It follows that it not only can but also logically should operate at a loss. In walllaw there is no direct economic benefit for purely formal participation. Quite the contrary. 
 
 While capital deposits do increase one's swaying power, they do so at economic cost due to inflation. You not only get let’s say, .9 of same token value, but also likely provide an advantageous exit opportunity for others given that any new deposit is a deflationary event. Governance costs and one ought to participate in governance only if they believe their input is valuable to the extent they are willing to sacrifice economic value to make themselves heard. And that should by no means be controversial. There is a cost to you reading this as there is a cost to keeping up with interminable chains of opinions and proposals. Governance is for those that care enough to accept some economic downside for the future progress to be brought upon the collective through their input. For all others, holding the token should be good enough.
 

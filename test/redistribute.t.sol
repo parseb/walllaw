@@ -149,15 +149,6 @@ contract RedistributiveTest is Test, MyUtils {
         address[] memory Ms = iMR.getctiveMembersOf(address(DAO));
         assertTrue(Ms.length > 0, "no members retrieved");
 
-        /// test post exec wipe
-
-        ////
-        // uint256 initInflation = DAO.baseInflationRate();
-        // _setInflation(10, address(DAO));
-        // uint256 initPerSec = DAO.baseInflationPerSec();
-
-        // assertFalse(initInflation == DAO.baseInflationRate(), "failed to update infaltion");
-        // assertTrue(initPerSec != 0, "per sec not updated");
     }
 
     // function testRedistributes() public {
