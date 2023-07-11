@@ -10,7 +10,6 @@ import "./interfaces/ISafeFactory.sol";
 import "./interfaces/ISafe.sol";
 
 import "./utils/libSafeFactoryAddresses.sol";
-import "forge-std/console.sol";
 
 /// @author BPA, parseb
 /// @custom:experimental This is an experimental contract.
@@ -95,7 +94,6 @@ contract ODAO {
         if (!isEndpoint && (uint160(membraneID_) == uint160(parentDAO_))) {
             bytes memory x = abi.encode(links[parentDAO_].length);
             subDAOaddr = SF.createProxy(SafeFactoryAddresses.getSingletonAddressForChainID(block.chainid), x);
-            console.log("safe  --  ", subDAOaddr);
             address[] memory OWs = MR.getctiveMembersOf(parentDAO_);
             uint256 t = OWs.length / 2 + 1;
             ISafe(subDAOaddr).setup(OWs, t, address(0), x, address(0), address(0), 0, subDAOaddr);
